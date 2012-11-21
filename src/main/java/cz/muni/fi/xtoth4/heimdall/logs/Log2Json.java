@@ -2,14 +2,14 @@ package cz.muni.fi.xtoth4.heimdall.logs;
 
 
 public class Log2Json {
-    private String type;
-    private String severity;
-    private String level;
+    private Log2JsonType type;
+    private int severity;
+    private Log2JsonLevel level;
     private String payload;
     private String application;
 
 
-    public Log2Json(String type, String level, String severity, String payload) {
+    public Log2Json(Log2JsonType type, Log2JsonLevel level, int severity, String payload) {
         this.type = type;
         this.level = level;
         this.severity = severity;
@@ -18,15 +18,15 @@ public class Log2Json {
     }
 
 
-    public void setType(String type) {
+    public void setType(Log2JsonType type) {
         this.type = type;
     }
 
-    public void setSeverity(String severity) {
+    public void setSeverity(int severity) {
         this.severity = severity;
     }
 
-    public void setLevel(String level) {
+    public void setLevel(Log2JsonLevel level) {
         this.level = level;
     }
 
@@ -34,16 +34,15 @@ public class Log2Json {
         this.payload = payload;
     }
 
-    public String getType() {
-
+    public Log2JsonType getType() {
         return type;
     }
 
-    public String getSeverity() {
+    public int getSeverity() {
         return severity;
     }
 
-    public String getLevel() {
+    public Log2JsonLevel getLevel() {
         return level;
     }
 
