@@ -1,8 +1,8 @@
 package cz.muni.fi.xtoth4.heimdall.logs;
 
-//import com.fasterxml.jackson.annotation.JsonProperty;
-//import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-//import com.fasterxml.jackson.annotation.JsonRootName;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import com.sleepycat.persist.model.Entity;
 import com.sleepycat.persist.model.PrimaryKey;
 import com.sleepycat.persist.model.Relationship;
@@ -11,8 +11,8 @@ import com.sleepycat.persist.model.SecondaryKey;
 import java.util.Date;
 
 @Entity
-//@JsonRootName("Event")
-//@JsonPropertyOrder({"occurrenceTime", "type", "_"})
+@JsonRootName("Event")
+@JsonPropertyOrder({"occurrenceTime", "type", "_"})
 public class Event {
 
     @PrimaryKey(sequence = "event_long_sequence")
@@ -45,7 +45,7 @@ public class Event {
     @SecondaryKey(name = "priority", relate = Relationship.MANY_TO_ONE)
     private int priority;
 
-//    @JsonProperty("_")
+    @JsonProperty("_")
     private Payload payload;
 
     public Event(){

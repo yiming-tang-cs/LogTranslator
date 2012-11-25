@@ -10,6 +10,9 @@ package cz.muni.fi.xtoth4.heimdall.logs;
 public enum Log2JsonType {
     NETWORK_SERVER,
     NETWORK_CLIENT,
+    ADD, REMOVE,
+    RUNNING, STOPPED,
+    EXITED
 //  and many others added in time
 
 }

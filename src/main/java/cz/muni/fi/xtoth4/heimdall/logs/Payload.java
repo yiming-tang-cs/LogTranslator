@@ -1,6 +1,6 @@
 package cz.muni.fi.xtoth4.heimdall.logs;
 
-//import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.*;
 import com.sleepycat.persist.model.Persistent;
 
 import java.util.LinkedHashMap;
@@ -16,12 +16,12 @@ public class Payload {
 
     private Map<String, Object> properties = new LinkedHashMap<>(1);
 
-//    @JsonAnySetter
+    @JsonAnySetter
     public void add(String key, Object value) {
         properties.put(key, value);
     }
 
-//    @JsonAnyGetter
+    @JsonAnyGetter
     public Map<String, Object> properties() {
         return properties;
     }

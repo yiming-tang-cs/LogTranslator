@@ -1,15 +1,18 @@
 package cz.muni.fi.xtoth4.heimdall.logs;
 
+import org.apache.log4j.Level;
 
 public class Log2Json {
-    private Log2JsonType type;
+    private String type;
     private int severity;
-    private Log2JsonLevel level;
-    private String payload;
+    private Level level;
+    private Payload payload;
     private String application;
 
+    public Log2Json () {
+    }
 
-    public Log2Json(Log2JsonType type, Log2JsonLevel level, int severity, String payload) {
+    public Log2Json(String type, Level level, int severity, Payload payload) {
         this.type = type;
         this.level = level;
         this.severity = severity;
@@ -18,7 +21,7 @@ public class Log2Json {
     }
 
 
-    public void setType(Log2JsonType type) {
+    public void setType(String type) {
         this.type = type;
     }
 
@@ -26,15 +29,15 @@ public class Log2Json {
         this.severity = severity;
     }
 
-    public void setLevel(Log2JsonLevel level) {
+    public void setLevel(Level level) {
         this.level = level;
     }
 
-    public void setPayload(String payload) {
+    public void setPayload(Payload payload) {
         this.payload = payload;
     }
 
-    public Log2JsonType getType() {
+    public String getType() {
         return type;
     }
 
@@ -42,11 +45,11 @@ public class Log2Json {
         return severity;
     }
 
-    public Log2JsonLevel getLevel() {
+    public Level getLevel() {
         return level;
     }
 
-    public String getPayload() {
+    public Payload getPayload() {
         return payload;
     }
 
@@ -58,7 +61,7 @@ public class Log2Json {
                 ", application='" + application + "'" +
                 ", level='" + level + "'" +
                 ", severity='" + severity + "'" +
-                ", payload='" + payload + "'" +
-                '}';
+                " " + payload +
+                " }";
     }
 }
