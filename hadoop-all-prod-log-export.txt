@@ -1,3 +1,4 @@
+TEST
 Targets
     String 'LOG\.(trace|debug|info|warn|error|fatal)'
 Found usages  (6,143 usages)
