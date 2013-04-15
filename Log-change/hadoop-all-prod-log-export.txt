@@ -1567,7 +1567,7 @@ LOG>ERR
 
                         (233: 9) LOG.debug("using plugin jars: "+ Iterables.toString(jars));
                         LOG.USING_PLUGIN_JARS(Iterables.toString(jars)).tag("org.apache.hadoop.metrics2").debug();
--------------------
+
                     MetricsSinkAdapter.java  (11 usages)
                         (95: 7) LOG.debug("enqueue, logicalTime="+ logicalTime);
                         (107: 7) LOG.warn(name + " has a full queue and can't consume the given metrics.");
