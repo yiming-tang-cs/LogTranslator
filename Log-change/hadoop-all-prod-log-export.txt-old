@@ -1407,25 +1407,25 @@ LOG>ERR
                 org.apache.hadoop.jmx  (15 usages)
                     JMXJsonServlet.java  (15 usages)
                         (215: 7) LOG.error("Caught an exception while processing JMX request", e);
-                        LOG.EXCEPTION_WHILE_PROCESSING_JMX_REQUEST_IOEXCEPTION(e).tag("org.apache.hadoop.jmx").error();
+                        LOG.EXCEPTION_WHILE_PROCESSING_JMX_REQUEST(e).tag("org.apache.hadoop.jmx").tag("IOException").error();
 
                         (218: 7) LOG.error("Caught an exception while processing JMX request", e);
-                        LOG.EXCEPTION_WHILE_PROCESSING_JMX_REQUEST_MALFORMED_OBJECT_NAME(e).tag("org.apache.hadoop.jmx").error();                        
+                        LOG.EXCEPTION_WHILE_PROCESSING_JMX_REQUEST(e).tag("org.apache.hadoop.jmx").tag("MalformedObjectNameException").error();                        
 
                         (227: 5) LOG.debug("Listing beans for "+qry);
                         LOG.LISTING_BEANS_FOR(qry).tag("org.apache.hadoop.jmx").debug();
 
                         (254: 11) LOG.error("getting attribute " + prs + " of " + oname + " threw an exception", e);
-                        LOG.ATTRIBUTE_NOT_FOUND_EXCEPTION_GETTING_ATTRIBUTE_OF_OBJECT(e, prs, oname).tag("org.apache.hadoop.jmx").error();
+                        LOG.EXCEPTION_GETTING_ATTRIBUTE_OF_OBJECT(e, prs, oname).tag("org.apache.hadoop.jmx").tag("AttributeNotFoundException").error();
 
                         (259: 11) LOG.error("getting attribute " + prs + " of " + oname + " threw an exception", e);
-                        LOG.MBEAN_EXCEPTION_GETTING_ATTRIBUTE_OF_OBJECT(e, prs, oname).tag("org.apache.hadoop.jmx").error();
+                        LOG.EXCEPTION_GETTING_ATTRIBUTE_OF_OBJECT(e, prs, oname).tag("org.apache.hadoop.jmx").tag("MBeanException").error();
 
                         (265: 11) LOG.error("getting attribute " + prs + " of " + oname + " threw an exception", e);
-                        LOG.RUNTIME_EXCEPTION_GETTING_ATTRIBUTE_OF_OBJECT(e, prs, oname).tag("org.apache.hadoop.jmx").error();
+                        LOG.EXCEPTION_GETTING_ATTRIBUTE_OF_OBJECT(e, prs, oname).tag("org.apache.hadoop.jmx").tag("RuntimeException").error();
 
                         (271: 11) LOG.error("getting attribute " + prs + " of " + oname + " threw an exception", e);
-                        LOG.REFLECTION_EXCEPTION_GETTING_ATTRIBUTE_OF_OBJECT(e, prs, oname).tag("org.apache.hadoop.jmx").error();
+                        LOG.EXCEPTION_GETTING_ATTRIBUTE_OF_OBJECT(e, prs, oname).tag("org.apache.hadoop.jmx").tag("ReflectionException").error();
 
                         (280: 9) LOG.error("Problem while trying to process JMX query: " + qry + " with MBean " + oname, e);
                         LOG.PROBLEM_WHILE_TRYING_TO_PROCESS_JMX_QUERY_MBEAN(qry, oname, e).tag("org.apache.hadoop.jmx").error();
@@ -1567,7 +1567,7 @@ LOG>ERR
 
                         (233: 9) LOG.debug("using plugin jars: "+ Iterables.toString(jars));
                         LOG.USING_PLUGIN_JARS(Iterables.toString(jars)).tag("org.apache.hadoop.metrics2").debug();
--------------------
+
                     MetricsSinkAdapter.java  (11 usages)
                         (95: 7) LOG.debug("enqueue, logicalTime="+ logicalTime);
                         (107: 7) LOG.warn(name + " has a full queue and can't consume the given metrics.");
