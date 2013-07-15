@@ -1,18 +1,27 @@
-import sys, os
+import sys
+import os
 import re
 
 BASE_PATH="/home/mtoth/skola/dp/hadoop-common"
-#LOG_FILE="/home/mtoth/Desktop/logy/hadoop-all-prod-log-export.txt"
-LOG_FILE="/home/mtoth/Desktop/logy/hadoop-rewritten-logs"
-
-LINES=14
-
+#LOG_FILE="/home/mtoth/skola/dp/LogFilterBase/Log-change/hadoop-all-prod-log-export.txt"
+LOG_FILE="/home/mtoth/skola/dp/LogFilterBase/Log-change/hadoop-rewritten-logs"
 
 #
 # /home/mtoth/skola/dp/hadoop-common
 #                     ./hadoop-tools/hadoop-archives/src/main/java/org/apache/hadoop/tools/HadoopArchives.java
 # /home/mtoth/skola/dp/hadoop-common/hadoop-archives/src/main/java/org/apache/hadoop/tools/HadoopArchives.java
 #
+
+class LogChanger:
+    def __init__(self): #, file_path, old_log, new_log, log_position):
+        self.data = []
+        self.file_path = None
+        self.old_log = None
+        self.new_log = None
+        self.log_position = None
+
+    def __str__(self):
+        return "LogChanger={\n" + self.file_path + "\n" + str(self.log_position) + "\nOLD=" + self.old_log + "\nNEW=" +  self.new_log + "\n}"
 
 
 # Insert Logger declaration and definition into java file
@@ -22,47 +31,46 @@ def get_first_method():
 
 # Find position in java file for substitution with new log
 def find_current_log():
+    # TODO
     None
 
 def parse_package(line):    
     package = line[0:line.index(" ")]
-    #print "package=", package
-    return package, search_basedir(package)
-    # return package
+    return search_basedir(package)
 
-def parse_namespace(line):    
-    namespace = "src/main/java/" + line[0:line.index(" ")].replace(".", "/")
-    print "namespace=", namespace
-
+def parse_namespace(line):  
+    if line.startswith("/"): 
+        namespace = line[:line.find("(") - 2]        
+    else:
+        namespace = "src/main/java/" + line[0:line.index(" ")].replace(".", "/")
     return namespace
 
 def parse_java_file(line):
     java_file = line[0:line.index(" ")]
-    print "java_file=", java_file
     return java_file
 
 def parse_log(line):
-    #print "log=", line
-    return line
+    if line.startswith('('):
+        return  parse_position(line)
+    else:
+        return line
 
+def parse_position(line):
+    positions_string = line[1:line.find(")")]
+    pos = [int(x) for x in positions_string.split(": ")]
+    log = line[line.find(")") + 2:]
+    return log, pos
+
+# Dictionary to substitute names and other not-automatically processable paths
+names = {   'hadoop-main'               : 'hadoop-common-project', 
+            'hadoop-hdfs-bkjournal'     : 'hadoop-hdfs'  }
 
 # search for package (directory) in BASE_PATH
-def search_basedir(package_name):
+def search_basedir(package_name):             
+    if package_name in names.keys():
+        #print "changing '" + package_name + "' to '" + names[package_name] +"'"
+        package_name = names[package_name]
 
-    #package_name = "hadoop-yarn-server-resourcemanager"
-
-    # for name in os.listdir(BASE_PATH):
-    #     path = BASE_PATH + "/" + name
-    #     if os.path.isdir(path):      
-    #         print path      
-    #         for file_name in os.listdir(path):
-    #         # search for files with similar/same name as package_name
-    #             print "files=" + file_name
-    #             if package_name == file_name:
-    #                 print package_name, 'FOUND! Here -', path,  file_name
-    #                 path = path + "/" + file_name
-    #                 return path
-                    
 
     found = False
     for root, dirnames, files in os.walk(BASE_PATH):        
@@ -73,50 +81,25 @@ def search_basedir(package_name):
             return package_name, path
             break
 
-
     # if BASE_PATH in path:
     #     stripped_path = path[len(BASE_PATH):]
 
     # return path + "/" + package_name
 
+def is_my_log(line):
+    # "LOG.SOMETHING_INTERESTING("
+    pattern = re.compile(r'^LOG\.[A-Z_]+\(*')
+    return pattern.match(line.strip())
 
+# TODO
+def is_generated_log(log):
+    "LOG..tag().LEVEL();"
+    return False
 
-def search_all_packages():
-    fr = open(LOG_FILE, 'r')
-    
-    l_number = 0    
-    previous_line = None
-    packages = []
+# TODO
+def change_java_file(logChanger):
+    print logChanger
 
-    for line in fr:
-        parsed_line = ""        
-        if line == '':
-            break;
-        space_counter = 0
-        found_first_letter = False;
-        for letter in line:
-            if letter.isspace() and not found_first_letter:
-                space_counter = space_counter + 1
-            else:
-                found_first_letter = True;
-                parsed_line += letter #sys.stdout.write(letter)
-
-        parsed_line = parsed_line[:-1]  # remove last \n
-
-        if space_counter == 12:
-            package = parse_package(parsed_line)
-            packages.append(package)
-
-
-
-    print packages
-    for name, path in packages:  
-        if path == None: 
-            print "package=", name, path
-
-
-# TODO - finish
-search_all_packages()
 
 
 # Create path from custom log file
@@ -128,15 +111,16 @@ def parse_log_file():
     #         12 : parse_package(),
     #         16 : parse_namespace(),
     #         20 : parse_java_file(),
-    #         24 : parse_log()
+    #         28 : parse_log()
     #         }
     fr = open(LOG_FILE, 'r')
     
     l_number = 0    
     previous_line = None
-    while (l_number != LINES):
-        parsed_line = ""
-        line = fr.readline()
+    full_path = ''
+    log = LogChanger()
+    for line in fr:   
+        parsed_line = ""     
         space_counter = 0
         found_first_letter = False;
         for letter in line:
@@ -147,209 +131,46 @@ def parse_log_file():
                 parsed_line += letter #sys.stdout.write(letter)
 
         parsed_line = parsed_line[:-1]  # remove last \n
-                
+
         # which function to call 
         if space_counter == 12:
+            full_path = "" 
             package = parse_package(parsed_line)
         if space_counter == 16:
             namespace = parse_namespace(parsed_line)
+            if namespace.startswith("src"):
+                full_path =  package[1] + "/" + namespace
+            else:
+                full_path = namespace
         if space_counter == 20:
-            java_file = parse_java_file(parsed_line)
+            java_file = parse_java_file(parsed_line) 
 
-        # if previous parsed_line = None or " " call with isOld = True                       
-        if space_counter == 24:
-            if previous_line.startswith('('):
-                print 'new'
-                new_log = parse_log(parsed_line)
+            if full_path.endswith('.java'):
+                # remove java-file & add new file.java
+                full_path = full_path[:full_path.rfind("/") + 1] + java_file
             else:
-                old_log = parse_log(parsed_line)
-
-
-
-        previous_line = parsed_line
-        l_number = l_number + 1
-
-        
-    full_path = BASE_PATH +"/" + package + "/" + namespace + "/" + java_file
-    print full_path
-
-
-#MAIN LOOP
-#parse_log_file()
-
-
-
-
-
-# Remove test classes and logs from log-file exported from idea
-def remove_test_classes(filepath):
-    fr = open(filepath, 'r')
-    
-    lines = []
-    l_number = 1             
-    remove_mode = False; 
-    remove_list = []
-
-    for line in fr:
-        parsed_line = ""
-        if line == '':
-            break;
-        space_counter = 0
-        found_first_letter = False;
-        for letter in line:
-            if letter.isspace() and not found_first_letter:
-                space_counter = space_counter + 1
-            else:
-                found_first_letter = True;
-                parsed_line += letter #sys.stdout.write(letter)
-
-        parsed_line = parsed_line[:-1]  # remove last \n
-
-        if space_counter == 16:
-            if remove_mode:
-                remove_stop_line = l_number
-                remove_mode = False
-                remove_list.append((remove_start_line, remove_stop_line))
-            if parsed_line.lower().find("test") != -1:
-                remove_mode = True
-                remove_start_line = l_number
-
-        l_number = l_number + 1
-        lines.append((l_number, line))
-    
-    print remove_list
-    fr.close()    
-
-    print "number of lines=", len(lines)
-    
-
-    fr = open(filepath + "-no-tests", 'w')
-
-    to_remove = []
-    for removal in remove_list:
-        for i in range(removal[0], removal[1]):
-            print i
-            to_remove.append(i)
-
-
-    for i, line in lines:
-        if i not in to_remove:
-            fr.write(line)  
+                full_path = full_path + "/" + java_file    
+                setattr(log, 'file_path', full_path)         
             
-file_name = "/home/mtoth/Desktop/hadoop-new-logs.txt"
-#remove_test_classes(file_name)
-
-
-def print_spaces(number):
-    spacing = ""
-    for i in range(0, number):
-        spacing += " " 
-    return spacing
-
-
-# Merge OLD and NEW "output-log-file" from idea log search export.
-# Also insert new logs to appropriate position. (DOES NOT DO UPDATE!!)
-def merge_log_files(file_old, file_new):
-    fr = open(file_old, "r") 
-    fnew = open(file_new, "rw")
-    f_write = open("hadoop-rewritten-logs", "r+")
-
-    l_number = 0    
-    previous_line = None
-    new_log = ""
-    old_log = ""
-    logs_to_change = []
-    for line in fr:  
-        parsed_line = ''
-        space_counter = 0
-        found_first_letter = False;
-        for letter in line:
-            if letter.isspace() and not found_first_letter:
-                space_counter = space_counter + 1
-            else:
-                found_first_letter = True;
-                parsed_line += letter #sys.stdout.write(letter)
-
-        parsed_line = parsed_line[:-1]  # remove last \n
-        
         # if previous parsed_line = None or " " call with isOld = True                       
-        if space_counter == 24:            
-            if previous_line.startswith('(') and not parsed_line.startswith('('):
-                new_log = parse_log(parsed_line)
-            else:
-                old_log = parse_log(parsed_line)
+        if space_counter == 28:
+            if previous_line.startswith('(') and is_my_log(parsed_line):
+                log.old_log, log.log_position = parse_log(previous_line)                 
+                log.new_log = parse_log(parsed_line)
 
-            
-            if old_log != "" and new_log != "":
-                # print old_log + "  --  " + new_log
-                logs_to_change.append( (old_log.strip(), new_log.strip()) )
-                old_log = ""
-                new_log = ""
-            if "LOG.USING_PLUGIN_JARS(Iterables.toString(jars)" in new_log:
-                break
+                if is_generated_log(log.new_log):
+                # pre-autogenerated format "LOG..tag().LEVEL();":
+                    pass
+                else:   
+                #   CALL CHANGING FUNCTION IN REAL LOGS 
+                    change_java_file(log)       
            
         previous_line = parsed_line
         l_number = l_number + 1
-
-    fr.close()
-
-
     
-    # for old, new in logs_to_change:
-    #     print old, "\n", new, "\n"
 
-    logs = logs_to_change
-
-    spaces = print_spaces(24)
-    i = 0
-    changed = 0
-    for line in fnew:
-        newline = line
-        line = line.lstrip()
-
-        for old, new in logs:#_to_change:
-            if old[old.lower().find(') '):45] in line:
-
-                if old.strip() != line.strip():
-                    #print old, line
-                    pass
-        #         print 'old=', old[old.lower().find('log'):30].strip() , '\nin=', line
-                newline = str.replace(line, line, spaces + line + spaces + new.rstrip() + "\n\n")            
-                print "old=" + old, "\n", line, "new=\n", newline#, changed
-        #         changed = changed + 1
-                logs_to_change.remove((old, new))                
-        #         break
-                i = i + 1
-        #f_write.write(newline)
-
-    print "not swapped= ", i#len(logs_to_change)
-    # for old, new in logs_to_change:
-    #     print old
-    #     print new
-    #     print "\n"
-
-#merge_log_files("/home/mtoth/Desktop/logy/hadoop-all-prod-log-export.txt", "hadoop-new-logs.txt-no-tests")
+    # Got full path to file -> search for LOG in JAVA file now.
 
 
-
-
-
-#log = '(1747: 9) LOG.warn("Unknown rpc kind "  + header.getRpcKind() + '
-# dead code
-def change_line(line):
-
-    print line[line.lower().find('log'):]
-
-
-    print "Line to change=", line.lower()
-    line = line.lower()
-    pattern = r"log.*"
-    match = re.search(pattern, line)
-    if match:
-        print match.group(0)
-        print match.start(0)
-
-    # print "changed to=", newline
-    # return newline
-
-#change_line(log)
+#MAIN LOOP
+parse_log_file()

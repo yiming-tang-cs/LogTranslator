@@ -1373,7 +1373,7 @@ HELP                        (116: 15) LOG.warn(msg);
                         LOG.SERVER_ACCEPTS_AUTH_METHODS(authMethods).tag("org.apache.hadoop.ipc").debug();
 
                         (2002: 9) LOG.warn("Error serializing call response for call " + call, t);
-                        LOG.ERROR_SERIALIzING_CALL_RESPONSE_FOR_CALL(call, t).tag("org.apache.hadoop.ipc").warn();
+                        LOG.ERROR_SERIALIZING_CALL_RESPONSE_FOR_CALL(call, t).tag("org.apache.hadoop.ipc").warn();
 
                         (2066: 9) LOG.debug("Adding saslServer wrapped token of size " + token.length+ " as call response.");
                         LOG.TO_CALL_RESPONSE_ADDING_SASL_SERVER_WRAPPED_TOKEN_OF_SIZE(token.length).tag("org.apache.hadoop.ipc").debug();
@@ -3585,11 +3585,7 @@ LOG>ERR
                         (133: 5) LOG.debug("Authorization check proxyuser [{}] host [{}] doAs [{}]",
                 org.apache.hadoop.lib.wsrs  (1 usage)
                     ExceptionProvider.java  (1 usage)
-                        (61: 5) LOG.debug("{}", throwable.getMessage(), throwable);
-            hadoop-mapreduce  (1 usage)
-                /home/michalxo/IdeaProjects/hadoop-common/hadoop-mapreduce-project  (1 usage)
-                    CHANGES.txt  (1 usage)
-                        (1684: 65) MAPREDUCE-3265. Removed debug logs during job submission to LOG.debug to
+                        (61: 5) LOG.debug("{}", throwable.getMessage(), throwable);            
             hadoop-mapreduce-client-app  (305 usages)
                 org.apache.hadoop.mapred  (39 usages)
                     LocalContainerLauncher.java  (14 usages)
