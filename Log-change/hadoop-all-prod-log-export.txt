@@ -830,7 +830,7 @@ x
                 org.apache.hadoop.http  (13 usages)
                     HttpServer.java  (13 usages)
                         (280: 9) LOG.info("adding path spec: " + path);
-                        LOGADDING_PATH_SPECIFICATION(path).tag("org.apache.hadoop.http").info();
+                        LOG.ADDING_PATH_SPECIFICATION(path).tag("org.apache.hadoop.http").info();
 
                         (422: 5) LOG.info("addJerseyResourcePackage: packageName=" + packageName+ ", pathSpec=" + pathSpec);
                         LOG.ADD_JERSEY_RESOURCE_PACKAGE_PATH_SPECIFICATION(packageName, pathSpec).tag("org.apache.hadoop.http").info();

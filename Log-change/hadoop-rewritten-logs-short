@@ -1,0 +1,390 @@
+Targets
+    String 'LOG\.(trace|debug|info|warn|error|fatal)'
+Found usages  (6,891 usages found)
+    Production  (6,886 usages found)
+        Unclassified usage  (6,886 usages found)
+            hadoop-hdfs-nfs  (181 usages found)
+                org.apache.hadoop.hdfs.nfs.mount  (9 usages found)
+                    RpcProgramMountd.java  (9 usages found)
+                        nullOp(XDR, int, InetAddress)  (1 usage found)
+                            (82: 7) LOG.debug("MOUNT NULLOP : " + " client: " + client);
+                        mnt(XDR, XDR, int, InetAddress)  (5 usages found)
+                            (90: 7) LOG.debug("MOUNT MNT path: " + path + " client: " + client);
+                            (95: 7) LOG.debug("Got host: " + host + " path: " + path);
+                            (98: 7) LOG.info("Path " + path + " is not shared.");
+                            (109: 7) LOG.error("Can't get handle for export:" + path + ", exception:" + e);
+                            (115: 5) LOG.info("Giving handle (fileId:" + handle.getFileId()
+                        dump(XDR, int, InetAddress)  (1 usage found)
+                            (126: 7) LOG.debug("MOUNT NULLOP : " + " client: " + client);
+                        umnt(XDR, XDR, int, InetAddress)  (1 usage found)
+                            (137: 7) LOG.debug("MOUNT UMNT path: " + path + " client: " + client);
+                        umntall(XDR, int, InetAddress)  (1 usage found)
+                            (148: 7) LOG.debug("MOUNT UMNTALL : " + " client: " + client);
+                org.apache.hadoop.hdfs.nfs.nfs3  (172 usages found)
+                    AsyncDataService.java  (6 usages found)
+                        execute(Runnable)  (1 usage found)
+                            (70: 7) LOG.debug("Current active thread number: " + executor.getActiveCount()
+                        shutdown()  (3 usages found)
+                            (83: 7) LOG.warn("AsyncDataService has already shut down.");
+                            (85: 7) LOG.info("Shutting down all async data service threads...");
+                            (90: 7) LOG.info("All async data service threads have been shut down");
+                        writeAsync(OpenFileCtx)  (1 usage found)
+                            (99: 7) LOG.debug("Scheduling write back task for fileId: "
+                        run()  (1 usage found)
+                            (136: 9) LOG.error("Asyn data service got error:"
+                    DFSClientCache.java  (1 usage found)
+                        get(String)  (1 usage found)
+                            (67: 7) LOG.error("Create DFSClient failed for user:" + uname);
+                    OpenFileCtx.java  (46 usages found)
+                        updateNonSequentialWriteInMemory(long)  (2 usages found)
+                            (102: 7) LOG.debug("Update nonSequentialWriteInMemory by " + count + " new value:"
+                            (107: 7) LOG.error("nonSequentialWriteInMemory is negative after update with count "
+                        lockCtx()  (1 usage found)
+                            (137: 7) LOG.trace("lock ctx, caller:" + methodName);
+                        unlockCtx()  (1 usage found)
+                            (148: 7) LOG.info("unlock ctx, caller:" + methodName);
+                        checkDump(long)  (8 usages found)
+                            (194: 9) LOG.debug("Do nothing, dump is disabled.");
+                            (205: 7) LOG.info("Create dump file:" + dumpFilePath);
+                            (209: 11) LOG.fatal("The dump file should not exist:" + dumpFilePath);
+                            (215: 9) LOG.error("Got failure when creating dump stream " + dumpFilePath
+                            (227: 9) LOG.error("Can't get random access to file " + dumpFilePath);
+                            (235: 7) LOG.debug("Start dump, current write number:" + pendingWrites.size());
+                            (247: 9) LOG.error("Dump data failed:" + writeCtx + " with error:" + e);
+                            (254: 7) LOG.fatal("After dump, nonSequentialWriteInMemory is not zero: "
+                        checkRepeatedWriteRequest(WRITE3Request, Channel, int)  (1 usage found)
+                            (271: 9) LOG.warn("Got a repeated request, same range, with a different xid:"
+                        receivedNewWrite(DFSClient, WRITE3Request, Channel, int, AsyncDataService, IdUserGroup)  (3 usages found)
+                            (286: 9) LOG.info("OpenFileCtx is inactive, fileId:"
+                            (301: 15) LOG.debug("Repeated write request which hasn't be served: xid="
+                            (306: 15) LOG.debug("Repeated write request which is already served: xid="
+                        receivedNewWriteInternal(DFSClient, WRITE3Request, Channel, int, AsyncDataService, IdUserGroup)  (6 usages found)
+                            (338: 7) LOG.debug("requesed offset=" + offset + " and current filesize="
+                            (344: 7) LOG.info("Add to the list, update nextOffset and notify the writer,"
+                            (372: 7) LOG.info("Add new write to the list but not update nextOffset:"
+                            (398: 7) LOG.warn("(offset,count,nextOffset):" + "(" + offset + "," + count + ","
+                            (404: 9) LOG.warn("Haven't noticed any partial overwrite out of a sequential file"
+                            (410: 11) LOG.debug("Process perfectOverWrite");
+                        processPerfectOverWrite(DFSClient, long, int, WriteStableHow, byte[], String, WccData, ...)  (5 usages found)
+                            (445: 9) LOG.error("Can't read back " + count + " bytes, partial read size:"
+                            (452: 7) LOG.info("Read failed when processing possible perfect overwrite, path="
+                            (463: 7) LOG.info("Perfect overwrite has different content");
+                            (467: 7) LOG.info("Perfect overwrite has same content,"
+                            (474: 9) LOG.info("Got error when processing perfect overwrite, path=" + path
+                        checkCommitInternal(long)  (2 usages found)
+                            (519: 5) LOG.info("getFlushedOffset=" + flushed + " commitOffset=" + commitOffset);
+                            (533: 7) LOG.error("Got stream error during data sync:" + e);
+                        streamCleanup(long, long)  (2 usages found)
+                            (565: 9) LOG.trace("Another thread is working on it" + ctxLock.toString());
+                            (573: 9) LOG.info("closing stream for fileId:" + fileId);
+                        executeWriteBack()  (7 usages found)
+                            (597: 11) LOG.fatal("The openFileCtx has false async status");
+                            (604: 13) LOG.debug("The asyn write task has no pendding writes, fileId: "
+                            (611: 13) LOG.debug("The openFileCtx is not active anymore, fileId: "
+                            (621: 11) LOG.trace("key.getMin()=" + key.getMin() + " nextOffset="
+                            (627: 13) LOG.info("The next sequencial write has not arrived yet");
+                            (633: 11) LOG.fatal("Got a overlapping write (" + key.getMin() + ","
+                            (640: 13) LOG.trace("Remove write(" + key.getMin() + "-" + key.getMax()
+                        doSingleWrite(WriteCtx)  (4 usages found)
+                            (674: 7) LOG.error("Failed to get request data offset:" + offset + " count:"
+                            (683: 5) LOG.info("do write, fileId: " + handle.getFileId() + " offset: " + offset
+                            (709: 7) LOG.error("Error writing to fileId " + handle.getFileId() + " at offset "
+                            (717: 7) LOG.info("Clean up open file context for fileId: "
+                        cleanup()  (4 usages found)
+                            (733: 7) LOG.info("Can't close stream for fileId:" + latestAttr.getFileid()
+                            (738: 5) LOG.info("There are " + pendingWrites.size() + " pending writes.");
+                            (742: 7) LOG.info("Fail pending write: (" + key.getMin() + "," + key.getMax()
+                            (772: 7) LOG.error("Failed to delete dumpfile: "+ dumpFile);
+                    RpcProgramNfs3.java  (104 usages found)
+                        clearDirectory(String)  (2 usages found)
+                            (172: 7) LOG.info("Delete current dump directory " + writeDumpDir);
+                            (178: 5) LOG.info("Create new dump directory " + writeDumpDir);
+                        nullProcedure()  (1 usage found)
+                            (190: 7) LOG.debug("NFS NULL");
+                        getattr(XDR, RpcAuthSys)  (4 usages found)
+                            (208: 7) LOG.error("Invalid GETATTR request");
+                            (215: 7) LOG.trace("GETATTR for fileId: " + handle.getFileId());
+                            (222: 7) LOG.info("Can't get file attribute, fileId=" + handle.getFileId());
+                            (227: 7) LOG.error("Can't get path for fileId:" + handle.getFileId());
+                        setattrInternal(DFSClient, String, SetAttr3, boolean)  (2 usages found)
+                            (243: 9) LOG.debug("set new mode:" + newAttr.getMode());
+                            (263: 9) LOG.debug("set atime:" + +atime + " mtime:" + mtime);
+                        setattr(XDR, RpcAuthSys)  (6 usages found)
+                            (282: 7) LOG.error("Invalid SETATTR request");
+                            (289: 7) LOG.debug("NFS SETATTR fileId: " + handle.getFileId());
+                            (293: 7) LOG.error("Setting file size is not supported when setattr, fileId: "
+                            (304: 9) LOG.info("Can't get path for fileId:" + handle.getFileId());
+                            (323: 7) LOG.warn("Exception ", e);
+                            (329: 9) LOG.info("Can't get postOpAttr for fileIdPath: " + fileIdPath);
+                        lookup(XDR, RpcAuthSys)  (5 usages found)
+                            (352: 7) LOG.error("Invalid LOOKUP request");
+                            (359: 7) LOG.debug("NFS LOOKUP dir fileId: " + dirHandle.getFileId() + " name: "
+                            (369: 11) LOG.debug("NFS LOOKUP fileId: " + dirHandle.getFileId() + " name:"
+                            (381: 9) LOG.info("Can't get path for dir fileId:" + dirHandle.getFileId());
+                            (389: 7) LOG.warn("Exception ", e);
+                        access(XDR, RpcAuthSys)  (4 usages found)
+                            (407: 7) LOG.error("Invalid ACCESS request");
+                            (415: 7) LOG.debug("NFS ACCESS fileId: " + handle.getFileId());
+                            (423: 9) LOG.error("Can't get path for fileId:" + handle.getFileId());
+                            (431: 7) LOG.warn("Exception ", e);
+                        read(XDR, RpcAuthSys)  (6 usages found)
+                            (454: 7) LOG.error("Invalid READ request");
+                            (464: 7) LOG.debug("NFS READ fileId: " + handle.getFileId() + " offset: " + offset
+                            (478: 11) LOG.debug("Get error accessing file, fileId:" + handle.getFileId());
+                            (484: 11) LOG.debug("Can't get path for fileId:" + handle.getFileId());
+                            (512: 9) LOG.info("Partical read. Asked offset:" + offset + " count:" + count
+                            (524: 7) LOG.warn("Read error: " + e.getClass() + " offset: " + offset
+                        write(XDR, Channel, int, RpcAuthSys)  (7 usages found)
+                            (545: 7) LOG.error("Invalid WRITE request");
+                            (554: 7) LOG.error("Invalid argument, data size is less than count in request");
+                            (560: 7) LOG.debug("NFS WRITE fileId: " + handle.getFileId() + " offset: "
+                            (569: 9) LOG.error("Can't get path for fileId:" + handle.getFileId());
+                            (573: 9) LOG.debug("requesed offset=" + offset + " and current filesize="
+                            (580: 7) LOG.info("Error writing to fileId " + handle.getFileId() + " at offset "
+                            (587: 9) LOG.info("Can't get postOpAttr for fileId: " + handle.getFileId());
+                        create(XDR, RpcAuthSys)  (8 usages found)
+                            (612: 7) LOG.error("Invalid CREATE request");
+                            (619: 7) LOG.debug("NFS CREATE dir fileId: " + dirHandle.getFileId()
+                            (626: 7) LOG.error("Setting file size is not supported when creating file: "
+                            (640: 9) LOG.error("Can't get path for dirHandle:" + dirHandle);
+                            (672: 7) LOG.error("Exception", e);
+                            (677: 11) LOG.error("Can't close stream for dirFileId:" + dirHandle.getFileId()
+                            (686: 11) LOG.error("Can't get postOpDirAttr for dirFileId:"
+                            (705: 7) LOG.debug("open stream for file:" + fileName + ", fileId:"
+                        mkdir(XDR, RpcAuthSys)  (5 usages found)
+                            (727: 7) LOG.error("Invalid MKDIR request");
+                            (734: 7) LOG.error("Setting file size is not supported when mkdir: " + fileName
+                            (747: 9) LOG.info("Can't get path for dir fileId:" + dirHandle.getFileId());
+                            (777: 7) LOG.warn("Exception ", e);
+                            (783: 11) LOG.info("Can't get postOpDirAttr for " + dirFileIdPath);
+                        remove(XDR, RpcAuthSys)  (5 usages found)
+                            (815: 7) LOG.error("Invalid REMOVE request");
+                            (821: 7) LOG.debug("NFS REMOVE dir fileId: " + dirHandle.getFileId()
+                            (831: 9) LOG.info("Can't get path for dir fileId:" + dirHandle.getFileId());
+                            (859: 7) LOG.warn("Exception ", e);
+                            (865: 11) LOG.info("Can't get postOpDirAttr for " + dirFileIdPath);
+                        rmdir(XDR, RpcAuthSys)  (5 usages found)
+                            (890: 7) LOG.error("Invalid RMDIR request");
+                            (897: 7) LOG.debug("NFS RMDIR dir fileId: " + dirHandle.getFileId()
+                            (907: 9) LOG.info("Can't get path for dir fileId:" + dirHandle.getFileId());
+                            (942: 7) LOG.warn("Exception ", e);
+                            (948: 11) LOG.info("Can't get postOpDirAttr for " + dirFileIdPath);
+                        rename(XDR, RpcAuthSys)  (6 usages found)
+                            (973: 7) LOG.error("Invalid RENAME request");
+                            (982: 7) LOG.debug("NFS RENAME from: " + fromHandle.getFileId() + "/" + fromName
+                            (995: 9) LOG.info("Can't get path for fromHandle fileId:"
+                            (1002: 9) LOG.info("Can't get path for toHandle fileId:" + toHandle.getFileId());
+                            (1019: 7) LOG.warn("Exception ", e);
+                            (1027: 9) LOG.info("Can't get postOpDirAttr for " + fromDirFileIdPath + " or"
+                        readdir(XDR, RpcAuthSys)  (9 usages found)
+                            (1060: 7) LOG.error("Invalid READDIR request");
+                            (1066: 7) LOG.error("Invalid READDIR request, with negitve cookie:" + cookie);
+                            (1071: 7) LOG.info("Nonpositive count in invalid READDIR request:" + count);
+                            (1076: 7) LOG.debug("NFS READDIR fileId: " + handle.getFileId() + " cookie: "
+                            (1088: 9) LOG.info("Can't get path for fileId:" + handle.getFileId());
+                            (1092: 9) LOG.error("Can't readdir for regular file, fileId:"
+                            (1098: 9) LOG.error("CookierVerf mismatch. request cookierVerf:" + cookieVerf
+                            (1128: 9) LOG.error("Can't get path for fileId:" + handle.getFileId());
+                            (1132: 7) LOG.warn("Exception ", e);
+                        readdirplus(XDR, RpcAuthSys)  (11 usages found)
+                            (1192: 7) LOG.error("Invalid READDIRPLUS request");
+                            (1199: 7) LOG.error("Invalid READDIRPLUS request, with negitve cookie:" + cookie);
+                            (1204: 7) LOG.info("Nonpositive count in invalid READDIRPLUS request:" + dirCount);
+                            (1210: 7) LOG.debug("NFS READDIRPLUS fileId: " + handle.getFileId() + " cookie: "
+                            (1222: 9) LOG.info("Can't get path for fileId:" + handle.getFileId());
+                            (1226: 9) LOG.error("Can't readdirplus for regular file, fileId:"
+                            (1232: 9) LOG.error("CookierVerf mismatch. request cookierVerf:" + cookieVerf
+                            (1262: 9) LOG.info("Can't get path for fileId:" + handle.getFileId());
+                            (1266: 7) LOG.warn("Exception ", e);
+                            (1293: 11) LOG.error("Can't get file attributes for fileId:" + fileId
+                            (1311: 11) LOG.error("Can't get file attributes for fileId:" + fileId
+                        fsstat(XDR, RpcAuthSys)  (4 usages found)
+                            (1339: 7) LOG.error("Invalid FSSTAT request");
+                            (1345: 7) LOG.debug("NFS FSSTAT fileId: " + handle.getFileId());
+                            (1357: 9) LOG.info("Can't get path for fileId:" + handle.getFileId());
+                            (1372: 7) LOG.warn("Exception ", e);
+                        fsinfo(XDR, RpcAuthSys)  (4 usages found)
+                            (1390: 7) LOG.error("Invalid FSINFO request");
+                            (1396: 7) LOG.debug("NFS FSINFO fileId: " + handle.getFileId());
+                            (1407: 9) LOG.info("Can't get path for fileId:" + handle.getFileId());
+                            (1417: 7) LOG.warn("Exception ", e);
+                        pathconf(XDR, RpcAuthSys)  (4 usages found)
+                            (1435: 7) LOG.error("Invalid PATHCONF request");
+                            (1443: 7) LOG.debug("NFS PATHCONF fileId: " + handle.getFileId());
+                            (1450: 9) LOG.info("Can't get path for fileId:" + handle.getFileId());
+                            (1457: 7) LOG.warn("Exception ", e);
+                        commit(XDR, RpcAuthSys)  (5 usages found)
+                            (1475: 7) LOG.error("Invalid COMMIT request");
+                            (1482: 7) LOG.debug("NFS COMMIT fileId: " + handle.getFileId() + " offset="
+                            (1491: 9) LOG.info("Can't get path for fileId:" + handle.getFileId());
+                            (1510: 7) LOG.warn("Exception ", e);
+                            (1515: 9) LOG.info("Can't get postOpAttr for fileId: " + handle.getFileId());
+                        handleInternal(RpcCall, XDR, XDR, InetAddress, Channel)  (1 usage found)
+                            (1540: 9) LOG.info("Wrong RPC AUTH flavor, "
+                    WriteCtx.java  (2 usages found)
+                        dumpData(FileOutputStream, RandomAccessFile)  (2 usages found)
+                            (73: 9) LOG.trace("No need to dump with status(replied,dataState):" + "("
+                            (82: 7) LOG.debug("After dump, new dumpFileOffset:" + dumpFileOffset);
+                    WriteManager.java  (13 usages found)
+                        addOpenFileStream(FileHandle, OpenFileCtx)  (1 usage found)
+                            (72: 7) LOG.debug("After add the new stream " + h.getFileId()
+                        WriteManager(IdUserGroup, Configuration)  (2 usages found)
+                            (82: 5) LOG.info("Stream timeout is " + streamTimeout + "ms.");
+                            (84: 7) LOG.info("Reset stream timeout to minimum value "
+                        handleWrite(DFSClient, WRITE3Request, Channel, int, Nfs3FileAttributes)  (2 usages found)
+                            (123: 7) LOG.debug("handleWrite fileId: " + handle.getFileId() + " offset: "
+                            (131: 7) LOG.info("No opened stream for fileId:" + fileHandle.getFileId());
+                        handleCommit(FileHandle, long)  (4 usages found)
+                            (165: 7) LOG.info("No opened stream for fileId:" + fileHandle.getFileId()
+                            (177: 9) LOG.info("Inactive stream, fileId=" + fileHandle.getFileId()
+                            (187: 9) LOG.debug("Not committed yet, wait., fileId=" + fileHandle.getFileId()
+                            (197: 9) LOG.info("Commit is interrupted, fileId=" + fileHandle.getFileId()
+                        run()  (4 usages found)
+                            (251: 11) LOG.trace("openFileMap size:" + openFileMap.size());
+                            (259: 15) LOG.debug("After remove stream " + pairs.getKey().getFileId()
+                            (270: 15) LOG.trace("StreamMonitor can still have a sleep:"
+                            (278: 11) LOG.info("StreamMonitor got interrupted");
+            hadoop-main  (6,668 usages found)
+                /home/mtoth/skola/dp/hadoop-common/hadoop-common-project/hadoop-auth-examples/src/main/java/org/apache/hadoop/security/authentication/examples  (2 usages found)
+                    RequestLoggerFilter.java  (2 usages found)
+                        doFilter(ServletRequest, ServletResponse, FilterChain)  (2 usages found)
+                            (57: 9) LOG.debug(xRequest.getResquestInfo().toString());
+                            LOG.CONFIGURATION_NOT_FOUND("krb5", "EMPTY_REALM").tag("org.apache.hadoop.KerberosServer").tag("AUTHENTICATION").debug();
+
+                            (61: 9) LOG.debug(xResponse.getResponseInfo().toString());
+                            LOG.HTTP_REQUEST_FILTER_EXAMPLE(xRequest.getResquestInfo().toString()).tag("org.apache.hadoop.KerberosServer").tag("AUTHENTICATION").debug();
+
+                /home/mtoth/skola/dp/hadoop-common/hadoop-common-project/hadoop-auth/src/main/java/org/apache/hadoop/security/authentication/client  (5 usages found)
+                    KerberosAuthenticator.java  (5 usages found)
+                        authenticate(URL, Token)  (3 usages found)
+                            (162: 9) LOG.debug("JDK performed authentication on our behalf.");
+                            LOG.AUTHENTICATION("PERFORMED_BY_JDK").tag("org.apache.hadoop.KerberosClient").debug();
+
+                            (170: 9) LOG.debug("Performing our own SPNEGO sequence.");
+                            LOG.EXECUTED_SPNEGO_SEQUENCE().tag("org.apache.hadoop.KerberosClient").tag("AUTHENTICATION").debug();
+
+                            (173: 9) LOG.debug("Using fallback authenticator sequence.");
+                            LOG.USING_FALLBACK_SEQUENCE.tag("org.apache.hadoop.KerberosClient").tag("AUTHENTICATION").debug();
+
+                        doSpnegoSequence(Token)  (2 usages found)
+                            (220: 9) LOG.debug("No subject in context, logging in");
+                            LOG.LOGGING_IN("NO_SUBJECT").tag("org.apache.hadoop.KerberosClient").debug();
+
+                            (228: 9) LOG.debug("Using subject: " + subject);
+                            LOG.LOGGING_IN(subject).tag("org.apache.hadoop.KerberosClient").debug();
+
+                /home/mtoth/skola/dp/hadoop-common/hadoop-common-project/hadoop-auth/src/main/java/org/apache/hadoop/security/authentication/server  (12 usages found)
+                    AuthenticationFilter.java  (5 usages found)
+                        init(FilterConfig)  (1 usage found)
+                            (158: 7) LOG.warn("'signature.secret' configuration not set, using a random value as secret");
+                            LOG.FIELD_NOT_SET("signature.secret").tag("org.apache.hadoop.KerberosServer").tag("AUTHENTICATION_CONFIG").warn();
+
+                        doFilter(ServletRequest, ServletResponse, FilterChain)  (4 usages found)
+                            (341: 9) LOG.warn("AuthenticationToken ignored: " + ex.getMessage());
+                            LOG.TOKEN_IGNORED(ex.getMessage()).tag("org.apache.hadoop.KerberosServer").warn();
+
+                            (347: 13) LOG.debug("Request [{}] triggering authentication", getRequestURL(httpRequest));
+                            (359: 13) LOG.debug("Request [{}] user [{}] authenticated", getRequestURL(httpRequest), token.getUserName());
+                            LOG.REQUEST_TRIGGERED_AUTHENTICATION(getRequestURL(httpRequest)).tag("org.apache.hadoop.KerberosServer").debug();
+
+                            (391: 7) LOG.warn("Authentication exception: " + ex.getMessage(), ex);
+                            LOG.AUTHENTICATED_USER(token.getUserName(), "request", getRequestURL(httpRequest)).tag("org.apache.hadoop.KerberosServer").debug();
+
+                    KerberosAuthenticationHandler.java  (7 usages found)
+                        init(Properties)  (2 usages found)
+                            (167: 7) LOG.info("Login using keytab "+keytab+", for principal "+principal);
+                            LOG.AUTHENTICATION_ERROR(ex.getMessage()).tag("org.apache.hadoop.KerberosServer").warn();
+
+                            (183: 7) LOG.info("Initialized, principal [{}] from keytab [{}]", principal, keytab);
+                            LOG.LOGIN_USING("KEYTAB", keytab, "PRINCIPAL", principal).tag("org.apache.hadoop.KerberosServer").info();
+
+                        destroy()  (1 usage found)
+                            (202: 7) LOG.warn(ex.getMessage(), ex);
+                            LOG.INITIALIZED_PRINCIPAL(principal, "FROM_KEYTAB", keytab).tag("org.apache.hadoop.KerberosServer").info();
+
+                        authenticate(HttpServletRequest, HttpServletResponse)  (4 usages found)
+                            (280: 9) LOG.trace("SPNEGO starting");
+                            LOG.LOGIN_ERROR(ex.getMessage()).tag("org.apache.hadoop.KerberosServer").warn();
+
+                            (282: 9) LOG.warn("'" + KerberosAuthenticator.AUTHORIZATION + "' does not start with '" +
+                            LOG.STARTING_SPNEGO().tag("org.apache.hadoop.KerberosServer").trace();
+
+                            (307: 17) LOG.trace("SPNEGO in progress");
+                            LOG.WRONG_FORMAT(authorization).tag("org.apache.hadoop.KerberosServer").tag("AUTHENTICATION").warn();
+
+                            (314: 17) LOG.trace("SPNEGO completed for principal [{}]", clientPrincipal);
+                            LOG.SPNEGO_IN_PROGRESS().tag("org.apache.hadoop.KerberosServer").tag("AUTHENTICATION").trace();
+
+                /home/mtoth/skola/dp/hadoop-common/hadoop-common-project/hadoop-auth/src/main/java/org/apache/hadoop/security/authentication/util  (1 usage found)
+                    KerberosName.java  (1 usage found)
+                            (87: 9) LOG.debug("Kerberos krb5 configuration not found, setting default realm to empty");
+                            LOG.SPNEGO_COMPLETED_FOR_PRINCIPAL(clientPrincipal).tag("org.apache.hadoop.KerberosServer").trace();
+
+                /home/mtoth/skola/dp/hadoop-common/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/conf  (30 usages found)
+                    Configuration.java  (24 usages found)
+                        handleDeprecation()  (2 usages found)
+                            (464: 5) LOG.debug("Handling deprecation for all properties in config...");
+                            LOG.HANDLING_DEPRECATIONS().tag("org.apache.haddop.conf").tag("CONFIGURATION").debug();
+
+                            (468: 7) LOG.debug("Handling deprecation for " + (String)item);
+                            LOG.HANDLING_DEPRECATION_FOR((String)item).tag("org.apache.hadoop.conf").tag("CONFIGURATION").debug();
+
+                        substituteVars(String)  (1 usage found)
+                            (689: 9) LOG.warn("Unexpected SecurityException in Configuration", se);
+                            LOG.UNEXPECTED_SECURITY_EXCEPTION().tag("org.apache.hadoop.conf").tag("CONFIGURATION").warn();
+
+                        warnOnceIfDeprecated(String)  (1 usage found)
+                            (839: 7) LOG.warn(keyInfo.getWarningMessage(name));
+                            LOG.DEPRECATED_KEY(keyInfo.getWarningMessage(name)).tag("org.apache.hadoop.conf").tag("DEPRECATION").warn();
+
+                        getTimeDuration(String, long, TimeUnit)  (1 usage found)
+                            (1228: 7) LOG.warn("No unit for " + name + "(" + vStr + ") assuming " + unit);
+                        getPattern(String, Pattern)  (1 usage found)
+                            (1253: 7) LOG.warn("Regular expression '" + valString + "' for property '" +
+                            LOG.NOT_VALID_REGULAR_EXPRESSION(valString, "property", name, "using default", pse).tag("org.apache.hadoop.conf").warn();
+
+                        getLocalPath(String, String)  (2 usages found)
+                            (1822: 5) LOG.warn("Could not make " + path + 
+                            LOG.UNABLE_TO_CREATE_FILE(path, "in directory", dirsProp).tag("org.apache.hadoop.conf").warn();
+
+                            (1826: 7) LOG.warn(dirsProp + "[" + index + "]=" + dirs[index]);
+                            LOG.DIRECTORY_ON_INDEX(dirsProp + "[" + index + "]=" + dirs[index]).tag("org.apache.hadoop.conf").warn();
+
+                        getConfResourceAsInputStream(String)  (2 usages found)
+                            (1878: 9) LOG.info(name + " not found");
+                            LOG.RESOURCE_NOT_FOUND(name).tag("org.apache.hadoop.conf").info();
+
+                            (1881: 9) LOG.info("found resource " + name + " at " + url);
+                            LOG.RESOURCE_FOUND(name, "location", url).tag("org.apache.hadoop.conf").tag("INPUTSTREAM").info();
+
+                        getConfResourceAsReader(String)  (2 usages found)
+                            (1902: 9) LOG.info(name + " not found");
+                            (1905: 9) LOG.info("found resource " + name + " at " + url);
+                            LOG.RESOURCE_FOUND(name, "location", url).tag("org.apache.hadoop.conf").tag("READER").info();
+
+                        parse(DocumentBuilder, URL)  (1 usage found)
+                            (1973: 7) LOG.debug("parsing URL " + url);
+                        parse(DocumentBuilder, InputStream, String)  (1 usage found)
+                            (1984: 7) LOG.debug("parsing input stream " + is);
+                        loadResource(Properties, Resource, boolean)  (8 usages found)
+                            (2035: 9) LOG.error("Failed to set setXIncludeAware(true) for parser "
+                            LOG.FAILED_TO_SET_DOCBUILDERFACTORY("setXIncludeAware(true)", docBuilderFactory, e).tag("org.apache.hadoop.conf").error();
+
+                            (2057: 13) LOG.debug("parsing File " + file);
+                            (2085: 9) LOG.fatal("bad conf file: top-level element not <configuration>");
+                            LOG.WRONG_FILE_FORMAT("top-level element not <configuration>").tag("org.apache.hadoop.conf").fatal();
+
+                            (2097: 11) LOG.warn("bad conf file: element not <property>");
+                            LOG.WRONG_FILE_FORMAT("element not <property>").tag("org.apache.hadoop.conf").warn();
+
+                            (2146: 7) LOG.fatal("error parsing conf " + name, e);
+                            LOG.ERROR_PARSING_CONF(name, e).tag("org.apache.hadoop.conf").fatal();
+
+                            (2149: 7) LOG.fatal("error parsing conf " + name, e);
+                            (2152: 7) LOG.fatal("error parsing conf " + name, e);
+                            (2155: 7) LOG.fatal("error parsing conf " + name , e);
+                        loadProperty(Properties, String, String, String, boolean, String[])  (1 usage found)
+                            (2173: 9) LOG.warn(name+":an attempt to override final parameter: "+attr
+                            LOG.IGNORING_PARAMETER(name, attr).tag("org.apache.hadoop.conf").warn();
+
+                        (480: 7) LOG.warn("DEPRECATED: hadoop-site.xml found in the classpath. " +

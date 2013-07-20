@@ -83,7 +83,7 @@ def merge_log_files(file_old, file_new):
         f_write.write(newline)
     f_write.close()
 
-    print "Swapped= ", i, "out of" len(logs_to_change)
+    print "Swapped= ", i, "out of", len(logs_to_change)
     f_error.write("Following logs were not matched, so they were not modified in new file. Add them manually.\n\n")
     for old, new in logs_to_change:        
         f_error.write(old+"\n")
@@ -91,7 +91,7 @@ def merge_log_files(file_old, file_new):
 
 
 # old input file with logs written, new output file w/o logs
-merge_log_files("/home/mtoth/skola/dp/LogFilterBase/Log-change/hadoop-all-prod-log-export.txt", "hadoop-new-logs-no-tests.txt")
+#merge_log_files("/home/mtoth/skola/dp/LogFilterBase/Log-change/hadoop-all-prod-log-export.txt", "hadoop-new-logs-no-tests.txt")
 
 
 # Remove test classes and logs from log-file exported from idea
@@ -208,3 +208,16 @@ def search_my_logs():
         match = pattern.match(line)
         if match:
             print match.group()
+
+
+def findnth(haystack, needle, n):
+    parts = haystack.split(needle, n+1)
+    print parts[-1]
+    if len(parts)<=n+1:
+        return -1
+    return len(haystack)-len(parts[-1])-len(needle)
+
+
+print findnth("org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo", ".", 5)
+
+

@@ -1020,12 +1020,10 @@ Found usages  (6,891 usages found)
                             (86: 9) log.warn(logPrefix + ": " + line);          
                     ZKFailoverController.java  (28 usages found)
                         run(String[])  (1 usage found)
-                            (154: 7) LOG.fatal("Automatic failover is not enabled for " + localTarget + "." +
-                            " Please ensure that automatic failover is enabled in the configuration before running the ZK failover controller.");
+                            (154: 7) LOG.fatal("Automatic failover is not enabled for " + localTarget + "." + " Please ensure that automatic failover is enabled in the configuration before running the ZK failover controller.");
 
                         doRun(String[])  (3 usages found)
-                            (186: 7) LOG.fatal("Unable to start failover controller. Unable to connect "
-                            + "Parent znode does not exist.\n" + "Run with -formatZK flag to initialize ZooKeeper.");
+                            (186: 7) LOG.fatal("Unable to start failover controller. Unable to connect "+ "Parent znode does not exist.\n" + "Run with -formatZK flag to initialize ZooKeeper.");
 
                             (212: 7) LOG.fatal("Unable to start failover controller. "
                             (221: 7) LOG.fatal("Fencing is not configured for " + localTarget + ".\n" +
@@ -1120,7 +1118,7 @@ Found usages  (6,891 usages found)
                     HttpServer.java  (13 usages found)
                         HttpServer(String, String, int, boolean, Configuration, AccessControlList, Connector, ...)  (1 usage found)
                             (281: 9) LOG.info("adding path spec: " + path);
-                            LOGADDING_PATH_SPECIFICATION(path).tag("org.apache.hadoop.http").info();
+                            LOG.ADDING_PATH_SPECIFICATION(path).tag("org.apache.hadoop.http").info();
 
                         addJerseyResourcePackage(String, String)  (1 usage found)
                             (430: 5) LOG.info("addJerseyResourcePackage: packageName=" + packageName
@@ -1538,8 +1536,7 @@ Found usages  (6,891 usages found)
                             (928: 8) LOG.warn("Protocol "  + protocolClass + 
                             LOG.PROTOCOL_NOT_REGISTERED_UNABLE_TO_GET_PROTOCOL_VERSION(protocolClass).tag("org.apache.hadoop.ipc").warn();
 
-                            (936: 6) LOG.debug("RpcKind = " + rpcKind + " Protocol Name = " + protocolName +  " version=" + version +
-                            " ProtocolImpl=" + protocolImpl.getClass().getName() + " protocolClass=" + protocolClass.getName());
+                            (936: 6) LOG.debug("RpcKind = " + rpcKind + " Protocol Name = " + protocolName +  " version=" + version + " ProtocolImpl=" + protocolImpl.getClass().getName() + " protocolClass=" + protocolClass.getName());
 
                         getHighestSupportedProtocol(RpcKind, String)  (1 usage found)
                             (977: 8) LOG.debug("Size of protoMap for " + rpcKind + " ="
@@ -1564,7 +1561,7 @@ Found usages  (6,891 usages found)
 
                         cleanupConnections(boolean)  (1 usage found)
                             (643: 15) LOG.debug(getName() + ": disconnecting client " + c.getHostAddress());
-                            String thread = getName();
+                                String thread = getName();
 
                         run()  (3 usages found)
                             (658: 7) LOG.info(getName() + ": starting");
