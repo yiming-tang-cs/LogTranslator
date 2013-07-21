@@ -209,15 +209,3 @@ def search_my_logs():
         if match:
             print match.group()
 
-
-def findnth(haystack, needle, n):
-    parts = haystack.split(needle, n+1)
-    print parts[-1]
-    if len(parts)<=n+1:
-        return -1
-    return len(haystack)-len(parts[-1])-len(needle)
-
-
-print findnth("org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo", ".", 5)
-
-

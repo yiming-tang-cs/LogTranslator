@@ -4,7 +4,8 @@ import re
 
 BASE_PATH="/home/mtoth/skola/dp/hadoop-common"
 #LOG_FILE="/home/mtoth/skola/dp/LogFilterBase/Log-change/hadoop-all-prod-log-export.txt"
-LOG_FILE="/home/mtoth/skola/dp/LogFilterBase/Log-change/hadoop-rewritten-logs"
+LOG_FILE="/home/mtoth/skola/dp/LogFilterBase/Log-change/hadoop-rewritten-logs"#-short"
+NEW_FILE="/home/mtoth/skola/dp/LogFilterBase/Log-change/logs-generated"
 
 APPLICATION_NAMESPACE="org.apache.hadoop"
 
@@ -26,6 +27,7 @@ class LogChanger:
 
     def __str__(self):
         return "LogChanger={\n" + self.file_path + "\n" + str(self.log_position) + "\nOLD=" + self.old_log + "\nNEW=" +  self.new_log + "\n}"
+
 
 
 # Insert logger declaration and definition into java file
@@ -96,46 +98,156 @@ def is_my_log(line):
     pattern = re.compile(r'^LOG\.[A-Z_]+\(*')
     return pattern.match(line.strip())
 
-
-
 # def is_generated_log(log):
 #     "LOG..tag().LEVEL();"
 #     return False
 
-# 
 def findnth(haystack, n):
     parts = haystack.split(".", n+1)
     return len(haystack)-len(parts[-1])-1
+
+# Too simple
+def parse_message(line):
+    message = ""
+    if (line.count('"') == 2) and (line.find("{") == -1):
+            message = line[line.find('"')+1:line.rfind('"')].strip()
+            # message = message.replace("-", "_").upper()
+            message = message.replace(" ", "_").upper()            
+
+            #remove all but alfa-num characters                        
+            message = re.sub(r'[\W]+', "", message).strip()
+            message = message.replace("__", "_")
+            if message.startswith('_'): 
+                message = message[1:]                
+    return message
+
+def get_all_pluses(line):
+    pluses = line.count("+")
+    if pluses > 0:
+        plus_positions = []
+        quote_positions = []
+        pos = 0
+        for c in line:
+            if c == "+":
+                plus_positions.append(pos)
+            if c == "\"":
+                quote_positions.append(pos)
+            pos = pos + 1
+        return plus_positions, quote_positions
+    else:
+        return None
+# TODO
+def parse_variables(line):
+    variables = []
+    variable = ""
+
+    plus_count = line.count("+")
+    if line.find("\"") == -1:    
+        variable = line.strip()
+
+    elif plus_count != 0:
+    # there is at least one variable and text (which we ignore)
+        plus_pos = line.find("+")                
+        
+        if plus_count == 1:
+            # ""+var or var+""
+            quote_pos = line.find("\"")
+            if plus_pos < quote_pos:
+                variable = line[:plus_pos]
+            else:
+                variable = line[plus_pos+1:]
+            variable = variable.strip()
+        
+        if plus_count >= 2:
+            # +var+
+            pluses, quotes = get_all_pluses(line)
+            #print line, pluses, quotes
+
+            for i in range(0, len(pluses)-1):
+
+                # if there is " between + + take borders  
+                if "\"" in line[pluses[i]:pluses[i+1]]:
+                    if i == 0:
+                        variables.append(line[:pluses[i]].strip())                        
+                    else:
+                        # take all on left
+                        variables.append(line[pluses[i-1]+1:pluses[i]].strip())
+                        #print variables, line
+
+                        # take on right until next + or stop
+                        if i == len(pluses)-1:
+                            #print i
+                            variables.append(line[pluses[i]:pluses[i+1]])
+                        # else:
+                        #     variables.append(line[pluses[i]:])
+                    i = i + 1
+                else:
+                    # variable is between
+                    variables.append(line[pluses[i]+1:pluses[i+1]].strip())
+                    #i = i + 1 #??
+                print i, pluses, variables, line
+
+            # for i in range(0, len(pluses)):
+            #     if pluses[i] < quotes[i]:
+            #         if i == 0:
+            #             variables.append(line[:pluses[i]].strip())
+            #         else:
+            #             variables.append(line[pluses[i-1]:pluses[i]].strip())
+            #     else:
+            #         #get position of the closest quote-pair
+            #         if i+2 in range(0, len(quotes)):
+            #             if pluses[i] < quotes[i+2]:
+            #                 pass
+
+
+
+    if "," in variable:
+        variables = [var.strip() for var in variable.split(",")]
+
+    #print variable, line +"\n"
+    if variables == []:
+        variables.append(variable)
+
+    #print variables, line
+    return variables
 
 
 # Simple Log generator. Checks for ";"
 def generate_log(log_line, logChanger):    
     message = ""
-    variable = ""
+    variables = []
     simple_log, pos = parse_position(log_line) 
 
     # parse namespace from full_path
     ns = APPLICATION_NAMESPACE.replace("/", ".")
     path = logChanger.file_path.replace("/", ".")
     module = path[path.find(ns):path.rfind(".")]
-    dots = module.count(".")
     module = module[:module.rfind(".")]
     module = module[:findnth(module, MAXIMUM_MODULE_DEPTH)]
     
     level = simple_log[4:simple_log.find("(")] + "();"
 
-    if simple_log.endswith(";"):                
-        if (simple_log.count('"') == 2) and (simple_log.find("{") == -1):
-            message = simple_log[simple_log.find('"')+1:simple_log.rfind('"')].strip()
-            message = message.replace(" ", "_").upper()
+
+    if simple_log.endswith(";"):   
+    # change only whole logs              
+        # LOG.MESSAGE
+        message = parse_message(simple_log)   
+
+
+        # LOG.MESSAGE(VARIABLE)
+        sl = simple_log
+        variables = parse_variables(simple_log[sl.find("(")+1:sl.rfind(")")])
+
         
-        var_pos = simple_log.find("+")                    
-        if (var_pos != -1):
-            variable = simple_log[var_pos+1: simple_log.rfind(')')].strip()        
-    # else:
+    else:
         # if long is not whole or trivial, we won't change much,
+        # try to parse some messages at least 
         # except trivial "LOG..tag().LEVEL();"
-    generated_log = 'LOG.' + message + "("+ variable +').tag("' + module + '").' + level
+        # print simple_log
+        pass
+
+    generated_log = 'LOG.' + message + "(" + ', '.join(map(str, variables)) + ').tag("' + module + '").' + level    
+    #print simple_log, "\n", generated_log + "\n"
     return generated_log
 
 
@@ -208,12 +320,12 @@ def parse_log_file():
                 else:
                     # generate simple log
                     log.new_log = generate_log(parsed_line, log)
-
+                    #print log.new_log, parsed_line
 
                 #   CALL CHANGING FUNCTION IN REAL LOGS 
-                change_java_file(log)    
+                change_java_file(log)  
 
-
+        #write_to_file()
         previous_line = parsed_line
         l_number = l_number + 1
     
