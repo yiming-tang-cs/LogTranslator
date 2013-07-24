@@ -141,6 +141,8 @@ def parse_variables(line):
     variables = []
     variable = ""
 
+    print line
+
     plus_count = line.count("+")
     if line.find("\"") == -1:    
         variable = line.strip()
@@ -168,24 +170,26 @@ def parse_variables(line):
                 # if there is " between + + take borders  
                 if "\"" in line[pluses[i]:pluses[i+1]]:
                     if i == 0:
-                        variables.append(line[:pluses[i]].strip())                        
+                        variables.append(line[:pluses[i]].strip())   
+                    elif i == len(pluses):
+                        pass
+
                     else:
                         # take all on left
                         variables.append(line[pluses[i-1]+1:pluses[i]].strip())
                         #print variables, line
 
                         # take on right until next + or stop
-                        if i == len(pluses)-1:
-                            #print i
-                            variables.append(line[pluses[i]:pluses[i+1]])
-                        # else:
-                        #     variables.append(line[pluses[i]:])
-                    i = i + 1
+                    #     if i == len(pluses)-1:
+                    #         #print i
+                    #         variables.append(line[pluses[i]:pluses[i+1]])
+                    #     # else:
+                    #     #     variables.append(line[pluses[i]:])
+                    # i = i + 1
                 else:
                     # variable is between
-                    variables.append(line[pluses[i]+1:pluses[i+1]].strip())
-                    #i = i + 1 #??
-                print i, pluses, variables, line
+                    variables.append(line[pluses[i]+1:pluses[i+1]].strip())                    
+                #print i, pluses, variables, line
 
             # for i in range(0, len(pluses)):
             #     if pluses[i] < quotes[i]:
