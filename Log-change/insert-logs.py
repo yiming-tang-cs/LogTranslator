@@ -9,9 +9,10 @@ NEW_FILE = "/home/mtoth/skola/dp/LogFilterBase/Log-change/logs-generated"
 APPLICATION_NAMESPACE = "org.apache.hadoop"
 # if given log has no/empty message, use this one
 EMPTY_LOG_MESSAGE = "LOG"
+LOG_START = "LOG."
 # variable for limiting depth of namespace (org.apache.hadoop = 2 - "number of dots")
 MAXIMUM_MODULE_DEPTH = 6
-#
+
 # /home/mtoth/skola/dp/hadoop-common
 #                     ./hadoop-tools/hadoop-archives/src/main/java/org/apache/hadoop/tools/HadoopArchives.java
 # /home/mtoth/skola/dp/hadoop-common/hadoop-archives/src/main/java/org/apache/hadoop/tools/HadoopArchives.java
@@ -30,19 +31,18 @@ class LogChanger:
         "\nNEW=" +  self.new_log + "\n}"
 
 
-
 # Insert logger declaration and definition into java file
 def get_first_method():
     # TODO
     None
 
-# Find position in java file for substitution with new log
-def find_current_log():
-    # TODO
-    None
+# Incomplete logs (not ending ";") 
+def complete_java_log(simple_log, log_changer):
+    #print simple_log, log_changer
+    pass
 
 # TODO
-def change_java_file(log_changer):
+def insert_log_to_java_file(log_changer):
     # If in this file for 1st time, declare & define JSONLogger and Namespace 
     # Insert into java_file on appropriate position LOG
     #print log_changer
@@ -162,27 +162,15 @@ def generate_log(log_line, log_changer):
     module = module[:findnth(module, MAXIMUM_MODULE_DEPTH)]
     
     level = simple_log[4:simple_log.find("(")] + "();"
-
-
-    if simple_log.endswith(";"):   
     # change only whole logs              
-        # LOG.MESSAGE
-        message = parse_message(simple_log)   
-        # LOG.MESSAGE(VARIABLE)
-        sl = simple_log
-        variables = parse_variables(simple_log[sl.find("(")+1:sl.rfind(")")])
-        # print simple_log, "===> ", message, variables  
-
-    else:
-        # if long is not whole or trivial, we won't change much,
-        # try to parse some messages at least 
-        # except trivial "LOG..tag().LEVEL();"
-        # Go to appropriate java file and fetch WHOLE LOG! Don't be lazy!!!
-        print simple_log, log_changer
-        pass
-
-    generated_log = 'LOG.' + message + "(" + ', '.join(map(str, variables)) + ').tag("' + module + '").' + level    
-    print simple_log, "\n", generated_log + "\n"
+    # LOG.MESSAGE
+    message = parse_message(simple_log)   
+    # LOG.MESSAGE(VARIABLE)
+    sl = simple_log
+    variables = parse_variables(simple_log[sl.find("(")+1:sl.rfind(")")])
+    # print simple_log, "===> ", message, variables  
+    generated_log = LOG_START + message + "(" + ', '.join(map(str, variables)) + ').tag("' + module + '").' + level    
+    #print simple_log, "\n", generated_log + "\n"
     return generated_log
 
 
@@ -194,12 +182,13 @@ def parse_log_file():
 # 12 : parse_package(),
 # 16 : parse_namespace(),
 # 20 : parse_java_file(),
+# 24 : method name - NOT USED,
 # 28 : parse_log()
     fr = open(LOG_FILE, 'r')    
     l_number = 0    
     previous_line = None
     full_path = ''
-    log = LogChanger()
+    log = LogChanger()    
 
     for line in fr:   
         parsed_line = ""     
@@ -235,8 +224,15 @@ def parse_log_file():
                 log.file_path = full_path #setattr(log, 'file_path', full_path)         
             
         if space_counter == 28:
-            if previous_line.startswith('('):
-                log.old_log, log.log_position = parse_log(previous_line)
+            if previous_line.startswith('(') and parsed_line.startswith('LOG.'):
+                print "complete log=" + parsed_line
+                if parsed_line.endswith(";"):
+                    # TODO & CHECK
+                    insert_log_to_java_file(log)
+
+            elif parsed_line.startswith("("):
+                #print "pl (=", parsed_line
+                log.old_log, log.log_position = parse_log(parsed_line)
 
                 if is_my_log(parsed_line):
                     # this is my new log - insert it into appropriate FILE.java                                     
@@ -244,11 +240,21 @@ def parse_log_file():
    
                 else:
                     # generate simple log
+                    
+                    if not parsed_line.endswith(";"): 
+                        complete_java_log(parsed_line, log) 
+                        # if long is not whole or trivial, we won't change much,
+                        # try to parse some messages at least, except trivial "LOG..tag().LEVEL();"
+                        # Go to appropriate java file and fetch WHOLE LOG! Don't be lazy!!!
+    
                     log.new_log = generate_log(parsed_line, log)
                     #print log.new_log, parsed_line
 
-                #   CALL CHANGING FUNCTION IN REAL LOGS 
-                change_java_file(log)  
+                # CALL CHANGING FUNCTION IN REAL LOGS 
+                insert_log_to_java_file(log)  
+            else:
+                #print "ELSE??=", parsed_line
+                pass
 
         #write_to_file()
         previous_line = parsed_line
