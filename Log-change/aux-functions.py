@@ -210,33 +210,40 @@ def search_my_logs():
             print match.group()
 
 
+l = [
+ '"dsadasd" + test, sad + "dsad"',
+ '"Failed to load state.", e, asd, " blabolasd."',
+ '"Unknown child node with name: " + childNodeName',  # !!!!!!  string + string
+ '"User " + user + " removed from activeUsers, currently: " + var2',
+ '"update:" + " application=" + applicationId + " request=" + request',
+ '"Test" + test.id() + " test 2=" + max.id().getStuff() +',
+ 'max.getId(), error',
+ 'blabol, bla2',
+ '"ffd"',
+ '"comment 1 +"'
+]
 
-str0 = '"dsadasd" + test, sad + "dsad"'
-str1 = '"Failed to load state.", e'
-str2 = '"Unknown child node with name: " + childNodeName'  # !!!!!!  string + string
-str3 = '"User " + user + " removed from activeUsers, currently: " + var2'
-str4 = '"update:" + " application=" + applicationId + " request=" + request'
-str5 = '"Test" + test.id() + " test 2=" + max.id().getStuff() +'
-str6 = 'max.getId(), error'
-str7 = 'blabol, bla2'
-
-l = [str0, str1, str2, str3, str4, str5, str6, str7]
 
 test = '<tr align="right"><td>172</td><td align="center">Willard</td> <td>10,592</td> <td align="center">Lynne</td> <td>14,234</td></tr>'
 #print re.findall(r'>(?P<rank>\d+)<.+?>(?P<boy>\w+)<.+?>(?P<bcount>[0-9,]+)<.+?>(?P<girl>\w+)<.+?>(?P<gcount>[0-9,]+)', test)
 
 
 for s in l:
-    #print re.findall(r'\"(?P<comment>[\s*\w+\s*\.?*:?=?]+)\".*', s, re.IGNORECASE)
-    middle = r'\+\s*(?P<var>[\w.()]+)\s*\+' # missing group: VAR COMA VAR 
-    right = r'\+\s*(?P<var>[\w.()]+)\s*\+{0}'
-    # left = r''
-    comma = r'\+\s*(?P<var>[\w.()]+)'
-
+    #           string         variable(s)     string
+    pattern = r'(?:\"[^"]+\")*(?P<var>[^"]+)(?:\"[^"]+\")*|(?:\"[^"]+\")'
+    found =  re.findall(pattern, s, re.IGNORECASE)
     
+    variables = []
+    if found != ['']:        
+        for found_var in found: 
+            if found_var.strip() != '':
+                if "+" in found_var:
+                    found_var = found_var.replace("+", "").strip()
 
-    #               string            variable(s)       string
-    franta = r'(?:<comment>\"[^"]+\")*(?P<var>[^"]+)*(?:P<comment2>\"[^"]+\")*'
+                if "," in found_var:
+                    variables = [v.strip() for v in found_var.split(",") if v.strip() != '']
 
-
-    print re.findall(franta, s, re.IGNORECASE)
+                elif found_var != '':                    
+                    variables.append(found_var.strip())
+               
+    print found, "---->", variables
