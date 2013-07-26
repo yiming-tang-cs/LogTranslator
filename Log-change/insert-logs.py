@@ -20,7 +20,7 @@ class LogChanger:
         self.file_path = None
         self.old_log = None
         self.new_log = None
-        self.log_position = None
+        self.log_position = None # (Log-start-line, Log-start-column, Log-end-line)
 
     def __str__(self):
         return "LogChanger={\nPATH=" + str(self.file_path) + "\nPOS=" + \
@@ -49,6 +49,7 @@ def fetch_full_log(log_changer):
         if ";" in line:
             # if line is not COMMENTED - break! else ignore line
             if "//" not in line:
+                log_changer.log_position.append(i+1)
                 break
     f.close()
     #print log, log_changer, "\n\n"
@@ -69,10 +70,10 @@ def parse_package(line):
 
 
 def parse_namespace(line): 
-    if line.startswith("/"): 
+    if line.startswith("/"): # windows paths not covered yet  
         namespace = line[:line.find("(") - 2]        
     else:
-        namespace = "src/main/java/" + line[0:line.index(" ")].replace(".", "/")
+        namespace = "src" + os.sep + "main" + os.sep + "java" + os.sep + line[0:line.index(" ")].replace(".", os.sep)
     return namespace
 
 
@@ -109,7 +110,7 @@ def search_basedir(package_name):
         #print dirs      
         if package_name in dirnames:
             #print "Here I am :-) ", root, package_name 
-            path = root + "/" + package_name                                    
+            path = root + os.sep + package_name                                    
             return package_name, path                    
     # if BASE_PATH in path:
     #     stripped_path = path[len(BASE_PATH):]
@@ -174,8 +175,8 @@ def generate_log(log_changer):
     variables = []
 
     # parse namespace from full_path
-    namespace = APPLICATION_NAMESPACE.replace("/", ".")
-    path = log_changer.file_path.replace("/", ".")
+    namespace = APPLICATION_NAMESPACE.replace(os.sep, ".")
+    path = log_changer.file_path.replace(os.sep, ".")
     module = path[path.find(namespace):path.rfind(".")]
     module = module[:module.rfind(".")]
     module = module[:findnth(module, MAXIMUM_MODULE_DEPTH)]
@@ -269,7 +270,7 @@ def parse_log_file():
         if space_counter == 16:
             namespace = parse_namespace(parsed_line)
             if namespace.startswith("src"):
-                full_path =  package[1] + "/" + namespace
+                full_path =  package[1] + os.sep + namespace
             else:
                 full_path = namespace
         if space_counter == 20:
@@ -277,16 +278,16 @@ def parse_log_file():
 
             if full_path.endswith('.java'):
                 # remove java-file & add new file.java
-                full_path = full_path[:full_path.rfind("/") + 1] + java_file
+                full_path = full_path[:full_path.rfind(os.sep) + 1] + java_file
             else:
-                full_path = full_path + "/" + java_file    
+                full_path = full_path + os.sep + java_file    
             log.file_path = full_path
             
         if space_counter == 28:
             #print log, "\nprev=" + previous_line, "\nparsed=", parsed_line            
             old_line, new_line = handle_log_line(log, previous_line, parsed_line)
             
-            print "parsed_line=" + parsed_line + "\nold_line=" + old_line + "\nnew_line=" + new_line + "\n"#, log.file_path + "\n\n"
+            print old_line + "\n" + new_line + "\n"#, log.file_path + "\n\n"
             # CALL CHANGING FUNCTION IN REAL LOGS 
             # insert_log_to_java_file(log)
 

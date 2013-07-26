@@ -1,5 +1,6 @@
 # Auxiliary and test functions 
 import re
+import os
 
 BASE_PATH="/home/mtoth/skola/dp/hadoop-common"
 LOG_FILE="/home/mtoth/skola/dp/LogFilterBase/Log-change/hadoop-rewritten-logs-short"
@@ -273,9 +274,10 @@ def fetch_full_log():
             if ";" in line:
                 # if line is not COMMENT - break! else ignore line
                 if "//" not in line:
+                    POS.append(i+1)
                     break
 
-        print "log = ", log
+        print "log = ", log, POS
     except:
         print 'Error while reading file!', PATH
         raise
@@ -285,4 +287,8 @@ def fetch_full_log():
 
 
 
-fetch_full_log()
+def test():
+    print os.sep
+
+
+test()
