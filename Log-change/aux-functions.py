@@ -1,4 +1,4 @@
-# Auxiliary functions
+# Auxiliary and test functions 
 import re
 
 BASE_PATH="/home/mtoth/skola/dp/hadoop-common"
@@ -209,41 +209,80 @@ def search_my_logs():
         if match:
             print match.group()
 
+def regexp_search():
+    l = [
+     '"dsadasd" + test, sad + "dsad"',
+     '"Failed to load state.", e, asd, " blabolasd."',
+     '"Unknown child node with name: " + childNodeName',  # !!!!!!  string + string
+     '"User " + user + " removed from activeUsers, currently: " + var2',
+     '"update:" + " application=" + applicationId + " request=" + request',
+     '"Test" + test.id() + " test 2=" + max.id().getStuff() +',
+     'max.getId(), error',
+     'blabol, bla2',
+     '"ffd"',
+     '"comment 1 +"'
+    ]
 
-l = [
- '"dsadasd" + test, sad + "dsad"',
- '"Failed to load state.", e, asd, " blabolasd."',
- '"Unknown child node with name: " + childNodeName',  # !!!!!!  string + string
- '"User " + user + " removed from activeUsers, currently: " + var2',
- '"update:" + " application=" + applicationId + " request=" + request',
- '"Test" + test.id() + " test 2=" + max.id().getStuff() +',
- 'max.getId(), error',
- 'blabol, bla2',
- '"ffd"',
- '"comment 1 +"'
-]
+    for s in l:
+        #           string         variable(s)     string
+        pattern = r'(?:\"[^"]+\")*(?P<var>[^"]+)(?:\"[^"]+\")*|(?:\"[^"]+\")'
+        found =  re.findall(pattern, s, re.IGNORECASE)
+        
+        variables = []
+        if found != ['']:        
+            for found_var in found: 
+                if found_var.strip() != '':
+                    if "+" in found_var:
+                        found_var = found_var.replace("+", "").strip()
+
+                    if "," in found_var:
+                        variables = [v.strip() for v in found_var.split(",") if v.strip() != '']
+
+                    elif found_var != '':                    
+                        variables.append(found_var.strip())
+                   
+        print found, "---->", variables
+
+def is_my_log(line):
+    # "LOG.SOMETHING_INTERESTING("
+    pattern = re.compile(r'^LOG\.[A-Z_]+\(*')
+    return pattern.match(line.strip())
 
 
-test = '<tr align="right"><td>172</td><td align="center">Willard</td> <td>10,592</td> <td align="center">Lynne</td> <td>14,234</td></tr>'
-#print re.findall(r'>(?P<rank>\d+)<.+?>(?P<boy>\w+)<.+?>(?P<bcount>[0-9,]+)<.+?>(?P<girl>\w+)<.+?>(?P<gcount>[0-9,]+)', test)
+def fetch_full_log():
+
+    '''
+    LOG.info("Giving handle (fileId:" + handle.getFileId()
+        + ") to client for export " + path);        
+    }
+    '''
+    #line = '(115: 5) LOG.info("Giving handle (fileId:" + handle.getFileId()'
+    PATH='/home/mtoth/skola/dp/hadoop-common/hadoop-hdfs-project/hadoop-hdfs-nfs/src/main/java/org/apache/hadoop/hdfs/nfs/mount/RpcProgramMountd.java'
+    POS=[115, 5]
+    OLD='LOG.info("Giving handle (fileId:" + handle.getFileId()'
+    NEW='LOG.LOG(path, e).tag("org.apache.hadoop.hdfs.nfs").error();' # it;s previous log!!
+
+    f = open(PATH, "r+b")
+    try:
+        java_file = list(enumerate(f))        
+        log = ""       
+
+        for i, line in java_file[POS[0]-1:]:
+            line = line.strip()
+            log = log + line
+            if ";" in line:
+                # if line is not COMMENT - break! else ignore line
+                if "//" not in line:
+                    break
+
+        print "log = ", log
+    except:
+        print 'Error while reading file!', PATH
+        raise
+    finally:
+        f.close()
+        return log
 
 
-for s in l:
-    #           string         variable(s)     string
-    pattern = r'(?:\"[^"]+\")*(?P<var>[^"]+)(?:\"[^"]+\")*|(?:\"[^"]+\")'
-    found =  re.findall(pattern, s, re.IGNORECASE)
-    
-    variables = []
-    if found != ['']:        
-        for found_var in found: 
-            if found_var.strip() != '':
-                if "+" in found_var:
-                    found_var = found_var.replace("+", "").strip()
 
-                if "," in found_var:
-                    variables = [v.strip() for v in found_var.split(",") if v.strip() != '']
-
-                elif found_var != '':                    
-                    variables.append(found_var.strip())
-               
-    print found, "---->", variables
+fetch_full_log()
