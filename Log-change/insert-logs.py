@@ -44,6 +44,20 @@ public class SampleNamespace extends AbstractNamespace {
 }
 """
 
+NAMESPACE_JAVA_CLASS_TEMPLATE = """ 
+package cz.muni.fi.sampleproject;
+
+import cz.muni.fi.annotation.Namespace;
+import cz.muni.fi.logger.AbstractNamespace;
+
+@Namespace
+public class %s extends AbstractNamespace {
+    %s
+}
+""" 
+
+
+
 
 # Dictionary containing associated files to namespace.  
 # <NAMESPACE_FILE> : <LOG_FILE_1, LOG_FILE_2, ... LOG_FILE_N>
@@ -74,19 +88,11 @@ class LogChanger:
 #     None
 
 
-
 def fetch_log(log_changer):
-    """ Get complete logs from given part of log and try to find out types 
-        of variables in this log.
-
-        log_changer - object holding all log information
-        is_finished - True/False whether log ends with ";" or not. 
-                        If False, finish it from appropriate file. 
-    """
+    """ Get complete log from java file from given part of log. """
     f = open(log_changer.file_path, "r+b")
     java_file = list(enumerate(f))        
     log = ""       
-
     # Log is not finished
     for i, line in java_file[log_changer.position[0]-1:]:
         log = log + line.strip() + " "
@@ -95,6 +101,7 @@ def fetch_log(log_changer):
             if "//" not in line:
                 log_changer.position.append(i+1)
                 break
+    log_changer.old_log = log
     f.close()
     return log_changer
 
@@ -102,8 +109,8 @@ def fetch_log(log_changer):
 # TODO!! Use ANTLR??
 def fetch_variables_type(log):
     """ Method recognized basic types of variables 
-        byte, short, int, long, float|double, boolean, string.
-        If it fails to find type, fallback to string type.
+        byte, short, int, long, float|double, boolean, String.
+        If it fails to find type, fallback to String type.
     """    
     
     f = open(log.file_path, "r+b")
@@ -116,7 +123,7 @@ def fetch_variables_type(log):
     variables = []
     # fall back mode:
     for v in log.variables:
-        variables.append((v, "string"))
+        variables.append((v, "String"))
     log.variables = variables
 
     return log
@@ -125,20 +132,46 @@ def fetch_variables_type(log):
 def insert_log_to_java_file(log_changer):
     # If in this file for 1st time, declare & define JSONLogger and Namespace 
     # Insert into java_file on appropriate position LOG
-    global modified_java_files    
+    global modified_java_files                
     
-    f = open(log_changer.file_path, "rw+b")
-    java_file = list(enumerate(f))        
-    
-    if log_changer.file_path not in modified_java_files:
-        # Create NewNamespace.java file with associated logs.
-        # DECLARE LOG & NAMESPACE
-        # create new XyzNamespace.java file
-        # insert into this file all logged methods -- FIND OUT TYPES OF VARIABLES!!!
-        pass
-    # change log in java file
+    #local_directory = log_changer.file_path[:log_changer.file_path.rfind(os.sep)+1]
+    #print local_directory
 
-    # go to appropriate line and change log in it
+    if log_changer.namespace not in modified_java_files.keys():
+        # Create new Namespace.java file with methods from actual log  
+        modified_java_files[log_changer.namespace] = []
+
+        i = 0        
+        variable_list = []
+        for v in log_changer.variables:
+            variable = v[0]
+            if "()" in variable:
+                variable = variable.replace(".", "_").replace("()", "")
+            variable_list.append(variable)
+            if i == 0:                
+                parameters = v[1] + " " + variable    
+                i = i + 1
+            else:
+                parameters = parameters + ", " + v[1] + " " + variable        
+
+        method = "public AbstractNamespace %s(%s) {\n\t\treturn log(%s);\n\t}" \
+                % (log_changer.new_log[4:log_changer.new_log.find("(")],
+                 parameters, ", ".join(variable_list))
+
+        new_file = NAMESPACE_JAVA_CLASS_TEMPLATE % (log_changer.namespace, method)
+        modified_java_files[log_changer.namespace].append(log_changer.file_path)
+
+        #print new_file, modified_java_files
+
+    if log_changer.file_path not in modified_java_files: #does not work yet
+        # Update moduleNamespace file with new logs.
+        pass
+    #if log_changer.file_path not in modified_java_files[log_changer.namespace]:
+        # DECLARE LOG & NAMESPACE        
+        # go to appropriate line and change log in it
+        f = open(log_changer.file_path, "rw+b")
+        java_file = list(enumerate(f))        
+        pass
 
     f.close()
 

@@ -290,7 +290,24 @@ def fetch_full_log():
 def test():
     l = ["asda", "dsadsa", "test()"]
     generated_log = "(" + ', '.join(map(str, l)) + ').tag("' 
-    print generated_log
-    print str(l)
+    #print generated_log
+    #print str(l)
+
+    slovnik2 = {}
+    slovnik = {"a" : ["asd", "ad"], "b" : ["sdf"],  "c" : ["dfg"]}
+
+    print slovnik.keys()
+    z = "blabol"
+    for x in slovnik.keys():
+        print "key="+x
+        if z not in slovnik[x]:
+            print "\t", slovnik[x]
+            slovnik[x].append(z)
+        # for i in slovnik[x]:
+        #     print "\t" + i
+
+    print slovnik.items()
+
 test()
+
 
