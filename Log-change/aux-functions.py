@@ -288,7 +288,9 @@ def fetch_full_log():
 
 
 def test():
-    print os.sep
-
-
+    l = ["asda", "dsadsa", "test()"]
+    generated_log = "(" + ', '.join(map(str, l)) + ').tag("' 
+    print generated_log
+    print str(l)
 test()
+

@@ -3,7 +3,7 @@ import re
 
 BASE_PATH = "/home/mtoth/skola/dp/hadoop-common"
 #LOG_FILE = "/home/mtoth/skola/dp/LogFilterBase/Log-change/hadoop-all-prod-log-export.txt"
-LOG_FILE = "/home/mtoth/skola/dp/LogFilterBase/Log-change/hadoop-rewritten-logs"#-short"
+LOG_FILE = "/home/mtoth/skola/dp/LogFilterBase/Log-change/hadoop-rewritten-logs-short"
 # LOG_FILE = "/home/mtoth/Desktop/hadoop-fresh-logs.txt"
 NEW_FILE = "/home/mtoth/skola/dp/LogFilterBase/Log-change/logs-generated"
 
@@ -14,54 +14,133 @@ LOG_START = "LOG."
 # variable for limiting depth of namespace (org.apache.hadoop = 2 - "number of dots")
 MAXIMUM_MODULE_DEPTH = 6
 
+CLASS_TEMPLATE = [                            
+                "import cz.muni.fi.logger.LoggerFactory;",
+                "SampleNamespace LOG = LoggerFactory.getLogger(SampleNamespace.class);",
+                'LOG.event1("abc", 123).tag("EntityA").tag("EntityB").log();'
+                ]
+
+
+NAMESPACE_CLASS_TEMPLATE = """ 
+package cz.muni.fi.sampleproject;
+
+import cz.muni.fi.annotation.Namespace;
+import cz.muni.fi.logger.AbstractNamespace;
+
+@Namespace
+public class SampleNamespace extends AbstractNamespace {
+
+    public AbstractNamespace event1(String param1, int param2) {
+        return log(param1, param2);
+    }
+
+    public AbstractNamespace event2(double a, double b, boolean c) {
+        return log(a, b, c);
+    }
+
+    public AbstractNamespace event3(double a, String ac) {
+        return log(a, ac);
+    }
+}
+"""
+
+
+# Dictionary containing associated files to namespace.  
+# <NAMESPACE_FILE> : <LOG_FILE_1, LOG_FILE_2, ... LOG_FILE_N>
+modified_java_files = {}
+
+
+
+
 class LogChanger:
-    def __init__(self): #, file_path, old_log, new_log, log_position):
+    def __init__(self): #, file_path, old_log, new_log, position):
         self.data = []
         self.file_path = None
         self.old_log = None
         self.new_log = None
-        self.log_position = None # (Log-start-line, Log-start-column, Log-end-line)
+        self.position = None # (Log-start-line, Log-start-column, Log-end-line)
+        self.namespace = None
+        self.variables = []
 
     def __str__(self):
         return "LogChanger={\nPATH=" + str(self.file_path) + "\nPOS=" + \
-        str(self.log_position) + "\nOLD=" + str(self.old_log) + \
-        "\nNEW=" +  str(self.new_log) + "\n}"
+        str(self.position) + "\nOLD=" + str(self.old_log) + \
+        "\nNEW=" +  str(self.new_log) + "\nNS=" + str(self.namespace) + \
+        "\nVARS=" + str(self.variables) +"}"
 
 
 # Insert logger declaration and definition into java file
 # def get_first_method():
-#     # TODO
 #     None
 
 
 
-def fetch_full_log(log_changer):
-    """ Get complete logs from given part of log (not ending with ";")  """
+def fetch_log(log_changer):
+    """ Get complete logs from given part of log and try to find out types 
+        of variables in this log.
+
+        log_changer - object holding all log information
+        is_finished - True/False whether log ends with ";" or not. 
+                        If False, finish it from appropriate file. 
+    """
     f = open(log_changer.file_path, "r+b")
     java_file = list(enumerate(f))        
     log = ""       
 
-    for i, line in java_file[log_changer.log_position[0]-1:]:
+    # Log is not finished
+    for i, line in java_file[log_changer.position[0]-1:]:
         log = log + line.strip() + " "
-        # if "AsyncDataService" in log_changer.file_path:
-        #     print "line=", line, i, log_changer.log_position
-        #     print 'log=', log
         if ";" in line:
             # if line is not COMMENTED - break! else ignore line
             if "//" not in line:
-                log_changer.log_position.append(i+1)
+                log_changer.position.append(i+1)
                 break
     f.close()
-    #print log, log_changer, "\n\n"
+    return log_changer
+
+
+# TODO!! Use ANTLR??
+def fetch_variables_type(log):
+    """ Method recognized basic types of variables 
+        byte, short, int, long, float|double, boolean, string.
+        If it fails to find type, fallback to string type.
+    """    
+    
+    f = open(log.file_path, "r+b")
+    java_file = list(enumerate(f))        
+
+    #print log.file_path, log.position, log.variables
+    # for i, line in java_file:
+    #     print i, line.strip()
+
+    variables = []
+    # fall back mode:
+    for v in log.variables:
+        variables.append((v, "string"))
+    log.variables = variables
+
     return log
 
 
-# TODO
 def insert_log_to_java_file(log_changer):
     # If in this file for 1st time, declare & define JSONLogger and Namespace 
     # Insert into java_file on appropriate position LOG
-    #print log_changer
-    pass
+    global modified_java_files    
+    
+    f = open(log_changer.file_path, "rw+b")
+    java_file = list(enumerate(f))        
+    
+    if log_changer.file_path not in modified_java_files:
+        # Create NewNamespace.java file with associated logs.
+        # DECLARE LOG & NAMESPACE
+        # create new XyzNamespace.java file
+        # insert into this file all logged methods -- FIND OUT TYPES OF VARIABLES!!!
+        pass
+    # change log in java file
+
+    # go to appropriate line and change log in it
+
+    f.close()
 
 
 def parse_package(line):    
@@ -73,7 +152,8 @@ def parse_namespace(line):
     if line.startswith("/"): # windows paths not covered yet  
         namespace = line[:line.find("(") - 2]        
     else:
-        namespace = "src" + os.sep + "main" + os.sep + "java" + os.sep + line[0:line.index(" ")].replace(".", os.sep)
+        #namespace = "src" + os.sep + "main" + os.sep + "java" + os.sep + line[0:line.index(" ")].replace(".", os.sep)
+        namespace = os.path.join("src", "main", "java", line[0:line.index(" ")].replace(".", os.sep))
     return namespace
 
 
@@ -81,14 +161,13 @@ def parse_java_file(line):
     java_file = line[0:line.index(" ")]
     return java_file
 
-# Method returns parsed log and position
 def parse_log_and_position(line):
+    """ Method returns parsed log and position """
     if line.startswith('('):
         positions_string = line[1:line.find(")")]
         try:
             pos = [int(x) for x in positions_string.split(": ")]
             log = line[line.find(")") + 2:]
-            #print log, line
             return log.strip(), pos
         except:
             print "Error parsing position in line" + line
@@ -105,11 +184,8 @@ def search_basedir(package_name):
     if package_name in NAMES.keys():
         package_name = NAMES[package_name]
 
-    found = False
-    for root, dirnames, files in os.walk(BASE_PATH):        
-        #print dirs      
-        if package_name in dirnames:
-            #print "Here I am :-) ", root, package_name 
+    for root, dirnames, files in os.walk(BASE_PATH):          
+        if package_name in dirnames: 
             path = root + os.sep + package_name                                    
             return package_name, path                    
     # if BASE_PATH in path:
@@ -117,14 +193,13 @@ def search_basedir(package_name):
     # return path + "/" + package_name
 
 
-def findnth(haystack, n):
-    parts = haystack.split(".", n+1)
+def findnth(haystack, nth):
+    parts = haystack.split(".", nth+1)
     return len(haystack)-len(parts[-1])-1
 
 
-# TODO - implement better message mechanism.
 def parse_message(line):
-    """  Too simple + fix needed (see 1st log) """
+    """  Too simple message parsing. Implement better message mechanism. """
     message = ""
     if (line.count('"') == 2) and (line.find("{") == -1):
         message = line[line.find('"')+1:line.rfind('"')].strip()
@@ -151,7 +226,7 @@ def parse_variables(line):
     """ Parse all variables from java log. Variables are separated by '+' or ','. """
     variables = []    
     pattern = r'(?:\"[^"]+\")*(?P<var>[^"]+)(?:\"[^"]+\")*|(?:\"[^"]+\")'
-    
+
     found =  re.findall(pattern, line, re.IGNORECASE)
     if found != ['']:        
         for found_var in found: 
@@ -174,50 +249,40 @@ def generate_log(log_changer):
     message = ""
     variables = []
 
-    # parse namespace from full_path
-    namespace = APPLICATION_NAMESPACE.replace(os.sep, ".")
-    path = log_changer.file_path.replace(os.sep, ".")
-    module = path[path.find(namespace):path.rfind(".")]
-    module = module[:module.rfind(".")]
-    module = module[:findnth(module, MAXIMUM_MODULE_DEPTH)]
-    
-    level = logold[4:logold.find("(")] + "();"
-    # change only whole logs              
+    level = logold[4:logold.find("(")] + "();"    
     # LOG.MESSAGE
     message = parse_message(logold)   
     # LOG.MESSAGE(VARIABLE[S])
-    variables = parse_variables(logold[logold.find("(")+1:logold.rfind(")")])     
-    generated_log = LOG_START + message + "(" + ', '.join(map(str, variables)) + ').tag("' + module + '").' + level    
+    end_pos = logold.rfind(")")
+    if logold[end_pos-1] == "(":
+        # fix for ending object.method()\EOL
+        end_pos = end_pos + 1    
+
+    variables = parse_variables(logold[logold.find("(")+1:end_pos])     
+    generated_log = LOG_START + message + "(" + ', '.join(map(str, variables)) + ').tag("' + log_changer.namespace + '").' + level    
     #print logold, "\n", generated_log + "\n"
-    return generated_log
+    return generated_log, variables
 
 
 def handle_log_line(log, previous_line, parsed_line):               
     """ Handle log on given line. Generate new log (if needed) and insert it into java file."""
-    #print log, previous_line, parsed_line, '\n'
     if previous_line.startswith('(') and parsed_line.startswith('LOG.'):        
         if parsed_line.endswith(";"):           
             # Log is finished and ready to be inserted into java file  
-            log.new_log = parsed_line
-            insert_log_to_java_file(log)
-            # print log   
-            return log.old_log, log.new_log
+            log.new_log = parsed_line            
 
     elif parsed_line.startswith("("):
         # No log has been generated for this line
-        log.old_log, log.log_position = parse_log_and_position(parsed_line)
-
+        log.old_log, log.position = parse_log_and_position(parsed_line)
         if not parsed_line.endswith(";"):
-            #log has to be fetched & finished from java file                        
-            log.old_log = fetch_full_log(log)                        
-        
-        log.new_log = generate_log(log)
-        insert_log_to_java_file(log)
-        return log.old_log, log.new_log
+            #log has to be fetched & finished from java file                      
+            log = fetch_log(log)                        
+        log.new_log, log.variables = generate_log(log)
     else:
         print "ERROR! Some bullshit is on the line, ignore it... or?? =", parsed_line    
-
-    # print parsed_line, log
+    
+    return fetch_variables_type(log)
+    #print parsed_line, log
 
 
 def parse_log_file():
@@ -267,12 +332,14 @@ def parse_log_file():
         if space_counter == 12:
             full_path = "" 
             package = parse_package(parsed_line)
+
         if space_counter == 16:
             namespace = parse_namespace(parsed_line)
             if namespace.startswith("src"):
                 full_path =  package[1] + os.sep + namespace
             else:
                 full_path = namespace
+
         if space_counter == 20:
             java_file = parse_java_file(parsed_line) 
 
@@ -281,15 +348,23 @@ def parse_log_file():
                 full_path = full_path[:full_path.rfind(os.sep) + 1] + java_file
             else:
                 full_path = full_path + os.sep + java_file    
+            
             log.file_path = full_path
+            # parse namespace from full_path
+            namespace = APPLICATION_NAMESPACE.replace(os.sep, ".")
+            path = full_path.replace(os.sep, ".")
+            module = path[path.find(namespace):path.rfind(".")]
+            module = module[:module.rfind(".")]
+            module = module[:findnth(module, MAXIMUM_MODULE_DEPTH)]
             
-        if space_counter == 28:
-            #print log, "\nprev=" + previous_line, "\nparsed=", parsed_line            
-            old_line, new_line = handle_log_line(log, previous_line, parsed_line)
+            log.namespace = module
             
-            print old_line + "\n" + new_line + "\n"#, log.file_path + "\n\n"
+        if space_counter == 28:  
+            log = handle_log_line(log, previous_line, parsed_line)
+            
+            #print "previous=" + previous_line + "\nparsed=" + parsed_line + "\nold=" + log.old_log + "\nnew=" + log.new_log + "\n"#, log.file_path + "\n\n"
             # CALL CHANGING FUNCTION IN REAL LOGS 
-            # insert_log_to_java_file(log)
+            insert_log_to_java_file(log)
 
         #write_to_file()
         previous_line = parsed_line
