@@ -66,7 +66,7 @@ modified_java_files = {}
 
 
 
-class LogChanger:
+class LogChanger(object):
     def __init__(self): #, file_path, old_log, new_log, position):
         self.data = []
         self.file_path = None
@@ -235,18 +235,18 @@ def parse_message(line):
     """  Too simple message parsing. Implement better message mechanism. """
     message = ""
     if (line.count('"') == 2) and (line.find("{") == -1):
-        message = line[line.find('"')+1:line.rfind('"')].strip()
+        message = line[line.find('"')+1:line.rfind('"')]
         # message = message.replace("-", "_").upper()
-        message = message.replace(" ", "_").upper()            
+        #message = message.replace(" ", "_").upper()            
         # remove all but alfa-num characters                        
-        message = re.sub(r'[\W]+', "", message).strip()
+        message = re.sub(r'[\W]+', "_", message.strip().upper())
         # remove multi-underscores        
-        message = re.sub(r'_+', "_", message)             
+        #message = re.sub(r'_+', "_", message)             
 
-        if message.startswith('_'):
-            message = message[1:] 
-        if message.endswith('_'):  
-            message = message[:-1]         
+        #if message.startswith('_'):
+        #    message = message[1:] 
+        #if message.endswith('_'):  
+        #    message = message[:-1]         
         #print message  
     if message == "":
         #print "not (correctly) parsed=", line
@@ -395,7 +395,8 @@ def parse_log_file():
         if space_counter == 28:  
             log = handle_log_line(log, previous_line, parsed_line)
             
-            #print "previous=" + previous_line + "\nparsed=" + parsed_line + "\nold=" + log.old_log + "\nnew=" + log.new_log + "\n"#, log.file_path + "\n\n"
+            # print "previous=" + previous_line + "\nparsed=" + parsed_line + "\nold=" + log.old_log + "\nnew=" + log.new_log + "\n"#, log.file_path + "\n\n"
+            print log.old_log + "\n" + log.new_log + "\n"#, log.file_path + "\n\n"
             # CALL CHANGING FUNCTION IN REAL LOGS 
             insert_log_to_java_file(log)
 
@@ -403,9 +404,6 @@ def parse_log_file():
         previous_line = parsed_line
         l_number = l_number + 1
     
-
-
-
 
 #MAIN LOOP
 parse_log_file()
