@@ -228,7 +228,7 @@ def findnth(haystack, nth, splitter):
 def regexp_search():
     l = [
      '"dsadasd" + test, sad + "dsad"',
-     '"Failed to load a state.", e, asd, " blabolasd."',
+     '"Can\'t Failed to load a state.", e, asd, " blabolasd."',
      '"Unknown child node with the name: " + childNodeName',  # !!!!!!  string + string
      '"User " + user + " removed from activeUsers, currently: " + var2',
      '"update:" + " application=" + applicationId + " request=" + request',
@@ -314,8 +314,9 @@ def regexp_search():
         found =  re.findall(comment_pattern, s, re.IGNORECASE)
         messages = []        
 
-        for f in found:          
-            f = re.sub(r'[\W]+(?!" ")', " ", f.strip().upper())      
+        for f in found:       
+            f = re.sub("'", "", f)   
+            f = re.sub(r'[\W]+(?!\')', " ", f.strip().upper())      
             f = re.sub(" ", "_", f.strip())
             messages.append(f)
         
@@ -439,10 +440,71 @@ LOG.info("Giving handle (fileId:" + handle.getFileId()
     print output
     print ast.dump(ast.parse(output))
 
-regexp_search()
+#regexp_search()
 
 
 JAVA_FILE = "/home/mtoth/skola/dp/hadoop-common/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/util/VersionInfo.java"
 JAVA_FILE = "/home/mtoth/Desktop/fds"
 #ast_tree(JAVA_FILE)
 
+
+l = [
+ '"dsadasd" + test, sad + "dsad"',
+ '"Failed to load state.", e, asd, " blabolasd."',
+ '"Unknown child node with name: " + childNodeName',  # !!!!!!  string + string
+ '"User " + user + " removed from activeUsers, currently: " + var2',
+ '"update:" + " application=" + applicationId + " request=" + request',
+ '"Test" + test.id() + " test 2=" + max.id().getStuff() +',
+ 'max.getId(), error',
+ 'blabol, bla2',
+ '"ffd"',
+ '"comment 1 +"',
+ '"  classpath = " + System.getProperty("java.class.path")',
+]
+
+def finder(line):
+    # mask the strings
+    st = '' 
+    m = ''
+    for i, c in enumerate(line):
+        if c in ['"', "'"]:
+            st += c
+        m += c if len(st) == 0 else '~'
+        st = '' if len(st) == 2 else st
+
+    #split = m.split(',') if ',' in m else m.split('+')
+    split = [spl2 for spl1 in m.split('+') for spl2 in spl1.split(',')]
+    pos = 0
+    for spl in split:
+        if spl.replace('~', '').strip() != '':        
+            out = line[pos : pos+len(spl)].strip()
+            yield out
+        pos += len(spl) + 1
+    
+#line = '"  classpath = " + System.getProperty("java.class.path")'
+#print "s=", line
+#out = list(finder(line))
+#print "output=", out
+
+#for line in l:
+#    print "s=", line
+#    print "output=", list(finder(line))
+#    print
+
+
+
+def test():
+    PATH='/home/mtoth/skola/dp/hadoop-common/hadoop-hdfs-project/hadoop-hdfs-nfs/src/main/java/org/apache/hadoop/hdfs/nfs/mount/RpcProgramMountd.java'
+    NS='org.apache.hadoop.hdfs.nfs'
+    
+
+
+test()
+
+def parse_package_from_file(file):   
+    f = open(file, "r+wb")
+
+
+
+
+parse_package_from_file("/home/mtoth/Desktop/fds")
