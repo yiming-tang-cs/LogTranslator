@@ -503,8 +503,16 @@ test()
 
 def parse_package_from_file(file):   
     f = open(file, "r+wb")
+    f.seek(-2, os.SEEK_END)
+    method = """\tpublic AbstractNamespace DELETE_CURRENT_DUMP_DIRECTORY(String writeDumpDir) {
+        return log(writeDumpDir);
+    }"""
+    f.write("\n\n" + method + "\n}")
+    f.seek(0, os.SEEK_SET)
+    print f.read()
+    f.close
 
 
 
 
-parse_package_from_file("/home/mtoth/Desktop/fds")
+parse_package_from_file("/home/mtoth/Desktop/ngmon/hadoop-hdfs-project/hadoop-hdfs-nfs/src/main/java/org/apache/hadoop/hdfs/nfs/NfsNamespace.java")

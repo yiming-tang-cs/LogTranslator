@@ -24,30 +24,6 @@ CLASS_TEMPLATE = [
                 'LOG.event1("abc", 123).tag("EntityA").tag("EntityB").log();'
                 ]
 
-
-NAMESPACE_CLASS_TEMPLATE = """ 
-package cz.muni.fi.sampleproject;
-
-import cz.muni.fi.annotation.Namespace;
-import cz.muni.fi.logger.AbstractNamespace;
-
-@Namespace
-public class SampleNamespace extends AbstractNamespace {
-
-    public AbstractNamespace event1(String param1, int param2) {
-        return log(param1, param2);
-    }
-
-    public AbstractNamespace event2(double a, double b, boolean c) {
-        return log(a, b, c);
-    }
-
-    public AbstractNamespace event3(double a, String ac) {
-        return log(a, ac);
-    }
-}
-"""
-
 NAMESPACE_JAVA_CLASS_TEMPLATE = """package %s;
 
 import cz.muni.fi.annotation.Namespace;
@@ -57,8 +33,7 @@ import cz.muni.fi.logger.AbstractNamespace;
 public class NAMESPACE_CLASSNAME extends AbstractNamespace {
 
 %s
-}
-""" 
+}""" 
 
 
 
@@ -88,6 +63,7 @@ class LogChanger(object):
         self.namespace = None
         self.variables = []
         self.namespace_path = None
+        self.logs_to_change = {}
 
 
     def __str__(self):
@@ -107,10 +83,18 @@ class LogChanger(object):
             log = log + line.strip() + " "
             if ");" in line:
                 # if line is not COMMENTED - break! else ignore line
-                if "//" not in line:
+                if not line.strip().startswith("//"):
+                # if "//" not in line:
                     self.position.append(i+1)
                     break
-        self.old_log = log
+        self.old_log = log       
+# ==============
+#        # seems to work ok
+#        if len(log) >= 210:
+#            fw = open("/home/mtoth/Desktop/ngmon/metody", "a")
+#            fw.write(log + "\n" + self.file_path + "\n\n")
+#            fw.close()
+# ==============
         f.close()        
         return self
 
@@ -155,17 +139,15 @@ class LogChanger(object):
         """ Method recognized basic types of variables 
             byte, short, int, long, float|double, boolean, String.
             If it fails to find type, fallback to String type.
-        """    
-        
-        f = open(self.file_path, "r+b")
-        java_file = list(enumerate(f))        
+        """            
+        # f = open(self.file_path, "r+b")
+        # java_file = list(enumerate(f))        
 
         variables = []
         # fall back mode:
         for v in self.variables:
             variables.append((v, "String"))
         self.variables = variables
-
         return self
 
     # TODO: Remove TEST ENV
@@ -182,7 +164,6 @@ class LogChanger(object):
         
         class_file_path = self.namespace_path + os.sep + classname + '.java'
         new_file = new_file.replace("NAMESPACE_CLASSNAME", classname)
-        #print 'Creating new file', class_file_path    
         # Create neccessary folders if needed (should not be needed in TEST env)
         if not os.path.exists(self.namespace_path):
             os.makedirs(self.namespace_path)
@@ -194,16 +175,43 @@ class LogChanger(object):
 
 
     def insert_namespace_file(self, method, ns_file_path):
-        f = open(ns_file_path)
-        # enumerate and insert logs 
-        print method
+        f = open(ns_file_path, "r+b")
+        if method in f.read():
+            return
+        f.seek(-2, os.SEEK_END)
+        f.write("\n\n" + method + "\n}")
+        f.seek(0, os.SEEK_SET)
+        f.close()        
         
 
-    def insert_log_to_java_file(self):
+    def buffer_logs_to_change(self):
+        '''
+        Using buffer like - fill buffer with all logs from one java file, 
+        then change whole original java file at once.
+        '''
+        replace_java_file = False
+        log_dict = self.logs_to_change
+        if self.file_path not in log_dict.keys():
+            if log_dict.keys() != []:
+                # was not empty write all buffered logs to previous file now
+                replace_java_file = True
+            log_dict[self.file_path] = []
+        log_dict[self.file_path].append((self.position, self.new_log))
+
+        if replace_java_file:
+            for key in log_dict.keys():
+                if key != self.file_path:
+                    #print "%s\n%s.\n\n" % (key, log_dict[key])
+                    replace_logs_in_java_file(key, log_dict[key])
+                    log_dict.pop(key)
+            replace_java_file = False
+
+        
+
+    def handle_new_log(self):
         """ If in this file for 1st time, declare & define JSONLogger and Namespace 
             Insert into java_file on appropriate position LOG
-        """
-                
+        """                
         # create method with variables and methods
         i = 0        
         variable_list = []
@@ -225,27 +233,17 @@ class LogChanger(object):
                 % (self.new_log[4:self.new_log.find("(")],
                  parameters, ", ".join(variable_list))
 
-
-        # Path to namespace
-        #print self.namespace#, self.file_path
-        #local_directory = self.file_path[:self.file_path.rfind(os.sep)+1]
-        #print local_directory, self.file_path
-
+        
         global modified_java_files
-
+        # Insert to new or already created file ngmon logs
         if self.namespace not in modified_java_files.keys():
             # Create new Namespace.java file with methods from actual log  
-            modified_java_files[self.namespace] = []
-            
-            
-            new_file = NAMESPACE_JAVA_CLASS_TEMPLATE % (self.namespace, method)
-            
-
-            #print new_file#, modified_java_files
+            modified_java_files[self.namespace] = []                        
+            new_file = NAMESPACE_JAVA_CLASS_TEMPLATE % (self.namespace, method)            
+            #print new_file, modified_java_files
             new_file_path = self.create_namespace_file(new_file)
             modified_java_files[self.namespace].append(new_file_path)
             modified_java_files[self.namespace].append(self.file_path)
-        
         else:
             # Namespace is already created - add new method to it
             # if log comes from new file, append it to global file             
@@ -254,25 +252,7 @@ class LogChanger(object):
             
             self.insert_namespace_file(method, modified_java_files[self.namespace][0])
             
-            # for subor in modified_java_files[self.namespace]:
-            #     print subor
-            # print '\n\n'
-
-
-        # TODO
-        # change_log_in_java_file()
-        if self.file_path not in modified_java_files: #does not work yet
-            # Update moduleNamespace file with new logs.
-            pass
-
-        #if self.file_path not in modified_java_files[self.namespace]:
-            # declare log and namespace
-            # go to appropriate line and change log in it
-            f = open(self.file_path, "rw+b")
-            java_file = list(enumerate(f))        
-            pass
-
-        f.close()
+        self.buffer_logs_to_change()
 
 
     def parse_message(self, line):
@@ -282,8 +262,8 @@ class LogChanger(object):
         messages = []        
 
         for f in found:   
-            f = re.sub("'", "", f)          
-            f = re.sub(r'[\W]+(?!" ")', " ", f.strip().upper())      
+            f = re.sub("'", "", f)
+            f = re.sub(r'[\W]+(?!" ")', " ", f.strip().upper())
             f = re.sub(" ", "_", f.strip())
             messages.append(f) 
 
@@ -317,7 +297,6 @@ class LogChanger(object):
         """
 
         variables = []    
-
         pattern = r'(?:\"[^"]+\")*(?P<var>[^"]+)(?:\"[^"]+\")*|(?:\"[^"]+\")'
 
         found =  re.findall(pattern, line, re.IGNORECASE)
@@ -356,18 +335,53 @@ class LogChanger(object):
     #             yield line[pos : pos+len(spl)].strip()
     #         pos += len(spl) + 1
 
-    
 
+def replace_logs_in_java_file(filename, logs):
+    log_dict = {}
+    print filename
+    # Convert list to dictionary {(LOG_START_LINE, LOG_END_LINE) : [LOG_OFFSET, JAVA_LOG, NGMON_LOG]}
+    for l in logs:
+        if len(l[0]) > 2:
+            log_dict[(l[0][0], l[0][2])] = []
+            log_dict[(l[0][0], l[0][2])].append(l[0][1])
+            log_dict[(l[0][0], l[0][2])].append(l[1])
+        else:
+            log_dict[(l[0][0], 0)] = []
+            log_dict[(l[0][0], 0)].append(l[0][1])
+            log_dict[(l[0][0], 0)].append(l[1])
 
+    # Fetch all appropriate logs from java file
+    f = open(filename, "r+b")
+    enumerated_file = enumerate(list(f))
+    for i, line in enumerated_file:        
+        for k,l in log_dict.keys():
+            if i+1 == k:
+                log_dict[(k,l)].append(line.strip())
 
+    # Replace fetched & paired logs
+    for k in sorted(log_dict.keys()):   
+        print "=", k, log_dict[k]
+        
+    f.seek(0)
+
+    for i, line in enumerate(list(f)):      
+        for k,l in sorted(log_dict.keys()):
+            # print k,l
+            if k > i+1:
+                break
+            if i+1 == k:
+                # Replace this line
+                print i+1
+                f.write("TEST")
+                pass   
+                         
+    f.close()
 
 def parse_package(line):    
     package = line[0:line.index(" ")]
     #print "\n\npackage=", search_basedir(package)
     return search_basedir(package)
 
-# def parse_package_from_file(file):    
-#     pass
 
 def parse_namespace(line): 
     if line.startswith("/"): # windows paths not covered yet  
@@ -468,7 +482,8 @@ def parse_log_file(filepath):
     log_counter = 0
     log = LogChanger()    
 
-    for line in fr:   
+    for line in fr: 
+
         parsed_line = ""     
         space_counter = 0
         found_first_letter = False
@@ -513,8 +528,7 @@ def parse_log_file(filepath):
             path = full_path.replace(os.sep, ".")
             module = path[path.find(namespace):path.rfind(".")]
             module = module[:module.rfind(".")]
-            module = module[:findnth(module, MAXIMUM_MODULE_DEPTH, ".")]
-            
+            module = module[:findnth(module, MAXIMUM_MODULE_DEPTH, ".")]            
             log.namespace = module
             
         if space_counter == 28:  
@@ -523,12 +537,16 @@ def parse_log_file(filepath):
             # print "previous=" + previous_line + "\nparsed=" + parsed_line + "\nold=" + log.old_log + "\nnew=" + log.new_log + "\n"#, log.file_path + "\n\n"
             # print log.old_log + "\n" + log.new_log + "\n"#, log.file_path + "\n\n"
             # CALL CHANGING FUNCTION IN REAL LOGS 
-            log.insert_log_to_java_file()
+            log.handle_new_log()
             log_counter = log_counter + 1
 
-        #write_to_file()
         previous_line = parsed_line
         l_number = l_number + 1
+    if log.logs_to_change.keys() != []:
+        # Replace LAST buffered changed logs to original java file  -- how to make it better??  
+        for filename in log.logs_to_change.keys():       
+            replace_logs_in_java_file(filename, log.logs_to_change[filename])
+
     print "Processed " + str(log_counter) + " logs from " + str(l_number) + " lines in file " + IDEA_GENERATED_FILE + ". Tests were not included."
 
 # Remove test classes and logs from log-file exported from idea
