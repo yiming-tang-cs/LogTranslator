@@ -480,39 +480,36 @@ def finder(line):
             out = line[pos : pos+len(spl)].strip()
             yield out
         pos += len(spl) + 1
-    
-#line = '"  classpath = " + System.getProperty("java.class.path")'
-#print "s=", line
-#out = list(finder(line))
-#print "output=", out
-
-#for line in l:
-#    print "s=", line
-#    print "output=", list(finder(line))
-#    print
-
 
 
 def test():
-    PATH='/home/mtoth/skola/dp/hadoop-common/hadoop-hdfs-project/hadoop-hdfs-nfs/src/main/java/org/apache/hadoop/hdfs/nfs/mount/RpcProgramMountd.java'
-    NS='org.apache.hadoop.hdfs.nfs'
+    bla = '''import org.jboss.netty.channel.Channel;
+
+/**
+ * RPC program corresponding to mountd daemon. See {@link Mountd}.
+ */
+public class RpcProgramMountd extends RpcProgram implements MountInterface {
+  private static final Log LOG = LogFactory.getLog(RpcProgramMountd.class);
+  public static final int PROGRAM = 100005;
+  public static final int VERSION_1 = 1;
+  public static final int VERSION_2 = 2;
+  public static final int VERSION_3 = 3;
+  public static final int PORT = 4242;'''
+
+
+
+    # re.sub()
+    match = re.search(r'[\w ]*log\s+=[\w ]+[\W]+', bla.lower())
+    if match:
+        print match.group()
+    # pattern = re.compile(r"\w+version")
+    # pattern = re.compile(r"import\w*")
+    # print bla.lower()
+
+    # match = pattern.match(bla.lower())
+    # if match:
+    #     print match.group()
+    # print re.findall(r'*log=*', bla.lower())
     
 
-
 test()
-
-def parse_package_from_file(file):   
-    f = open(file, "r+wb")
-    f.seek(-2, os.SEEK_END)
-    method = """\tpublic AbstractNamespace DELETE_CURRENT_DUMP_DIRECTORY(String writeDumpDir) {
-        return log(writeDumpDir);
-    }"""
-    f.write("\n\n" + method + "\n}")
-    f.seek(0, os.SEEK_SET)
-    print f.read()
-    f.close
-
-
-
-
-parse_package_from_file("/home/mtoth/Desktop/ngmon/hadoop-hdfs-project/hadoop-hdfs-nfs/src/main/java/org/apache/hadoop/hdfs/nfs/NfsNamespace.java")
