@@ -483,7 +483,36 @@ def finder(line):
 
 
 def test():
-    bla = '''import org.jboss.netty.channel.Channel;
+    bla = ''' * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.hadoop.hdfs.nfs.mount;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.hdfs.server.namenode.NameNode;
+import org.apache.hadoop.mount.MountEntry;
+import org.apache.hadoop.mount.MountInterface;
+import org.apache.hadoop.mount.MountResponse;
+import org.apache.hadoop.nfs.nfs3.FileHandle;
+import org.apache.hadoop.nfs.nfs3.Nfs3Status;
+import org.apache.hadoop.oncrpc.RpcAcceptedReply;
+import org.apache.hadoop.oncrpc.RpcCall;
+import org.apache.hadoop.oncrpc.RpcProgram;
+import org.apache.hadoop.oncrpc.XDR;
+import org.jboss.netty.channel.Channel;
 
 /**
  * RPC program corresponding to mountd daemon. See {@link Mountd}.
@@ -494,14 +523,37 @@ public class RpcProgramMountd extends RpcProgram implements MountInterface {
   public static final int VERSION_1 = 1;
   public static final int VERSION_2 = 2;
   public static final int VERSION_3 = 3;
-  public static final int PORT = 4242;'''
+  public static final int PORT = 4242;
+
+  public XDR dump(XDR out, int xid, InetAddress client) {
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("MOUNT NULLOP : " + " client: " + client);
+    }
+
+    List<MountEntry> copy = new ArrayList<MountEntry>(mounts);
+    MountResponse.writeMountList(out, xid, copy);
+    return out;
+  }
+
+  public XDR umnt(XDR xdr, XDR out, int xid, InetAddress client) {
+    String path = xdr.readString();
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("MOUNT UMNT path: " + path + " client: " + client);
+    }
+  }
+'''
 
 
 
-    # re.sub()
-    match = re.search(r'[\w ]*log\s+=[\w ]+[\W]+', bla.lower())
+    # match = re.search(r'import [\w\.]+log[\w\.]+;', bla.lower())
+    # print "x"
+    # if match:
+    #     print match.group()
+
+    match = re.search(r'log\.is[\w]+enabled', bla.lower())
     if match:
-        print match.group()
+        log_global = match.group().replace('log', 'LogGlobal')
+        print log_global
     # pattern = re.compile(r"\w+version")
     # pattern = re.compile(r"import\w*")
     # print bla.lower()
@@ -512,4 +564,26 @@ public class RpcProgramMountd extends RpcProgram implements MountInterface {
     # print re.findall(r'*log=*', bla.lower())
     
 
-test()
+# test()
+
+
+def generate_log_global():
+    FILE = """package cz.muni.fi.logger;\n
+public static class LogGlobal {\n
+%s
+}"""
+    METHOD = '''\tpublic static Boolean is%sEnabled() {
+\t\treturn True;
+\t}\n\n'''
+    
+    level_list = ['Debug', 'Info', 'Error', 'Fatal']
+    method = ""
+
+    for i in [METHOD % x for x in level_list]:
+        method += i
+    full_file =  FILE % method.rstrip()
+     
+    print full_file
+       
+
+generate_log_global()

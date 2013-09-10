@@ -18,13 +18,10 @@ LOG_START = "LOG."
 MAXIMUM_MODULE_DEPTH = 6
 METHOD_NAME_SEPARATORS = 6
 
-CLASS_TEMPLATE = [                            
-                "import cz.muni.fi.logger.LoggerFactory;",
-                "SampleNamespace LOG = LoggerFactory.getLogger(SampleNamespace.class);",
-                'LOG.event1("abc", 123).tag("EntityA").tag("EntityB").log();'
-                ]
-
-LOG_DECLARATION = "private static final %s LOG = LoggerFactory.getLogger(%s.class);" #"SampleNamespace LOG = LoggerFactory.getLogger(SampleNamespace.class);"
+LOG_IMPORT = "import cz.muni.fi.logger.LoggerFactory;\nimport %s.%s;" # import org.apache.hadoop.hdfs.nfs DOT SomeNamespace;
+LOG_IMPORT_GLOBAL = "import cz.muni.fi.logger.LogGlobal;" # logger class, which handles 'default' LOG. methods like isLEVELEnabled() LEVEL={Debug,Trace,Info,Error,Fatal}
+LOG_DEFINITION = "private static final %s LOG = LoggerFactory.getLogger(%s.class);" #"SampleNamespace LOG = LoggerFactory.getLogger(SampleNamespace.class);"
+LOG_DEFINITION_GLOBAL = "private static final LogGlobal LOG_GLOBAL;"
 NAMESPACE_JAVA_CLASS_TEMPLATE = """package %s;
 
 import cz.muni.fi.annotation.Namespace;
@@ -361,22 +358,39 @@ def replace_logs_in_java_file(log, filename, logs):
             log_dict[(l[0][0], 0)].append(l[0][1])
             log_dict[(l[0][0], 0)].append(l[1])
 
-    # Fetch all appropriate logs from java file
+    # Fetch all appropriate logs and log definition, get import position, and from java file
     f = open(filename, "r+b")
     enumerated_file = enumerate(list(f))
-    for i, line in enumerated_file:
-        # Replace one liner log definition
-        if re.search(r'[\W ]+log\s+=', line.lower()):            
-            log_line = LOG_DECLARATION % (log.namespace_class, log.namespace_class)
-            log_dict[(i+1, 0)] = [line, log_line]
+    found_log_definition = False
+    found_log_import = False
+    old_log_pattern = re.compile(r'(?P<log>log)\.is[\w]+()', re.IGNORECASE)
 
+    for i, line in enumerated_file:
+        # Find current java log import 
+        if not found_log_import and re.search(r'import [\w\.]+log;', line.lower(), re.IGNORECASE):
+            log_dict[(i+1, 0)] = [line, (LOG_IMPORT + "\n%s") % (log.namespace, log.namespace_class, LOG_IMPORT_GLOBAL)]
+            found_log_import = True
+
+        # Find one liner log definition
+        if not found_log_definition and re.search(r'[\W ]+log\s+=', line.lower(), re.IGNORECASE):            
+            log_line = (LOG_DEFINITION + "\n%s") % (log.namespace_class, log.namespace_class, LOG_DEFINITION_GLOBAL)
+            log_dict[(i+1, 0)] = [line, log_line]
+            found_log_definition = True
+        
+        # Change LOG.isXYZEnabled()
+        result = old_log_pattern.search(line)
+        if result:
+            log_dict[(i+1, 0)] = [line, line.replace(result.group('log'), 'LOG_GLOBAL').strip()]
+        
+        # Find all log usages         
         for k,l in log_dict.keys():
             if i+1 == k:
                 log_dict[(k,l)].append(line.strip())
             if k < (i+1) and i+1 <= l:
                 log_dict[(k,l)].append(line.strip())
 
-    # Search and replace LOG definition    
+
+    # Replace in java file    
     f.seek(0)
     read_file = f.read()
     out = open(filename, "w+")    
@@ -470,6 +484,38 @@ def handle_log_line(log, previous_line, parsed_line):
     return log.fetch_variables_type()
     #print parsed_line, log
 
+def generate_log_global():
+    """
+    Method generates dumb class for calls not supported by ngmon logger (yet?).  
+    """
+
+    FILE = """package cz.muni.fi.logger;\n
+/**
+  * Ngmon log helper class for methods which ngmon does not support yet.
+  */
+public class LogGlobal {\n
+%s
+}\n"""
+    METHOD = '''\tpublic static Boolean is%sEnabled() {
+\t\treturn true;
+\t}\n\n'''
+    
+    level_list = ['Debug', 'Trace', 'Info', 'Error', 'Fatal']
+    method = ""
+
+    for i in [METHOD % x for x in level_list]:
+        method += i
+    full_file =  FILE % method.rstrip()
+     
+    # TODO: Where to put this file??
+    path = BASE_PATH + "src/java/main/cz/muni/fi/logger"
+    if not os.path.exists(path):
+            os.makedirs(path)
+
+    fw = open(path + "/LogGlobal.java", "w+")
+    fw.write(full_file)
+    fw.close()
+
 
 def parse_log_file(filepath):
     """ 
@@ -562,6 +608,9 @@ def parse_log_file(filepath):
         for filename in log.logs_to_change.keys():       
             replace_logs_in_java_file(log, filename, log.logs_to_change[filename])
 
+    # Create LOG_GLOBAL class
+    generate_log_global()
+
     print "Processed " + str(log_counter) + " logs from " + str(l_number) + " lines in file " + IDEA_GENERATED_FILE + ". Tests were not included."
 
 # Remove test classes and logs from log-file exported from idea
@@ -605,7 +654,6 @@ def remove_test_classes(filepath):
     
     fr.close()    
 
-    #print remove_list
     #print "number of lines=", len(lines)
     fr = open(filepath + "-no-tests", 'w')
 
