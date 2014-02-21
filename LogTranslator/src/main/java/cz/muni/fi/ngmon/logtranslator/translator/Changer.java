@@ -5,6 +5,7 @@ public class Changer {
     private String content = null;
     private boolean changed = false;
     private String filePath;
+    private Changer parent;
 
     public Changer() {
         this.changed = false;
@@ -32,5 +33,13 @@ public class Changer {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public Changer getParent() {
+        return parent;
+    }
+
+    public void setParent(Changer parent) {
+        this.parent = parent;
     }
 }

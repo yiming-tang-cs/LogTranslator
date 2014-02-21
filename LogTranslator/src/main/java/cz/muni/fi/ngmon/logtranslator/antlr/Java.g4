@@ -38,7 +38,23 @@
  *  $ javac *.java
  *  $ grun Java compilationUnit *.java
  */
+
+
+/*
+ * Changed by Michal Toth:
+ * Added @header and @lexer definition to generate proper package for us
+ * Send whitespace characters to hidden channel (WS rule -> channel(HIDDEN),
+ * LINE_COMMENT and COMMENT is sent to -> channel(COMMENT)
+ */
+
 grammar Java;
+
+@header {package cz.muni.fi.ngmon.logtranslator.antlr;}
+// @lexer::header {package cz.muni.fi.ngmon.logtranslator.translator;}
+@lexer::members {
+    public static final int WHITESPACE = 1;
+    public static final int COMMENTS = 2;
+}
 
 // starting point for parsing a java file
 compilationUnit
@@ -1008,13 +1024,13 @@ ELLIPSIS : '...';
 // Whitespace and comments
 //
 
-WS  :  [ \t\r\n\u000C]+ -> skip
+WS  :  [ \t\r\n\u000C]+ -> channel(HIDDEN)      // was -> skip
     ;
 
 COMMENT
-    :   '/*' .*? '*/' -> skip
+    :   '/*' .*? '*/' -> channel(COMMENT)       // skip
     ;
 
 LINE_COMMENT
-    :   '//' ~[\r\n]* -> skip
+    :   '//' ~[\r\n]* -> channel(COMMENT)       // skip
     ;

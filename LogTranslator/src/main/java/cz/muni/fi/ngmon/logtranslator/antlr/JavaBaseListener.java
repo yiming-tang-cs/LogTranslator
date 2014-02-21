@@ -1,5 +1,5 @@
-package cz.muni.fi.ngmon.logtranslator.antlr;
 // Generated from Java.g4 by ANTLR 4.2
+package cz.muni.fi.ngmon.logtranslator.antlr;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.NotNull;

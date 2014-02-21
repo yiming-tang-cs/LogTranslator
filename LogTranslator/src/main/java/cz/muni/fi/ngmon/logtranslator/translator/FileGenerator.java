@@ -1,5 +1,6 @@
 package cz.muni.fi.ngmon.logtranslator.translator;
 
+// https://theantlrguy.atlassian.net/wiki/display/ST4/StringTemplate+4+Documentation
 public class FileGenerator {
 
     private String fileTemplate = "package %s;\n" +

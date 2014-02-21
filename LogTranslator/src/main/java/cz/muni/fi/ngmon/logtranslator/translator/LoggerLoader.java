@@ -126,6 +126,10 @@ public abstract class LoggerLoader {
         return loggingApplicationNamespace;
     }
 
+    public String getLoggingApplicationNamespaceShort() {
+        return loggingApplicationNamespace.substring(loggingApplicationNamespace.lastIndexOf(".")+1);
+    }
+
     public void setLoggingApplicationNamespace(String loggingApplicationNamespace) {
         this.loggingApplicationNamespace = loggingApplicationNamespace;
     }
