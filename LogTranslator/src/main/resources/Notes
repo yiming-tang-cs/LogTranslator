@@ -1,0 +1,7 @@
+variable declaration related rules:
+
+x memberDeclaration
+x   fieldDeclarator
+x   localVariableDeclaration
+?   constantDeclarator
+?   constDeclaration
