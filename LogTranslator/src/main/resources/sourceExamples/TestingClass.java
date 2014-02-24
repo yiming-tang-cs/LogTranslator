@@ -10,11 +10,10 @@ public class TestingClass {
     private static final int PIA = 321321321;
 
     private static final Logger LOG = LogFactory.getLog(TestingClass.class);
+    //  ==> private static final XYZNamespace LOG = LoggerFactory.getLogger(TestingClass.class);
 
     private int someCounter = 0;
-//  ==> private static final XYZNamespace LOG = LoggerFactory.getLogger(TestingClass.class);
-
-    private static int number;
+    public final static int number;
     final int number22;
 
     /*  Some comment spread over
@@ -45,13 +44,13 @@ public class TestingClass {
 
     public Object mnt(Object xdr, Object out, int xid, InetAddress client) {
         String path = xdr.toString();
-        if (LOG.isDebugEnabled()) {
+        if (LOG.isWarnEnabled()) {
             LOG.debug("MOUNT MNT path: " + path + " client: " + client);
 //            LOG.MOUNT_MNT_PATH_CLIENT(path, client).tag("cz.muni.fi.ngmon.logchanger.examplesources").debug();
         }
 
         String host = client.getHostName();
-        if (LOG.isDebugEnabled()) {
+        if (someCrazyStuff().getBooleanValue() == something) {
             LOG.debug("Got host: " + host + " path: " + path);
         }
         LOG.info("Path " + path + " is not shared.");

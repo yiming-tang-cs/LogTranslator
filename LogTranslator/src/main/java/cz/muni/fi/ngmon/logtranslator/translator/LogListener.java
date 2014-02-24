@@ -1,20 +1,22 @@
 package cz.muni.fi.ngmon.logtranslator.translator;
 
+import cz.muni.fi.ngmon.logtranslator.antlr.ANTLRRunner;
 import cz.muni.fi.ngmon.logtranslator.antlr.JavaBaseListener;
 import cz.muni.fi.ngmon.logtranslator.antlr.JavaParser;
 import org.antlr.v4.runtime.BufferedTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.TokenStreamRewriter;
 import org.antlr.v4.runtime.misc.NotNull;
-
 import java.util.Map;
 
-public class LogListener extends JavaBaseListener {
-    //    BufferedTokenStream bufferedTokens;
 
+public class LogListener extends JavaBaseListener {
+    //    BufferedTokenStream bufferedTokens; // intended to be used with multiple channels for handling WHITESPACES and COMMENTS
     static LoggerLoader loggerLoader = new CustomLoggerLoader();
     Variable var;
     TokenStreamRewriter rewriter;
+    private String logName = null; // reference to original LOG variable name
+    private String logType = null; // reference to original LOG variable type
 
 
     public LogListener(BufferedTokenStream tokens, String filename) {
@@ -29,8 +31,17 @@ public class LogListener extends JavaBaseListener {
         return rewriter;
     }
 
+    public String getLogType() {
+        if (logType == null) {
+            return null;
+        } else {
+            // return only last part of QN
+            return logType.substring(logType.lastIndexOf(".") + 1);
+        }
+    }
+
     void checkAndStoreVariable(String variableName, String variableType, int lineNumber,
-                                  int lineStartPosition, int lineStopPosition, int startPosition, int stopPosition) {
+                               int lineStartPosition, int lineStopPosition, int startPosition, int stopPosition) {
         Variable.Properties p = var.new Properties();
 
         if (variableName == null || variableType == null) {
@@ -64,25 +75,10 @@ public class LogListener extends JavaBaseListener {
 
     @Override
     public void exitCompilationUnit(@NotNull JavaParser.CompilationUnitContext ctx) {
-        Map<String, Variable.Properties> map = var.getVariableList();
+//        Map<String, Variable.Properties> map = var.getVariableList();
 //        for (String key : map.keySet()) {
 //            System.out.println(key + " " + map.get(key));
 //        }
-    }
-
-    @Override
-    public void exitImportDeclaration(@NotNull JavaParser.ImportDeclarationContext ctx) {
-    }
-
-    @Override
-    public void enterVariableDeclarator(@NotNull JavaParser.VariableDeclaratorContext ctx) {
-        // Logger <LOG> = LogFactory .... (if or look into FieldDeclaration
-        //System.out.println("enVarDec " + ctx.variableDeclaratorId().getText() + " " + ctx.variableInitializer().expression().getText());
-    }
-
-    @Override
-    public void exitVariableDeclarator(@NotNull JavaParser.VariableDeclaratorContext ctx) {
-        super.exitVariableDeclarator(ctx);
     }
 
     // ------------------------------------------------------------------------
@@ -93,11 +89,22 @@ public class LogListener extends JavaBaseListener {
             if (ctx.getText().toLowerCase().contains(loggerLoader.getLogFactory().toLowerCase())) {
                 rewriter.replace(ctx.getStart(), ctx.getStop(), loggerLoader.getNgmonLogFactoryImport());
             }
-            // Change logger and add namespace
+            // Change logger and add namespace, logGlobal imports
             if (ctx.getText().toLowerCase().contains(loggerLoader.getLogger().toLowerCase())) {
-                rewriter.replace(ctx.start, ctx.stop, loggerLoader.getNgmonLogImport());
+                if (getLogType() == null) {
+                    logType = ctx.getText();
+                }
+
+                String namespaceImport = "import " + ANTLRRunner.getCurrentFileInfo().getNamespace() +
+                        "." + ANTLRRunner.getCurrentFileInfo().getNamespaceEnd() + "Namespace";
+                String logGlobalImport = "import " + loggerLoader.getNgmonLogGlobal();
+                // Change Log import with Ngmon Log, currentNameSpace and LogGlobal imports
+                rewriter.replace(ctx.start, ctx.stop, loggerLoader.getNgmonLogImport() + ";\n"
+                        + namespaceImport + "\n" + logGlobalImport);
+
+                ANTLRRunner.getCurrentFileInfo().setNamespaceClass(
+                        ANTLRRunner.getCurrentFileInfo().getNamespaceEnd() + "Namespace");
             }
-            // TODO: Add another import namespace?
         }
     }
 
@@ -107,13 +114,21 @@ public class LogListener extends JavaBaseListener {
         // private static final XNamespace LOG = LoggerFactory.getLogger(XNamespace.class);
         String varName = ctx.variableDeclarators().variableDeclarator(0).variableDeclaratorId().getText();
 
-        // TODO log names should be in some dictionary form no "log" only
-        if (varName.toLowerCase().contains("log")) {
-            String logFieldDeclaration = loggerLoader.getLoggingApplicationNamespaceShort() +
-                    " LOG = LoggerFactory.getLogger(" + loggerLoader.getLoggingApplicationNamespaceShort() + ".class);";
-            rewriter.replace(ctx.getStart(), logFieldDeclaration);
+        // TODO: log names should be in some dictionary form no "log" only
+        // Test for equality of Log variable name and type
+        if ((varName.toLowerCase().contains("log")) && ctx.type().getText().equals(getLogType())) {
+            // store LOG variableName for further easier searching assistance
+            if (logName == null) {
+                logName = varName;
+            }
+
+            String logFieldDeclaration = ANTLRRunner.getCurrentFileInfo().getNamespaceClass() +
+                " LOG = LoggerFactory.getLogger(" + ANTLRRunner.getCurrentFileInfo().getNamespaceClass() + ".class);";
+//            System.out.println("replacing " + ctx.getStart() + ctx.getText() + " with " + logFieldDeclaration);
+            rewriter.replace(ctx.getStart(), ctx.getStop(), logFieldDeclaration);
+
         } else {
-            // it is not LOG variable, so let's store information about it for further log transformations
+            // It is not LOG variable, so let's store information about it for further log transformations
             if (ctx.variableDeclarators().variableDeclarator().size() == 1) {
                 checkAndStoreVariable(varName, ctx.type().getText(), ctx.start.getLine(),
                         ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
@@ -123,14 +138,6 @@ public class LogListener extends JavaBaseListener {
                 System.err.println("exitFieldDeclaration variableDeclarator().size() > 1!\n");
             }
         }
-    }
-
-
-    @Override
-    public void exitConstantDeclarator(@NotNull JavaParser.ConstantDeclaratorContext ctx) {
-        System.err.println("constant!" + ctx.getText());
-        System.exit(100);
-        // Maybe not used at all?!
     }
 
     @Override
@@ -152,13 +159,60 @@ public class LogListener extends JavaBaseListener {
         checkAndStoreVariable(varName, varType, ctx.start.getLine(),
                 ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
                 ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
+    }
 
+    @Override
+    public void exitConstantDeclarator(@NotNull JavaParser.ConstantDeclaratorContext ctx) {
+        // Should change log definition and store variable as well,
+        // but it seems like this construction is not used at all.
+        System.err.println("constant!" + ctx.getText());
+        System.exit(100);
+        // Maybe not used at all?!
     }
 
     @Override
     public void exitConstDeclaration(@NotNull JavaParser.ConstDeclarationContext ctx) {
+        // This is not duplicate!
+        // Should change log definition and store variable as well,
+        // but it seems like this construction is not used at all.
         System.err.println("constDec=" + ctx.getText() + " in file=" + var.getFileName());
-
         System.exit(100);
+    }
+
+
+    @Override
+    public void exitBlockStatement(@NotNull JavaParser.BlockStatementContext ctx) {
+        // Translate "if (LOG.isXEnabled())" statement to "if (LogGlobal.isXEnabled())"
+        if ((ctx.statement() != null) && (ctx.statement().getChildCount() > 0)) {
+            if (ctx.statement().getChild(0).getText().toLowerCase().equals("if")) {
+                JavaParser.ExpressionContext exp = ctx.statement().parExpression().expression();
+                if (exp.getText().startsWith(logName + ".")) {
+                    // Check if Log call matches regexp "isXEnabled"
+                    if (exp.expression(0).getChild(exp.expression(0).getChildCount() - 1).getText()
+                            .matches("is.*Enabled")) {
+                        // Now we can safely replace logName by LogGlobal
+                        JavaParser.ExpressionContext log = exp.expression(0).expression(0);
+                        rewriter.replace(log.start, log.stop,
+                                loggerLoader.getQualifiedNameEnd(loggerLoader.getNgmonLogGlobal()));
+                    } else {
+                        System.err.println("Not implemented translation of log call! " +
+                                "Don't know what to do with '" + exp.getText() + "'.");
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public void exitStatementExpression(@NotNull JavaParser.StatementExpressionContext ctx) {
+        // Process LOG.X(stuff);
+        if (ctx.getText().startsWith(logName + ".")) {
+            System.out.println("exitStmnt     = " + ctx.getText() + " " + ctx.expression().getChildCount());
+
+            // if Log.operation is in currentLoggerMethodList - transform it,
+            // else throw new exception or add it to methodList?
+
+
+        }
     }
 }
