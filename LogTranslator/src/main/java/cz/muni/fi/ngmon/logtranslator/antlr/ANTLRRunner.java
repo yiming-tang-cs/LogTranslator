@@ -1,7 +1,7 @@
 package cz.muni.fi.ngmon.logtranslator.antlr;
 
 import cz.muni.fi.ngmon.logtranslator.translator.FileInfo;
-import cz.muni.fi.ngmon.logtranslator.translator.LogListener;
+import cz.muni.fi.ngmon.logtranslator.translator.LogTranslator;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RuleContext;
@@ -36,7 +36,7 @@ public class ANTLRRunner {
 
 //            System.out.println("ParseTree = " + tree.getText());
             ParseTreeWalker walker = new ParseTreeWalker();
-            LogListener listener = new LogListener(tokens, file);
+            LogTranslator listener = new LogTranslator(tokens, file);
             walker.walk(listener, tree);
 
           //  System.out.println("modified=\n" + listener.getRewriter().getText());

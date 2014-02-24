@@ -7,19 +7,19 @@ import org.antlr.v4.runtime.BufferedTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.TokenStreamRewriter;
 import org.antlr.v4.runtime.misc.NotNull;
-import java.util.Map;
 
 
-public class LogListener extends JavaBaseListener {
+
+public class LogTranslator extends JavaBaseListener {
     //    BufferedTokenStream bufferedTokens; // intended to be used with multiple channels for handling WHITESPACES and COMMENTS
-    static LoggerLoader loggerLoader = new CustomLoggerLoader();
+    LoggerLoader loggerLoader = null;
     Variable var;
     TokenStreamRewriter rewriter;
     private String logName = null; // reference to original LOG variable name
     private String logType = null; // reference to original LOG variable type
 
 
-    public LogListener(BufferedTokenStream tokens, String filename) {
+    public LogTranslator(BufferedTokenStream tokens, String filename) {
         rewriter = new TokenStreamRewriter(tokens);
         var = new Variable();
         var.setFileName(filename);
@@ -79,31 +79,44 @@ public class LogListener extends JavaBaseListener {
 //        for (String key : map.keySet()) {
 //            System.out.println(key + " " + map.get(key));
 //        }
+
+        LoggerFactory.setActualLoggingFramework(null);
+        loggerLoader = null;
     }
 
     // ------------------------------------------------------------------------
     @Override
     public void enterQualifiedName(@NotNull JavaParser.QualifiedNameContext ctx) {
         if (ctx.getParent().getClass() == JavaParser.ImportDeclarationContext.class) {
+            // Determine actual logging framework
+            if (LoggerFactory.getActualLoggingFramework() == null) {
+                loggerLoader = LoggerFactory.determineLoggingFramework(ctx.getText());
+            }
             // Change logger factory
             if (ctx.getText().toLowerCase().contains(loggerLoader.getLogFactory().toLowerCase())) {
+                System.out.println("logfactory=" + ctx.getText());
                 rewriter.replace(ctx.getStart(), ctx.getStop(), loggerLoader.getNgmonLogFactoryImport());
             }
             // Change logger and add namespace, logGlobal imports
-            if (ctx.getText().toLowerCase().contains(loggerLoader.getLogger().toLowerCase())) {
-                if (getLogType() == null) {
-                    logType = ctx.getText();
+            for (String logImport : loggerLoader.getLogger()) {
+
+
+                if (ctx.getText().toLowerCase().equals(logImport.toLowerCase())) {
+                    if (getLogType() == null) {
+                        logType = ctx.getText();
+                        System.out.println("log=" + logType);
+                    }
+
+                    String namespaceImport = "import " + ANTLRRunner.getCurrentFileInfo().getNamespace() +
+                            "." + ANTLRRunner.getCurrentFileInfo().getNamespaceEnd() + "Namespace";
+                    String logGlobalImport = "import " + loggerLoader.getNgmonLogGlobal();
+                    // Change Log import with Ngmon Log, currentNameSpace and LogGlobal imports
+                    rewriter.replace(ctx.start, ctx.stop, loggerLoader.getNgmonLogImport() + ";\n"
+                            + namespaceImport + "\n" + logGlobalImport);
+
+                    ANTLRRunner.getCurrentFileInfo().setNamespaceClass(
+                            ANTLRRunner.getCurrentFileInfo().getNamespaceEnd() + "Namespace");
                 }
-
-                String namespaceImport = "import " + ANTLRRunner.getCurrentFileInfo().getNamespace() +
-                        "." + ANTLRRunner.getCurrentFileInfo().getNamespaceEnd() + "Namespace";
-                String logGlobalImport = "import " + loggerLoader.getNgmonLogGlobal();
-                // Change Log import with Ngmon Log, currentNameSpace and LogGlobal imports
-                rewriter.replace(ctx.start, ctx.stop, loggerLoader.getNgmonLogImport() + ";\n"
-                        + namespaceImport + "\n" + logGlobalImport);
-
-                ANTLRRunner.getCurrentFileInfo().setNamespaceClass(
-                        ANTLRRunner.getCurrentFileInfo().getNamespaceEnd() + "Namespace");
             }
         }
     }
@@ -123,7 +136,7 @@ public class LogListener extends JavaBaseListener {
             }
 
             String logFieldDeclaration = ANTLRRunner.getCurrentFileInfo().getNamespaceClass() +
-                " LOG = LoggerFactory.getLogger(" + ANTLRRunner.getCurrentFileInfo().getNamespaceClass() + ".class);";
+                    " LOG = LoggerFactory.getLogger(" + ANTLRRunner.getCurrentFileInfo().getNamespaceClass() + ".class);";
 //            System.out.println("replacing " + ctx.getStart() + ctx.getText() + " with " + logFieldDeclaration);
             rewriter.replace(ctx.getStart(), ctx.getStop(), logFieldDeclaration);
 

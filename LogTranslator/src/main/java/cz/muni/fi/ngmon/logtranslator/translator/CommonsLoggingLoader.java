@@ -2,22 +2,49 @@ package cz.muni.fi.ngmon.logtranslator.translator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+
+
+/*
+    http://commons.apache.org/proper/commons-logging/apidocs/index.html
+    Commons Logging
+    http://commons.apache.org/proper/commons-logging/apidocs/org/apache/commons/logging/Log.html
+    http://commons.apache.org/proper/commons-logging/apidocs/org/apache/commons/logging/impl/Log4JLogger.html
+ */
 
 public class CommonsLoggingLoader extends LoggerLoader {
 
-    // Use org.apache.commons.logging.* imports
-    private List<String> availableLogMethods = new ArrayList<>(
-            Arrays.asList("trace", "debug", "info", "warn", "error", "fatal"));
+    private Collection translateLogMethods;
+    private Collection checkerLogMethods;
 
-    public CommonsLoggingLoader(List<String> availableLogMethods) {
+    public CommonsLoggingLoader() {
         super();
-//        commons_logger=org.apache.commons.logging.Log
-//        commons_logfactory=org.apache.commons.logging.LogFactory
+//        org.apache.commons.logging.Log or org.apache.commons.logging.impl.Log4JLogger
+        List<String> imports = LoggerFactory.getActualLoggingImports();
+        setLogFactory(imports.get(0));
+        setLogger(imports.subList(1, imports.size()));
+
+
+//        List<String> customCustomizedMethods = null; //Arrays.asList("asd");
+        List<String> levels = Arrays.asList("trace", "debug", "info", "warn", "error", "fatal");
+        this.checkerLogMethods = generateCheckerMethods(levels);
+        this.translateLogMethods = generateTranslateMethods(levels, null);
+    }
+
+
+    @Override
+    public Collection getTranslateLogMethods() {
+        return translateLogMethods;
     }
 
     @Override
-    public List<String> getAvailableLogMethods() {
-        return availableLogMethods;
+    public Collection getCheckerLogMethods() {
+        return checkerLogMethods;
+    }
+
+    @Override
+    public String[] getFactoryInitializations() {
+        return new String[] {"LogFactory.getInstance", "LogFactory.getLog"};
     }
 }
