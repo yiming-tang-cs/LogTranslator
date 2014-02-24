@@ -14,7 +14,6 @@ import java.util.Properties;
 
 public abstract class LoggerLoader {
 
-    private String testingFile;
     private Properties properties;
     private String loggingApplicationHome;
     private String loggingApplicationNamespace;
@@ -38,16 +37,14 @@ public abstract class LoggerLoader {
             properties = new Properties();
             properties.load(is);
 
-            testingFile = properties.getProperty("example_file");
-
             loggingApplicationHome = properties.getProperty("application_home");
+            loggingApplicationNamespace = properties.getProperty("application_namespace");
             ngmonLogImport = properties.getProperty("ngmon_log_import");
             ngmonLogFactoryImport = properties.getProperty("ngmon_log_factory_import");
             ngmonLogGlobal = properties.getProperty("ngmon_log_global");
             ngmonAnnotationNamespaceImport = properties.getProperty("ngmon_annotation_ns_import");
             ngmonLoggerAbstractNamespaceImport = properties.getProperty("ngmon_logger_abstract_ns_import");
             ngmonEmptyLogStatement = properties.getProperty("ngmon_empty_log_statement");
-            loggingApplicationNamespace = properties.getProperty("application_namespace");
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -65,15 +62,6 @@ public abstract class LoggerLoader {
         this.loggingApplicationHome = loggingApplicationHome;
     }
 
-    // TODO remove later
-    public String getTestingFile() {
-        return testingFile;
-    }
-
-    public Properties getProperties() {
-        return properties;
-    }
-
     public List<String> getLogger() {
         return logger;
     }
@@ -89,9 +77,6 @@ public abstract class LoggerLoader {
     public void setLogFactory(String logFactory) {
         this.logFactory = logFactory;
     }
-
-    // --- ^^^ ---
-
 
     public String getNgmonEmptyLogStatement() {
         return ngmonEmptyLogStatement;

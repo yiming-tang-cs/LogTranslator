@@ -60,16 +60,3 @@ public class Log4jLoggingLoader extends LoggerLoader {
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
