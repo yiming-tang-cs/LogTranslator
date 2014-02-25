@@ -41,7 +41,7 @@ public class LoggerFactory {
     }
 
     public static LoggerLoader determineLoggingFramework(String obtImport) {
-        LoggerLoader loader = null;
+        LoggerLoader loader;
         for (String key : loggingFrameworks.keySet()) {
             if (loggingFrameworks.get(key).contains(obtImport)) {
                 setActualLoggingFramework(key);
@@ -51,7 +51,9 @@ public class LoggerFactory {
         }
 
         if (actualLoggingFramework == null) {
-            System.err.println("Unable to create new LoggerLoader. Haven't determined actual logging framework yet.");
+            // This obtImport does not contain any known "log import"
+            // in our loggingFrameworks map, we can safely skip it.
+            return null;
         } else {
             switch (actualLoggingFramework) {
                 case "juli":

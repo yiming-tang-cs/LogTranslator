@@ -13,6 +13,7 @@ public class TranslatorStarter {
 
         // TODO change to fileNames
         fileInfo = new FileInfo("/home/mtoth/skola/dp/LogFilterBase/LogTranslator/src/main/resources/sourceExamples/TestingClass.java");
+        fileInfo = new FileInfo("/home/mtoth/skola/dp/LogFilterBase/LogTranslator/src/main/resources/sourceExamples/WebApp.java");
         ANTLRRunner.run(fileInfo);
 
     }

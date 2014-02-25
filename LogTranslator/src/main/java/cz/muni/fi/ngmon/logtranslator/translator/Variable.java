@@ -105,10 +105,10 @@ public class Variable {
                     "name='" + name + '\'' +
                     ", type='" + type + '\'' +
                     ", lineNumber=" + lineNumber +
-                    ", startPosition=" + startPosition +
+                    /* ", startPosition=" + startPosition +
                     ", stopPosition=" + stopPosition +
                     ", fileStartPosition=" + fileStartPosition +
-                    ", fileStopPosition=" + fileStopPosition +
+                    ", fileStopPosition=" + fileStopPosition + */
                     '}';
         }
     }

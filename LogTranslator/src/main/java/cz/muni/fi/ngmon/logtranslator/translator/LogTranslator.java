@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.TokenStreamRewriter;
 import org.antlr.v4.runtime.misc.NotNull;
 
+import java.util.Map;
 
 
 public class LogTranslator extends JavaBaseListener {
@@ -45,7 +46,7 @@ public class LogTranslator extends JavaBaseListener {
         Variable.Properties p = var.new Properties();
 
         if (variableName == null || variableType == null) {
-            throw new NullPointerException("Variable name or type are null!");
+            throw new NullPointerException("Variable name or type are null! Type=" + variableType);
         } else {
             p.setName(variableName);
             p.setType(variableType);
@@ -79,7 +80,7 @@ public class LogTranslator extends JavaBaseListener {
 //        for (String key : map.keySet()) {
 //            System.out.println(key + " " + map.get(key));
 //        }
-
+        // do cleanUp()
         LoggerFactory.setActualLoggingFramework(null);
         loggerLoader = null;
     }
@@ -91,6 +92,11 @@ public class LogTranslator extends JavaBaseListener {
             // Determine actual logging framework
             if (LoggerFactory.getActualLoggingFramework() == null) {
                 loggerLoader = LoggerFactory.determineLoggingFramework(ctx.getText());
+
+                if (loggerLoader == null) {
+                    // this is not log import, we can safely skip it
+                    return;
+                }
             }
             // Change logger factory
             if (ctx.getText().toLowerCase().contains(loggerLoader.getLogFactory().toLowerCase())) {
@@ -99,8 +105,6 @@ public class LogTranslator extends JavaBaseListener {
             }
             // Change logger and add namespace, logGlobal imports
             for (String logImport : loggerLoader.getLogger()) {
-
-
                 if (ctx.getText().toLowerCase().equals(logImport.toLowerCase())) {
                     if (getLogType() == null) {
                         logType = ctx.getText();
@@ -155,23 +159,30 @@ public class LogTranslator extends JavaBaseListener {
 
     @Override
     public void exitLocalVariableDeclaration(@NotNull JavaParser.LocalVariableDeclarationContext ctx) {
-        String varName = null;
-        String varType = null;
+        String varType = ctx.type().getText();//null;
+        String[] variables = null;
+//        varType =
         if (ctx.variableDeclarators().variableDeclarator().size() == 1) {
-            varName = ctx.variableDeclarators().variableDeclarator(0).variableDeclaratorId().getText();
-            varType = ctx.type().getText();
+            variables = new String[]{ctx.variableDeclarators().variableDeclarator(0).variableDeclaratorId().getText()};
         } else {
-            // List size is more then 1 - never happened so far
-            System.err.println("exitLocalVariableDeclaration variableDeclarator().size() > 1!\n");
+            // Multiple variables are defined on one line. Ugly.. handle.
+            variables = new String[ctx.variableDeclarators().getChildCount()];
+
+            for (int i = 0; i < variables.length; i++) {
+                variables[i] = ctx.variableDeclarators().getChild(i).getText();
+            }
         }
 //        System.out.printf("type=%8s  name=%8s  start=%d:%d-%d ~ %d-%d   %50s\n",
 //                varType, varName, ctx.start.getLine(),
 //                ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
 //                ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex(), ctx.getText());
 
-        checkAndStoreVariable(varName, varType, ctx.start.getLine(),
-                ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
-                ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
+        for (String varName : variables) {
+            checkAndStoreVariable(varName, varType, ctx.start.getLine(),
+                    ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
+                    ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
+        }
+
     }
 
     @Override
