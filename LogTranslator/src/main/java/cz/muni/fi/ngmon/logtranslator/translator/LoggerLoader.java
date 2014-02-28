@@ -14,27 +14,27 @@ import java.util.Properties;
 
 public abstract class LoggerLoader {
 
-    private Properties properties;
     private String loggingApplicationHome;
     private String loggingApplicationNamespace;
-
     private List<String> logger;
-    private String logFactory;
 
+    private String logFactory;
     private String ngmonLogImport;
+
     private String ngmonLogFactoryImport;
     private String ngmonLogGlobal;
     private String ngmonAnnotationNamespaceImport;
     private String ngmonLoggerAbstractNamespaceImport;
     private String ngmonEmptyLogStatement;
+    private String ngmonLogLength;
 
 
     public LoggerLoader() {
         String propertyFile = "src/main/resources/logtranslator.properties";
+        Properties properties = new Properties();
 
         try {
             InputStream is = new FileInputStream(propertyFile);
-            properties = new Properties();
             properties.load(is);
 
             loggingApplicationHome = properties.getProperty("application_home");
@@ -45,7 +45,7 @@ public abstract class LoggerLoader {
             ngmonAnnotationNamespaceImport = properties.getProperty("ngmon_annotation_ns_import");
             ngmonLoggerAbstractNamespaceImport = properties.getProperty("ngmon_logger_abstract_ns_import");
             ngmonEmptyLogStatement = properties.getProperty("ngmon_empty_log_statement");
-
+            ngmonLogLength = properties.getProperty("ngmon_log_length", "7");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -76,6 +76,10 @@ public abstract class LoggerLoader {
 
     public void setLogFactory(String logFactory) {
         this.logFactory = logFactory;
+    }
+
+    public int getNgmonLogLength() {
+        return Integer.parseInt(ngmonLogLength);
     }
 
     public String getNgmonEmptyLogStatement() {
@@ -141,4 +145,6 @@ public abstract class LoggerLoader {
     }
 
     public abstract String[] getFactoryInitializations();
+
+
 }

@@ -2,20 +2,33 @@ package cz.muni.fi.ngmon.logtranslator.translator;
 
 import org.antlr.v4.misc.OrderedHashMap;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class Variable {
 
     // Mapping of variableName : <variableProperties>
-    private Map<String, Properties> variableList = new OrderedHashMap<>();
+    private static Map<String, List<Properties>> variableList = new OrderedHashMap<>();
     private String fileName;
 
-    public Map<String, Properties> getVariableList() {
+    public static Map<String, List<Properties>> getVariableList() {
         return variableList;
     }
 
     public void putVariableList(String variableName, Properties properties) {
-        variableList.put(variableName, properties);
+        List<Properties> props;
+        if (getProperties(variableName) != null) {
+            props = getProperties(variableName);
+        } else {
+            props = new ArrayList<>();
+        }
+        props.add(properties);
+        variableList.put(variableName, props);
+    }
+
+    public List<Properties> getProperties(String variableName) {
+        return variableList.get(variableName);
     }
 
     public String getFileName() {
@@ -42,6 +55,7 @@ public class Variable {
         private int stopPosition;
         private int fileStartPosition;
         private int fileStopPosition;
+        private boolean isField; // variable is declared in class, not in method body
 
         public String getName() {
             return name;
@@ -97,6 +111,14 @@ public class Variable {
 
         public void setFileStopPosition(int fileStopPosition) {
             this.fileStopPosition = fileStopPosition;
+        }
+
+        public boolean isField() {
+            return isField;
+        }
+
+        public void setField(boolean isField) {
+            this.isField = isField;
         }
 
         @Override

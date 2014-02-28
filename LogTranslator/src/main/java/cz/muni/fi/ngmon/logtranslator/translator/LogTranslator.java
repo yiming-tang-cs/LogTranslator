@@ -3,12 +3,25 @@ package cz.muni.fi.ngmon.logtranslator.translator;
 import cz.muni.fi.ngmon.logtranslator.antlr.ANTLRRunner;
 import cz.muni.fi.ngmon.logtranslator.antlr.JavaBaseListener;
 import cz.muni.fi.ngmon.logtranslator.antlr.JavaParser;
+import javafx.util.Pair;
 import org.antlr.v4.runtime.BufferedTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.TokenStreamRewriter;
 import org.antlr.v4.runtime.misc.NotNull;
+import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+final class Separators {
+    // manual append new separators
+    static final String COMMA = ",";
+    static final String PLUS = "+";
+    static final Collection<String> separators = Arrays.asList(COMMA, PLUS);
+
+}
 
 
 public class LogTranslator extends JavaBaseListener {
@@ -18,6 +31,7 @@ public class LogTranslator extends JavaBaseListener {
     TokenStreamRewriter rewriter;
     private String logName = null; // reference to original LOG variable name
     private String logType = null; // reference to original LOG variable type
+
 
 
     public LogTranslator(BufferedTokenStream tokens, String filename) {
@@ -41,12 +55,18 @@ public class LogTranslator extends JavaBaseListener {
         }
     }
 
+    private void storeVariable(ParserRuleContext ctx, String variableName, String variableTypeName, boolean isField) {
+        checkAndStoreVariable(variableName, variableTypeName, ctx.start.getLine(),
+                ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
+                ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex(), isField);
+    }
+
     void checkAndStoreVariable(String variableName, String variableType, int lineNumber,
-                               int lineStartPosition, int lineStopPosition, int startPosition, int stopPosition) {
+                               int lineStartPosition, int lineStopPosition, int startPosition, int stopPosition, boolean isField) {
         Variable.Properties p = var.new Properties();
 
         if (variableName == null || variableType == null) {
-            throw new NullPointerException("Variable name or type are null! Type=" + variableType);
+            throw new NullPointerException("Variable name or type are null!");
         } else {
             p.setName(variableName);
             p.setType(variableType);
@@ -57,6 +77,7 @@ public class LogTranslator extends JavaBaseListener {
         p.setStopPosition(lineStopPosition);
         p.setFileStartPosition(startPosition);
         p.setFileStopPosition(stopPosition);
+        p.setField(isField);
         var.putVariableList(variableName, p);
     }
 
@@ -147,11 +168,12 @@ public class LogTranslator extends JavaBaseListener {
         } else {
             // It is not LOG variable, so let's store information about it for further log transformations
             if (ctx.variableDeclarators().variableDeclarator().size() == 1) {
-                checkAndStoreVariable(varName, ctx.type().getText(), ctx.start.getLine(),
-                        ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
-                        ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
+                storeVariable(ctx, varName, ctx.type().getText(), true);
+//                checkAndStoreVariable(varName, ctx.type().getText(), ctx.start.getLine(),
+//                        ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
+//                        ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
             } else {
-                // List size is more then 1 - never happened so far
+                // Let's hope there are no 2 loggers defined on same line - should be impossible as well
                 System.err.println("exitFieldDeclaration variableDeclarator().size() > 1!\n");
             }
         }
@@ -172,17 +194,13 @@ public class LogTranslator extends JavaBaseListener {
                 variables[i] = ctx.variableDeclarators().getChild(i).getText();
             }
         }
-//        System.out.printf("type=%8s  name=%8s  start=%d:%d-%d ~ %d-%d   %50s\n",
-//                varType, varName, ctx.start.getLine(),
-//                ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
-//                ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex(), ctx.getText());
 
         for (String varName : variables) {
-            checkAndStoreVariable(varName, varType, ctx.start.getLine(),
-                    ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
-                    ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
+            storeVariable(ctx, varName, varType, false);
+//            checkAndStoreVariable(varName, varType, ctx.start.getLine(),
+//                    ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
+//                    ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
         }
-
     }
 
     @Override
@@ -203,6 +221,27 @@ public class LogTranslator extends JavaBaseListener {
         System.exit(100);
     }
 
+    @Override
+    public void enterCatchClause(@NotNull JavaParser.CatchClauseContext ctx) {
+        // Store exception into variable list
+        String errorVarName = null;
+        String errorTypeName;
+
+        if (ctx.getChild(ctx.getChildCount() - 3) != null) {
+            errorVarName = ctx.getChild(ctx.getChildCount() - 3).getText();
+        }
+
+        // Check for simple 'catch (Exception e)' or
+        // multi-exception 'catch (NullPointerException | IllegalArgumentException | IOException ex)' usage
+        if (ctx.catchType().getChildCount() == 1) {
+            System.out.println(ctx.getChild(2).getText() + " " + ctx.getChild(3).getText());
+            errorTypeName = ctx.getChild(2).getText();
+        } else {
+            // Store Exception as variable type name (as we can not tell which exception has higher priority)
+            errorTypeName = "Exception";
+        }
+        storeVariable(ctx, errorVarName, errorTypeName, false);
+    }
 
     @Override
     public void exitBlockStatement(@NotNull JavaParser.BlockStatementContext ctx) {
@@ -212,8 +251,11 @@ public class LogTranslator extends JavaBaseListener {
                 JavaParser.ExpressionContext exp = ctx.statement().parExpression().expression();
                 if (exp.getText().startsWith(logName + ".")) {
                     // Check if Log call matches regexp "isXEnabled"
-                    if (exp.expression(0).getChild(exp.expression(0).getChildCount() - 1).getText()
-                            .matches("is.*Enabled")) {
+                    // TODO: Check if Log call is in current checkerLogMethods()
+
+                    ParseTree methodCall = exp.expression(0).getChild(exp.expression(0).getChildCount() - 1);
+                    if (loggerLoader.getCheckerLogMethods().contains(methodCall.getText()))  {
+//                    if (exp.expression(0).getChild(exp.expression(0).getChildCount() - 1).getText().matches("is.*Enabled")) {
                         // Now we can safely replace logName by LogGlobal
                         JavaParser.ExpressionContext log = exp.expression(0).expression(0);
                         rewriter.replace(log.start, log.stop,
@@ -229,14 +271,82 @@ public class LogTranslator extends JavaBaseListener {
 
     @Override
     public void exitStatementExpression(@NotNull JavaParser.StatementExpressionContext ctx) {
-        // Process LOG.X(stuff);
+        // Process LOG.XYZ(stuff);
         if (ctx.getText().startsWith(logName + ".")) {
             System.out.println("exitStmnt     = " + ctx.getText() + " " + ctx.expression().getChildCount());
+            if ((ctx.expression().expression(0) != null) && (ctx.expression().expression(0).getChildCount() == 3)) {
+                // Get "XYZ" Log call into methodCall
+                ParseTree methodCall = ctx.expression().expression(0).getChild(2);
 
-            // if Log.operation is in currentLoggerMethodList - transform it,
+                // if Log.operation is in currentLoggerMethodList - transform it,
+                if (loggerLoader.getTranslateLogMethods().contains(methodCall.getText())) {
+//                    System.out.println("yes, '" + methodCall +"' is in current logger method list.");
+                    ParseTree transformedMethodCall = transformMethod(ctx.expression().expressionList());
+
+                    // add transformed method to appropriate XYZNamespace
+                }
             // else throw new exception or add it to methodList?
+            }
 
 
         }
+    }
+
+    private ParseTree transformMethod(JavaParser.ExpressionListContext expressionList) {
+        System.out.println("Transforming " + expressionList.getText());
+//        if (currentFramework == slf4j) then handle 2 types of messages: '"msgs {}", var' and classic '"das" + das + "dsad"';
+        String stringChild;
+        StringBuilder newLogName = new StringBuilder();
+        List<Pair<String, String>> variablesNameType = new ArrayList<>();
+
+        int logLengthLevel = 0;
+
+        if (LoggerFactory.getActualLoggingFramework().equals("slf4j") && expressionList.getText().contains("{}")) {
+            // handle {} and ""
+            System.out.println(expressionList.getText() + " is special slf4j {}");
+        } else {
+            // normal transformation of log
+
+            for (int i = 0; i < expressionList.getChildCount(); i++) {
+                stringChild = expressionList.getChild(i).getText();
+                if (Separators.separators.contains(stringChild)) continue;
+                System.out.println(expressionList.getChild(i).getText());
+
+                // if is a comment and we have not reached max length limit
+                if (stringChild.startsWith("\"") && (logLengthLevel < loggerLoader.getNgmonLogLength())) {
+                    if (logLengthLevel > 0) {
+                        newLogName.append("_");
+                    }
+                    newLogName.append(prepareMethodNameFrom(stringChild));
+                    logLengthLevel++;
+                }
+
+                if (Variable.getVariableList().containsKey(stringChild)) {
+                    for (String s : Variable.getVariableList().keySet()) {
+                        System.out.println(Variable.getVariableList().get(s));
+                    }
+                    // variable is known, put it into namespace
+                    List<Variable.Properties> variables = Variable.getVariableList().get(stringChild);
+                    if (variables.size() > 1) {
+                        // TODO do some magic
+                    } else {
+                        String type = null;
+                        for (Variable.Properties props : variables) {
+                            System.out.println(props);
+                            type = props.getType();
+                        }
+
+                        Pair<String, String> var = new Pair<>(stringChild, type);
+                        variablesNameType.add(var);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private String prepareMethodNameFrom(String child) {
+        System.out.println(child + " ---> " + "bastl");
+        return null;
     }
 }
