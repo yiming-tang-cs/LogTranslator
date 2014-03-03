@@ -6,28 +6,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class Variable {
+public class LogFile {
 
     // Mapping of variableName : <variableProperties>
-    private static Map<String, List<Properties>> variableList = new OrderedHashMap<>();
+    private static Map<String, List<Variable>> variableList = new OrderedHashMap<>();
     private String fileName;
 
-    public static Map<String, List<Properties>> getVariableList() {
+    public static Map<String, List<Variable>> getVariableList() {
         return variableList;
     }
 
-    public void putVariableList(String variableName, Properties properties) {
-        List<Properties> props;
+    public void putVariableList(String variableName, Variable variable) {
+        List<Variable> vars;
         if (getProperties(variableName) != null) {
-            props = getProperties(variableName);
+            vars = getProperties(variableName);
         } else {
-            props = new ArrayList<>();
+            vars = new ArrayList<>();
         }
-        props.add(properties);
-        variableList.put(variableName, props);
+        vars.add(variable);
+        variableList.put(variableName, vars);
     }
 
-    public List<Properties> getProperties(String variableName) {
+    public List<Variable> getProperties(String variableName) {
         return variableList.get(variableName);
     }
 
@@ -41,13 +41,13 @@ public class Variable {
 
     @Override
     public String toString() {
-        return "Variable{" +
+        return "LogFile{" +
                 "variableList=" + variableList +
                 ", fileName='" + fileName + '\'' +
                 '}';
     }
 
-    class Properties {
+    class Variable {
         private String name; // ?
         private String type;
         private int lineNumber;
@@ -123,10 +123,12 @@ public class Variable {
 
         @Override
         public String toString() {
-            return "Properties{" +
+            return "Variable{" +
                     "name='" + name + '\'' +
                     ", type='" + type + '\'' +
                     ", lineNumber=" + lineNumber +
+                    ", field=" + isField +
+
                     /* ", startPosition=" + startPosition +
                     ", stopPosition=" + stopPosition +
                     ", fileStartPosition=" + fileStartPosition +

@@ -3,43 +3,35 @@ package cz.muni.fi.ngmon.logtranslator.translator;
 import cz.muni.fi.ngmon.logtranslator.antlr.ANTLRRunner;
 import cz.muni.fi.ngmon.logtranslator.antlr.JavaBaseListener;
 import cz.muni.fi.ngmon.logtranslator.antlr.JavaParser;
-import javafx.util.Pair;
 import org.antlr.v4.runtime.BufferedTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.TokenStreamRewriter;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-
-final class Separators {
-    // manual append new separators
-    static final String COMMA = ",";
-    static final String PLUS = "+";
-    static final Collection<String> separators = Arrays.asList(COMMA, PLUS);
-
-}
 
 
 public class LogTranslator extends JavaBaseListener {
     //    BufferedTokenStream bufferedTokens; // intended to be used with multiple channels for handling WHITESPACES and COMMENTS
-    LoggerLoader loggerLoader = null;
-    Variable var;
+    static LoggerLoader loggerLoader = null;
+    LogFile var;
     TokenStreamRewriter rewriter;
+    private int currentLine = 0;
     private String logName = null; // reference to original LOG variable name
     private String logType = null; // reference to original LOG variable type
 
 
-
     public LogTranslator(BufferedTokenStream tokens, String filename) {
         rewriter = new TokenStreamRewriter(tokens);
-        var = new Variable();
+        var = new LogFile();
         var.setFileName(filename);
 //        rewriter.getTokenStream();
 //        List<Token> cmtChannel = tokens.getHiddenTokensToRight(0, 1);
+    }
+
+    public static LoggerLoader getLoggerLoader() {
+        return loggerLoader;
     }
 
     public TokenStreamRewriter getRewriter() {
@@ -63,7 +55,7 @@ public class LogTranslator extends JavaBaseListener {
 
     void checkAndStoreVariable(String variableName, String variableType, int lineNumber,
                                int lineStartPosition, int lineStopPosition, int startPosition, int stopPosition, boolean isField) {
-        Variable.Properties p = var.new Properties();
+        LogFile.Variable p = var.new Variable();
 
         if (variableName == null || variableType == null) {
             throw new NullPointerException("Variable name or type are null!");
@@ -88,6 +80,7 @@ public class LogTranslator extends JavaBaseListener {
      */
     @Override
     public void enterEveryRule(@NotNull ParserRuleContext ctx) {
+        currentLine = ctx.getStart().getLine();
     }
 
     @Override
@@ -97,7 +90,7 @@ public class LogTranslator extends JavaBaseListener {
 
     @Override
     public void exitCompilationUnit(@NotNull JavaParser.CompilationUnitContext ctx) {
-//        Map<String, Variable.Properties> map = var.getVariableList();
+//        Map<String, LogFile.Variable> map = var.getVariableList();
 //        for (String key : map.keySet()) {
 //            System.out.println(key + " " + map.get(key));
 //        }
@@ -234,7 +227,7 @@ public class LogTranslator extends JavaBaseListener {
         // Check for simple 'catch (Exception e)' or
         // multi-exception 'catch (NullPointerException | IllegalArgumentException | IOException ex)' usage
         if (ctx.catchType().getChildCount() == 1) {
-            System.out.println(ctx.getChild(2).getText() + " " + ctx.getChild(3).getText());
+//            System.out.println(ctx.getChild(2).getText() + " " + ctx.getChild(3).getText());
             errorTypeName = ctx.getChild(2).getText();
         } else {
             // Store Exception as variable type name (as we can not tell which exception has higher priority)
@@ -250,11 +243,9 @@ public class LogTranslator extends JavaBaseListener {
             if (ctx.statement().getChild(0).getText().toLowerCase().equals("if")) {
                 JavaParser.ExpressionContext exp = ctx.statement().parExpression().expression();
                 if (exp.getText().startsWith(logName + ".")) {
-                    // Check if Log call matches regexp "isXEnabled"
-                    // TODO: Check if Log call is in current checkerLogMethods()
-
+                    // Check if Log call is in current checkerLogMethods() 'isXEnabled()'
                     ParseTree methodCall = exp.expression(0).getChild(exp.expression(0).getChildCount() - 1);
-                    if (loggerLoader.getCheckerLogMethods().contains(methodCall.getText()))  {
+                    if (loggerLoader.getCheckerLogMethods().contains(methodCall.getText())) {
 //                    if (exp.expression(0).getChild(exp.expression(0).getChildCount() - 1).getText().matches("is.*Enabled")) {
                         // Now we can safely replace logName by LogGlobal
                         JavaParser.ExpressionContext log = exp.expression(0).expression(0);
@@ -272,6 +263,10 @@ public class LogTranslator extends JavaBaseListener {
     @Override
     public void exitStatementExpression(@NotNull JavaParser.StatementExpressionContext ctx) {
         // Process LOG.XYZ(stuff);
+        if (logName == null) {
+            System.err.println("Unable to change log calls, when log factory has not been defined! Error. Exitting");
+            System.exit(10);
+        }
         if (ctx.getText().startsWith(logName + ".")) {
             System.out.println("exitStmnt     = " + ctx.getText() + " " + ctx.expression().getChildCount());
             if ((ctx.expression().expression(0) != null) && (ctx.expression().expression(0).getChildCount() == 3)) {
@@ -281,72 +276,104 @@ public class LogTranslator extends JavaBaseListener {
                 // if Log.operation is in currentLoggerMethodList - transform it,
                 if (loggerLoader.getTranslateLogMethods().contains(methodCall.getText())) {
 //                    System.out.println("yes, '" + methodCall +"' is in current logger method list.");
-                    ParseTree transformedMethodCall = transformMethod(ctx.expression().expressionList());
 
-                    // add transformed method to appropriate XYZNamespace
+                    Log log = transformMethodStatement(ctx.expression().expressionList());
+                    log.generateMethodName();
+                    log.setLevel(methodCall.getText());
+
+                    // TODO add transformed method to appropriate XYZNamespace  - create mapping file-variables/methods
                 }
-            // else throw new exception or add it to methodList?
+                // else throw new exception or add it to methodList?
             }
-
-
         }
     }
 
-    private ParseTree transformMethod(JavaParser.ExpressionListContext expressionList) {
-        System.out.println("Transforming " + expressionList.getText());
-//        if (currentFramework == slf4j) then handle 2 types of messages: '"msgs {}", var' and classic '"das" + das + "dsad"';
-        String stringChild;
-        StringBuilder newLogName = new StringBuilder();
-        List<Pair<String, String>> variablesNameType = new ArrayList<>();
+    /**
+     *  Choose how to transform log statement input, based on logging framework
+     *  or construction of statement itself. Whether it contains commas, pluses or '{}'.
+     *
+     *   @param expressionList expressionList statement to be evaluated (method_call)
+     */
+    private Log transformMethodStatement(JavaParser.ExpressionListContext expressionList) {
+//        System.out.println("Transforming " + expressionList.getText());
+        Log log = new Log();
 
-        int logLengthLevel = 0;
+        // Handle 'plus' separated log - transformation of 'Log.X("This is " + sparta + "!")'
+        // Handle comma separated log statement 'Log.X("this is", sparta)'
+        for (JavaParser.ExpressionContext ec : expressionList.expression()) {
+            fillCurrentLog(log, ec);
+        }
 
         if (LoggerFactory.getActualLoggingFramework().equals("slf4j") && expressionList.getText().contains("{}")) {
-            // handle {} and ""
+            // TODO implement slf4j framework
             System.out.println(expressionList.getText() + " is special slf4j {}");
+            // if (currentFramework == slf4j) then handle 2 types of messages: '"msgs {}", var' and classic '"das" + das + "dsad"';
+            // handle {} and "" ?
+        }
+        return log;
+    }
+
+    /**
+     * Parse expression data (recursive tree of expressions in LOG.X(expression) call
+     */
+    private void fillCurrentLog(Log log, JavaParser.ExpressionContext expression) {
+        if (expression == null) {
+            System.err.println("Expression is null");
+            return;
+        }
+        if (expression.getChildCount() > 1) {
+            for (JavaParser.ExpressionContext ec : expression.expression()) {
+                fillCurrentLog(log, ec);
+            }
         } else {
-            // normal transformation of log
+            if (expression.getText().startsWith("\"")) {
+                log.addComment(cultivate(expression.getText()));
+            } else {
+                LogFile.Variable varProperty = findVariable(expression.getText());
+                log.addVariable(varProperty);
+            }
+        }
+    }
 
-            for (int i = 0; i < expressionList.getChildCount(); i++) {
-                stringChild = expressionList.getChild(i).getText();
-                if (Separators.separators.contains(stringChild)) continue;
-                System.out.println(expressionList.getChild(i).getText());
-
-                // if is a comment and we have not reached max length limit
-                if (stringChild.startsWith("\"") && (logLengthLevel < loggerLoader.getNgmonLogLength())) {
-                    if (logLengthLevel > 0) {
-                        newLogName.append("_");
-                    }
-                    newLogName.append(prepareMethodNameFrom(stringChild));
-                    logLengthLevel++;
-                }
-
-                if (Variable.getVariableList().containsKey(stringChild)) {
-                    for (String s : Variable.getVariableList().keySet()) {
-                        System.out.println(Variable.getVariableList().get(s));
-                    }
-                    // variable is known, put it into namespace
-                    List<Variable.Properties> variables = Variable.getVariableList().get(stringChild);
-                    if (variables.size() > 1) {
-                        // TODO do some magic
-                    } else {
-                        String type = null;
-                        for (Variable.Properties props : variables) {
-                            System.out.println(props);
-                            type = props.getType();
+    /**
+     * Associate input variable with variable from known variables list.
+     *
+     * @param findMe - variable to find
+     */
+    private LogFile.Variable findVariable(String findMe) {
+        LogFile.Variable foundVar = null;
+        for (String key : LogFile.getVariableList().keySet()) {
+            if (findMe.equals(key)) {
+                List<LogFile.Variable> props = LogFile.getVariableList().get(findMe);
+                if (props.size() > 1) {
+                    // get closest line number (or field member)
+                    int closest = currentLine;
+                    for (LogFile.Variable p : props) {
+                        if (currentLine - p.getLineNumber() < closest) {
+                            closest = currentLine - p.getLineNumber();
+                            foundVar = p;
                         }
-
-                        Pair<String, String> var = new Pair<>(stringChild, type);
-                        variablesNameType.add(var);
                     }
+                } else {
+                    foundVar = props.get(0);
                 }
             }
         }
-        return null;
+
+        if (foundVar == null) {
+            System.err.println("Unable to find variable " + findMe);
+        }
+        return foundVar;
     }
 
-    private String prepareMethodNameFrom(String child) {
-        System.out.println(child + " ---> " + "bastl");
-        return null;
+    /**
+     * Drop quotes, extra spaces, commas, non-alphanum characters
+     */
+    private String cultivate(String str) {
+        str = str.substring(1, str.length() - 1).trim();
+        str = str.replaceAll("\\d+", "");   // remove all digits as well?
+        str = str.replaceAll("\\W", " ").replaceAll("\\s+", " ");
+        return str;
     }
+
 }

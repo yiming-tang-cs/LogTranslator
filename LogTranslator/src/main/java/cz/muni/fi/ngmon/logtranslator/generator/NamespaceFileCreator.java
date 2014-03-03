@@ -1,4 +1,4 @@
-package cz.muni.fi.ngmon.logtranslator.translator;
+package cz.muni.fi.ngmon.logtranslator.generator;
 
 import org.stringtemplate.v4.ST;
 
