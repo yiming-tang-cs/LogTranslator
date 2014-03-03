@@ -51,54 +51,54 @@ import com.sun.jersey.spi.container.servlet.ServletContainer;
 public abstract class WebApp extends ServletModule {
   private static final Logger LOG = LoggerFactory.getLogger(WebApp.class);
 
-  public enum HTTP { GET, POST, HEAD, PUT, DELETE };
-
-  private volatile String name;
-  private volatile List<String> servePathSpecs = new ArrayList<String>();
-  // path to redirect to if user goes to "/"
-  private volatile String redirectPath;
-  private volatile String wsName;
-  private volatile Configuration conf;
-  private volatile HttpServer httpServer;
-  private volatile GuiceFilter guiceFilter;
-  private final Router router = new Router();
-
-  // index for the parsed route result
-  static final int R_PATH = 0;
-  static final int R_CONTROLLER = 1;
-  static final int R_ACTION = 2;
-  static final int R_PARAMS = 3;
-
-  static final Splitter pathSplitter =
-      Splitter.on('/').trimResults().omitEmptyStrings();
-
-  void setHttpServer(HttpServer server) {
-    httpServer = checkNotNull(server, "http server");
-  }
-
-  @Provides public HttpServer httpServer() { return httpServer; }
-
-  /**
-   * Get the address the http server is bound to
-   * @return InetSocketAddress
-   */
-  public InetSocketAddress getListenerAddress() {
-    return checkNotNull(httpServer, "httpServer").getListenerAddress();
-  }
-	
-  public int port() {
-    return checkNotNull(httpServer, "httpServer").getPort();
-  }
-
-  public void stop() {
-    try {
-      checkNotNull(httpServer, "httpServer").stop();
-      checkNotNull(guiceFilter, "guiceFilter").destroy();
-    }
-    catch (Exception e) {
-      throw new WebAppException(e);
-    }
-  }
+//  public enum HTTP { GET, POST, HEAD, PUT, DELETE };
+//
+//  private volatile String name;
+//  private volatile List<String> servePathSpecs = new ArrayList<String>();
+//  // path to redirect to if user goes to "/"
+//  private volatile String redirectPath;
+//  private volatile String wsName;
+//  private volatile Configuration conf;
+//  private volatile HttpServer httpServer;
+//  private volatile GuiceFilter guiceFilter;
+//  private final Router router = new Router();
+//
+//  // index for the parsed route result
+//  static final int R_PATH = 0;
+//  static final int R_CONTROLLER = 1;
+//  static final int R_ACTION = 2;
+//  static final int R_PARAMS = 3;
+//
+//  static final Splitter pathSplitter =
+//      Splitter.on('/').trimResults().omitEmptyStrings();
+//
+//  void setHttpServer(HttpServer server) {
+//    httpServer = checkNotNull(server, "http server");
+//  }
+//
+//  @Provides public HttpServer httpServer() { return httpServer; }
+//
+//  /**
+//   * Get the address the http server is bound to
+//   * @return InetSocketAddress
+//   */
+//  public InetSocketAddress getListenerAddress() {
+//    return checkNotNull(httpServer, "httpServer").getListenerAddress();
+//  }
+//
+//  public int port() {
+//    return checkNotNull(httpServer, "httpServer").getPort();
+//  }
+//
+//  public void stop() {
+//    try {
+//      checkNotNull(httpServer, "httpServer").stop();
+//      checkNotNull(guiceFilter, "guiceFilter").destroy();
+//    }
+//    catch (Exception e) {
+//      throw new WebAppException(e);
+//    }
+//  }
 
   public void joinThread() {
     try {
@@ -265,5 +265,11 @@ public abstract class WebApp extends ServletModule {
     return pathSpec.substring(start, ci + 1);
   }
 
-  public abstract void setup();
+  public abstract void setup() {
+      String host = "dasda";
+      String path = "32442";
+      if (someCrazyStuff().getBooleanValue() == something) {
+          LOG.debug("Got   host:123 + dasd Faster! Stupid " + host + " path: dsa?321 Should " + path);
+      }
+  };
 }
