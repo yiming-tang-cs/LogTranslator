@@ -1,4 +1,4 @@
-package cz.muni.fi.ngmon.logtranslator.translator;
+package cz.muni.fi.ngmon.logtranslator.common;
 
 import org.antlr.v4.misc.OrderedHashMap;
 
@@ -6,6 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+
+/**
+ * This object represents .java file with all variables found.
+ * Variable contains more detailed information about variable.
+ */
 public class LogFile {
 
     // Mapping of variableName : <variableProperties>
@@ -47,7 +52,7 @@ public class LogFile {
                 '}';
     }
 
-    class Variable {
+    public class Variable {
         private String name; // ?
         private String type;
         private int lineNumber;

@@ -1,66 +1,17 @@
 package cz.muni.fi.ngmon.logtranslator.translator;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 public abstract class LoggerLoader {
 
-    private String loggingApplicationHome;
-    private String loggingApplicationNamespace;
+
     private List<String> logger;
-
     private String logFactory;
-    private String ngmonLogImport;
-
-    private String ngmonLogFactoryImport;
-    private String ngmonLogGlobal;
-    private String ngmonAnnotationNamespaceImport;
-    private String ngmonLoggerAbstractNamespaceImport;
-    private String ngmonEmptyLogStatement;
-    private String ngmonLogLength;
 
 
-    public LoggerLoader() {
-        String propertyFile = "src/main/resources/logtranslator.properties";
-        Properties properties = new Properties();
-
-        try {
-            InputStream is = new FileInputStream(propertyFile);
-            properties.load(is);
-
-            loggingApplicationHome = properties.getProperty("application_home");
-            loggingApplicationNamespace = properties.getProperty("application_namespace");
-            ngmonLogImport = properties.getProperty("ngmon_log_import");
-            ngmonLogFactoryImport = properties.getProperty("ngmon_log_factory_import");
-            ngmonLogGlobal = properties.getProperty("ngmon_log_global");
-            ngmonAnnotationNamespaceImport = properties.getProperty("ngmon_annotation_ns_import");
-            ngmonLoggerAbstractNamespaceImport = properties.getProperty("ngmon_logger_abstract_ns_import");
-            ngmonEmptyLogStatement = properties.getProperty("ngmon_empty_log_statement");
-            ngmonLogLength = properties.getProperty("ngmon_log_length", "7");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-
-    // TODO which methods are necessary to be abstract?
-    public String getLoggingApplicationHome() {
-        return loggingApplicationHome;
-    }
-
-    public void setLoggingApplicationHome(String loggingApplicationHome) {
-        this.loggingApplicationHome = loggingApplicationHome;
-    }
 
     public List<String> getLogger() {
         return logger;
@@ -78,51 +29,15 @@ public abstract class LoggerLoader {
         this.logFactory = logFactory;
     }
 
-    public int getNgmonLogLength() {
-        return Integer.parseInt(ngmonLogLength);
-    }
-
-    public String getNgmonEmptyLogStatement() {
-        return ngmonEmptyLogStatement;
-    }
-
-    public String getNgmonLoggerAbstractNamespaceImport() {
-        return ngmonLoggerAbstractNamespaceImport;
-    }
-
-    public String getNgmonAnnotationNamespaceImport() {
-        return ngmonAnnotationNamespaceImport;
-    }
-
-    public String getNgmonLogFactoryImport() {
-        return ngmonLogFactoryImport;
-    }
-
-    public String getNgmonLogImport() {
-        return ngmonLogImport;
-    }
-
-    public String getNgmonLogGlobal() {
-        return ngmonLogGlobal;
-    }
-
-    public String getLoggingApplicationNamespace() {
-        return loggingApplicationNamespace;
-    }
-
-    public void setLoggingApplicationNamespace(String loggingApplicationNamespace) {
-        this.loggingApplicationNamespace = loggingApplicationNamespace;
-    }
-
-    public String getQualifiedNameEnd(String str) {
-        return str.substring(str.lastIndexOf(".") + 1);
-    }
 
     public abstract Collection getTranslateLogMethods();
 
     public abstract Collection getCheckerLogMethods();
 
-    public Collection generateTranslateMethods(List<String> levels, List<String> customMethods) {
+    public abstract String[] getFactoryInitializations();
+
+
+    public Collection<String> generateTranslateMethods(List<String> levels, List<String> customMethods) {
         List<String> methods = new ArrayList<>();
         for (String level : levels) {
             methods.add(level);
@@ -135,7 +50,6 @@ public abstract class LoggerLoader {
         return Collections.unmodifiableCollection(methods);
     }
 
-
     public Collection generateCheckerMethods(List<String> levels) {
         List<String> list = new ArrayList<>(levels.size());
         for (String level : levels) {
@@ -143,8 +57,6 @@ public abstract class LoggerLoader {
         }
         return Collections.unmodifiableCollection(list);
     }
-
-    public abstract String[] getFactoryInitializations();
 
 
 }

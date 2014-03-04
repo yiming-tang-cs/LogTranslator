@@ -24,9 +24,9 @@ public class LoggerFactory {
 
     }
 
-    public static String getObtainedImport() {
-        return obtainedImport;
-    }
+//    public static String getObtainedImport() {
+//        return obtainedImport;
+//    }
 
     public static List<String> getActualLoggingImports() {
         return loggingFrameworks.get(actualLoggingFramework);
@@ -64,9 +64,9 @@ public class LoggerFactory {
                 case "slf4j":
                     loader = new Slf4jLoggerLoader(); break;
                 case "log4j":
-                    loader = new Log4jLoggingLoader(); break;
+                    loader = new Log4jLoggerLoader(); break;
                 case "log4j2":
-                    loader = new Log4jLoggingLoader(); break;
+                    loader = new Log4jLoggerLoader(); break;
                 case "custom":
                     loader = new CustomLoggerLoader(); break;
                 default:

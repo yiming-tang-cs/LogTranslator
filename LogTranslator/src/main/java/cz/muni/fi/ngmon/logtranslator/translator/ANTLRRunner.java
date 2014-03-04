@@ -1,7 +1,8 @@
-package cz.muni.fi.ngmon.logtranslator.antlr;
+package cz.muni.fi.ngmon.logtranslator.translator;
 
-import cz.muni.fi.ngmon.logtranslator.translator.FileInfo;
-import cz.muni.fi.ngmon.logtranslator.translator.LogTranslator;
+import cz.muni.fi.ngmon.logtranslator.antlr.JavaLexer;
+import cz.muni.fi.ngmon.logtranslator.antlr.JavaParser;
+import cz.muni.fi.ngmon.logtranslator.common.FileInfo;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RuleContext;

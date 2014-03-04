@@ -1,4 +1,4 @@
-package cz.muni.fi.ngmon.logtranslator.translator;
+package cz.muni.fi.ngmon.logtranslator.common;
 
 public class FileInfo {
 
@@ -24,9 +24,9 @@ public class FileInfo {
     }
 
     public String getNamespaceEnd() {
-        StringBuffer stringBuffer = new StringBuffer(namespace.substring(namespace.lastIndexOf(".")+1));
-        stringBuffer.replace(0, 1, stringBuffer.substring(0, 1).toUpperCase());
-        return stringBuffer.toString();
+        StringBuilder stringBuilder = new StringBuilder(namespace.substring(namespace.lastIndexOf(".")+1));
+        stringBuilder.replace(0, 1, stringBuilder.substring(0, 1).toUpperCase());
+        return stringBuilder.toString();
     }
 
     public void setNamespace(String namespace) {

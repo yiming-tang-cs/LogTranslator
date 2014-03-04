@@ -1,8 +1,10 @@
 package cz.muni.fi.ngmon.logtranslator.translator;
 
-import cz.muni.fi.ngmon.logtranslator.antlr.ANTLRRunner;
 import cz.muni.fi.ngmon.logtranslator.antlr.JavaBaseListener;
 import cz.muni.fi.ngmon.logtranslator.antlr.JavaParser;
+import cz.muni.fi.ngmon.logtranslator.common.Log;
+import cz.muni.fi.ngmon.logtranslator.common.LogFile;
+import cz.muni.fi.ngmon.logtranslator.common.Utils;
 import org.antlr.v4.runtime.BufferedTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.TokenStreamRewriter;
@@ -115,7 +117,7 @@ public class LogTranslator extends JavaBaseListener {
             // Change logger factory
             if (ctx.getText().toLowerCase().contains(loggerLoader.getLogFactory().toLowerCase())) {
                 System.out.println("logfactory=" + ctx.getText());
-                rewriter.replace(ctx.getStart(), ctx.getStop(), loggerLoader.getNgmonLogFactoryImport());
+                rewriter.replace(ctx.getStart(), ctx.getStop(), Utils.getNgmonLogFactoryImport());
             }
             // Change logger and add namespace, logGlobal imports
             for (String logImport : loggerLoader.getLogger()) {
@@ -127,9 +129,9 @@ public class LogTranslator extends JavaBaseListener {
 
                     String namespaceImport = "import " + ANTLRRunner.getCurrentFileInfo().getNamespace() +
                             "." + ANTLRRunner.getCurrentFileInfo().getNamespaceEnd() + "Namespace";
-                    String logGlobalImport = "import " + loggerLoader.getNgmonLogGlobal();
+                    String logGlobalImport = "import " + Utils.getNgmonLogGlobal();
                     // Change Log import with Ngmon Log, currentNameSpace and LogGlobal imports
-                    rewriter.replace(ctx.start, ctx.stop, loggerLoader.getNgmonLogImport() + ";\n"
+                    rewriter.replace(ctx.start, ctx.stop, Utils.getNgmonLogImport() + ";\n"
                             + namespaceImport + "\n" + logGlobalImport);
 
                     ANTLRRunner.getCurrentFileInfo().setNamespaceClass(
@@ -250,7 +252,7 @@ public class LogTranslator extends JavaBaseListener {
                         // Now we can safely replace logName by LogGlobal
                         JavaParser.ExpressionContext log = exp.expression(0).expression(0);
                         rewriter.replace(log.start, log.stop,
-                                loggerLoader.getQualifiedNameEnd(loggerLoader.getNgmonLogGlobal()));
+                                Utils.getQualifiedNameEnd(Utils.getNgmonLogGlobal()));
                     } else {
                         System.err.println("Not implemented translation of log call! " +
                                 "Don't know what to do with '" + exp.getText() + "'.");

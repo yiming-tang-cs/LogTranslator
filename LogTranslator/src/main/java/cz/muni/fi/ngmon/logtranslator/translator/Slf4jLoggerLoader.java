@@ -24,9 +24,10 @@ public class Slf4jLoggerLoader extends LoggerLoader {
         setLogger(imports.subList(1, imports.size()));
         setLogFactory(imports.get(0));
         // Does slf4j has any custom methods? Add them into this list.
-        List<String> slf4jCustomizedMethods = null; //Arrays.asList("asd");
+//        List<String> slf4jCustomizedMethods = null;
+//        this.translateLogMethods = generateTranslateMethods(levels, slf4jCustomizedMethods);
+        this.translateLogMethods = generateTranslateMethods(levels, null);
         this.checkerLogMethods = generateCheckerMethods(levels);
-        this.translateLogMethods = generateTranslateMethods(levels, slf4jCustomizedMethods);
     }
 
 

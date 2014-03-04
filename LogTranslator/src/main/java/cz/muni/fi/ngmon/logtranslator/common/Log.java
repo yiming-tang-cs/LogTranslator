@@ -1,4 +1,4 @@
-package cz.muni.fi.ngmon.logtranslator.translator;
+package cz.muni.fi.ngmon.logtranslator.common;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +62,7 @@ public class Log {
     public void generateMethodName() {
         StringBuilder logName = new StringBuilder();
         int counter = 0;
-        int logNameLength = LogTranslator.getLoggerLoader().getNgmonLogLength();
+        int logNameLength = Utils.getNgmonLogLength();
 
         for (String comment : comments) {
             for (String str : comment.split(" ")) {

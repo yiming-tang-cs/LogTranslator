@@ -14,14 +14,14 @@ import java.util.List;
      */
 
 
-public class Log4jLoggingLoader extends LoggerLoader {
+public class Log4jLoggerLoader extends LoggerLoader {
 
 
     private Collection<String> translateLogMethods;
     private Collection checkerLogMethods;
     private List<String> levels = Arrays.asList("trace", "debug", "info", "warn", "error", "fatal");
 
-    public Log4jLoggingLoader() {
+    public Log4jLoggerLoader() {
         super();
         List<String> imports = LoggerFactory.getActualLoggingImports();
         setLogger(imports.subList(1, imports.size()));
