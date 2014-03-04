@@ -1,21 +1,21 @@
 package cz.muni.fi.ngmon.logtranslator.common;
 
-import org.antlr.v4.misc.OrderedHashMap;
-
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-
 /**
  * This object represents .java file with all variables found.
- * Variable contains more detailed information about variable.
+ * Variable contains more detailed information about specific
+ * variable in list.
  */
 public class LogFile {
 
     // Mapping of variableName : <variableProperties>
-    private static Map<String, List<Variable>> variableList = new OrderedHashMap<>();
+    private static Map<String, List<Variable>> variableList = new LinkedHashMap<>();
     private String fileName;
+    private String namespace;
 
     public static Map<String, List<Variable>> getVariableList() {
         return variableList;
@@ -42,6 +42,14 @@ public class LogFile {
 
     public void setFileName(String fileName) {
         this.fileName = fileName;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
     }
 
     @Override

@@ -17,7 +17,7 @@ import java.util.List;
 public class LogTranslator extends JavaBaseListener {
     //    BufferedTokenStream bufferedTokens; // intended to be used with multiple channels for handling WHITESPACES and COMMENTS
     static LoggerLoader loggerLoader = null;
-    LogFile var;
+    LogFile logFile;
     TokenStreamRewriter rewriter;
     private int currentLine = 0;
     private String logName = null; // reference to original LOG variable name
@@ -26,8 +26,8 @@ public class LogTranslator extends JavaBaseListener {
 
     public LogTranslator(BufferedTokenStream tokens, String filename) {
         rewriter = new TokenStreamRewriter(tokens);
-        var = new LogFile();
-        var.setFileName(filename);
+        logFile = new LogFile();
+        logFile.setFileName(filename);
 //        rewriter.getTokenStream();
 //        List<Token> cmtChannel = tokens.getHiddenTokensToRight(0, 1);
     }
@@ -38,41 +38,6 @@ public class LogTranslator extends JavaBaseListener {
 
     public TokenStreamRewriter getRewriter() {
         return rewriter;
-    }
-
-    public String getLogType() {
-        if (logType == null) {
-            return null;
-        } else {
-            // return only last part of QN
-            return logType.substring(logType.lastIndexOf(".") + 1);
-        }
-    }
-
-    private void storeVariable(ParserRuleContext ctx, String variableName, String variableTypeName, boolean isField) {
-        checkAndStoreVariable(variableName, variableTypeName, ctx.start.getLine(),
-                ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
-                ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex(), isField);
-    }
-
-    void checkAndStoreVariable(String variableName, String variableType, int lineNumber,
-                               int lineStartPosition, int lineStopPosition, int startPosition, int stopPosition, boolean isField) {
-        LogFile.Variable p = var.new Variable();
-
-        if (variableName == null || variableType == null) {
-            throw new NullPointerException("Variable name or type are null!");
-        } else {
-            p.setName(variableName);
-            p.setType(variableType);
-        }
-
-        p.setLineNumber(lineNumber);
-        p.setStartPosition(lineStartPosition);
-        p.setStopPosition(lineStopPosition);
-        p.setFileStartPosition(startPosition);
-        p.setFileStopPosition(stopPosition);
-        p.setField(isField);
-        var.putVariableList(variableName, p);
     }
 
 
@@ -92,13 +57,14 @@ public class LogTranslator extends JavaBaseListener {
 
     @Override
     public void exitCompilationUnit(@NotNull JavaParser.CompilationUnitContext ctx) {
-//        Map<String, LogFile.Variable> map = var.getVariableList();
+//        Map<String, LogFile.Variable> map = logFile.getVariableList();
 //        for (String key : map.keySet()) {
 //            System.out.println(key + " " + map.get(key));
 //        }
         // do cleanUp()
         LoggerFactory.setActualLoggingFramework(null);
         loggerLoader = null;
+
     }
 
     // ------------------------------------------------------------------------
@@ -164,9 +130,6 @@ public class LogTranslator extends JavaBaseListener {
             // It is not LOG variable, so let's store information about it for further log transformations
             if (ctx.variableDeclarators().variableDeclarator().size() == 1) {
                 storeVariable(ctx, varName, ctx.type().getText(), true);
-//                checkAndStoreVariable(varName, ctx.type().getText(), ctx.start.getLine(),
-//                        ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
-//                        ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
             } else {
                 // Let's hope there are no 2 loggers defined on same line - should be impossible as well
                 System.err.println("exitFieldDeclaration variableDeclarator().size() > 1!\n");
@@ -176,9 +139,9 @@ public class LogTranslator extends JavaBaseListener {
 
     @Override
     public void exitLocalVariableDeclaration(@NotNull JavaParser.LocalVariableDeclarationContext ctx) {
-        String varType = ctx.type().getText();//null;
-        String[] variables = null;
-//        varType =
+        String varType = ctx.type().getText();
+        String[] variables;
+
         if (ctx.variableDeclarators().variableDeclarator().size() == 1) {
             variables = new String[]{ctx.variableDeclarators().variableDeclarator(0).variableDeclaratorId().getText()};
         } else {
@@ -192,10 +155,13 @@ public class LogTranslator extends JavaBaseListener {
 
         for (String varName : variables) {
             storeVariable(ctx, varName, varType, false);
-//            checkAndStoreVariable(varName, varType, ctx.start.getLine(),
-//                    ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
-//                    ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
         }
+    }
+
+    @Override
+    public void exitFormalParameterList(@NotNull JavaParser.FormalParameterListContext ctx) {
+        // TODO #1 formal parameter list include declaration of variables as well.
+
     }
 
     @Override
@@ -212,7 +178,7 @@ public class LogTranslator extends JavaBaseListener {
         // This is not duplicate!
         // Should change log definition and store variable as well,
         // but it seems like this construction is not used at all.
-        System.err.println("constDec=" + ctx.getText() + " in file=" + var.getFileName());
+        System.err.println("constDec=" + ctx.getText() + " in file=" + logFile.getFileName());
         System.exit(100);
     }
 
@@ -309,7 +275,7 @@ public class LogTranslator extends JavaBaseListener {
         if (LoggerFactory.getActualLoggingFramework().equals("slf4j") && expressionList.getText().contains("{}")) {
             // TODO implement slf4j framework
             System.out.println(expressionList.getText() + " is special slf4j {}");
-            // if (currentFramework == slf4j) then handle 2 types of messages: '"msgs {}", var' and classic '"das" + das + "dsad"';
+            // if (currentFramework == slf4j) then handle 2 types of messages: '"msgs {}", logFile' and classic '"das" + das + "dsad"';
             // handle {} and "" ?
         }
         return log;
@@ -363,7 +329,7 @@ public class LogTranslator extends JavaBaseListener {
         }
 
         if (foundVar == null) {
-            System.err.println("Unable to find variable " + findMe);
+            System.err.println("Unable to find variable " + findMe + " in " + LogFile.getVariableList());
         }
         return foundVar;
     }
@@ -376,6 +342,41 @@ public class LogTranslator extends JavaBaseListener {
         str = str.replaceAll("\\d+", "");   // remove all digits as well?
         str = str.replaceAll("\\W", " ").replaceAll("\\s+", " ");
         return str;
+    }
+
+    public String getLogType() {
+        if (logType == null) {
+            return null;
+        } else {
+            // return only last part of QN
+            return logType.substring(logType.lastIndexOf(".") + 1);
+        }
+    }
+
+    private void storeVariable(ParserRuleContext ctx, String variableName, String variableTypeName, boolean isField) {
+        checkAndStoreVariable(variableName, variableTypeName, ctx.start.getLine(),
+                ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
+                ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex(), isField);
+    }
+
+    void checkAndStoreVariable(String variableName, String variableType, int lineNumber,
+                               int lineStartPosition, int lineStopPosition, int startPosition, int stopPosition, boolean isField) {
+        LogFile.Variable p = logFile.new Variable();
+
+        if (variableName == null || variableType == null) {
+            throw new NullPointerException("Variable name or type are null!");
+        } else {
+            p.setName(variableName);
+            p.setType(variableType);
+        }
+
+        p.setLineNumber(lineNumber);
+        p.setStartPosition(lineStartPosition);
+        p.setStopPosition(lineStopPosition);
+        p.setFileStartPosition(startPosition);
+        p.setFileStopPosition(stopPosition);
+        p.setField(isField);
+        logFile.putVariableList(variableName, p);
     }
 
 }

@@ -1,15 +1,18 @@
 package cz.muni.fi.ngmon.logtranslator.generator;
 
+import cz.muni.fi.ngmon.logtranslator.common.LogFile;
+
 import java.util.List;
+import java.util.Map;
 
 // https://theantlrguy.atlassian.net/wiki/display/ST4/StringTemplate+4+Documentation
 public class FileGenerator {
 
     private String packageDeclaration;
     private String namespaceName;
-    private String methodName;
-    private List<String> variableNameTypeList;
-    private List<String> variableNameList;
+//    private List<LogFile.Variable> variables;
+    private Map<String, List<LogFile.Variable>> methodData;
+
 
 
     private String fileTemplate =
@@ -34,6 +37,9 @@ public class FileGenerator {
             "\t}";
 
 
+    public FileGenerator() {
+
+    }
 
 
     public void setPackageDeclaration(String packageDeclaration) {
@@ -44,23 +50,5 @@ public class FileGenerator {
         this.namespaceName = namespaceName;
     }
 
-    public void setMethodName(String methodName) {
-        this.methodName = methodName;
-    }
 
-    public void setVariableNameTypeList(List<String> variableNameTypeList) {
-        this.variableNameTypeList = variableNameTypeList;
-    }
-
-    public void setVariableNameList(List<String> variableNameList) {
-        this.variableNameList = variableNameList;
-    }
-
-    public void setFileTemplate(String fileTemplate) {
-        this.fileTemplate = fileTemplate;
-    }
-
-    public void setMethodTemplate(String methodTemplate) {
-        this.methodTemplate = methodTemplate;
-    }
 }

@@ -1,5 +1,7 @@
 package cz.muni.fi.ngmon.logtranslator.translator;
 
+import cz.muni.fi.ngmon.logtranslator.common.Statistics;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -72,6 +74,9 @@ public class LoggerFactory {
                 default:
                     loader = null;
             }
+        }
+        if (loader != null) {
+            Statistics.reportLoaderType(loader);
         }
         return loader;
     }
