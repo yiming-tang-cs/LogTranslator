@@ -19,7 +19,7 @@ public class Log4jLoggerLoader extends LoggerLoader {
 
     private Collection<String> translateLogMethods;
     private Collection checkerLogMethods;
-    private List<String> levels = Arrays.asList("trace", "debug", "info", "warn", "error", "fatal");
+    private List<String> levels = Arrays.asList("trace", "debug", "info", "warn", "error", "fatal", "");
 
     public Log4jLoggerLoader() {
         super();

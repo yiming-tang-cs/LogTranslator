@@ -3,6 +3,11 @@ package cz.muni.fi.ngmon.logtranslator.common;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Log class is a representation of one log call method with all
+ * related variables used in this one method call.
+ * Log is used for generating new methods for ngmon.
+ */
 public class Log {
     private List<String> comments;
     private List<LogFile.Variable> variables;
@@ -12,7 +17,7 @@ public class Log {
 
     public Log() {
         comments = new ArrayList<>();
-        variables = new ArrayList<LogFile.Variable>();
+        variables = new ArrayList<>();
         methodName = null;
         tag = null;
         level = null;

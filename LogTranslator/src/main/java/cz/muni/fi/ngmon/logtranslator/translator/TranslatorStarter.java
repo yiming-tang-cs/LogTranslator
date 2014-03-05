@@ -24,16 +24,16 @@ public class TranslatorStarter {
             fileInfo.setNamespace(namespace);
 //        3) If new namespace, flush/write actual data into file
 //        4) Visit file
-            System.out.println("processing " + file);
-            ANTLRRunner.run(fileInfo);
+//            System.out.println("processing " + file);
+//            ANTLRRunner.run(fileInfo);
         }
 //        5)
 
         // TODO change to fileNames
 
-//        fileInfo = new FileInfo("/home/mtoth/skola/dp/LogFilterBase/LogTranslator/src/main/resources/sourceExamples/TestingClass.java");
+        FileInfo fileInfo = new FileInfo("/home/mtoth/skola/dp/LogFilterBase/LogTranslator/src/main/resources/sourceExamples/TestingClass.java");
 //        fileInfo = new FileInfo("/home/mtoth/skola/dp/LogFilterBase/LogTranslator/src/main/resources/sourceExamples/WebApp.java");
-//        ANTLRRunner.run(fileInfo);
+        ANTLRRunner.run(fileInfo);
 
     }
 }

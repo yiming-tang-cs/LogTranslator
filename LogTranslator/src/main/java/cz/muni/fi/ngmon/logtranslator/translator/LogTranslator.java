@@ -12,6 +12,7 @@ import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.List;
+import java.util.Map;
 
 
 public class LogTranslator extends JavaBaseListener {
@@ -55,9 +56,15 @@ public class LogTranslator extends JavaBaseListener {
         // exitEvery rule is always before exitX visit ?? ou really?
     }
 
+    /**
+     * Do clean up of resources when exiting given Java source code file.
+     *
+     * @param ctx - ANTLR's internal context of entry point for Java source code
+     *              JavaParser.CompilationUnitContext
+     */
     @Override
     public void exitCompilationUnit(@NotNull JavaParser.CompilationUnitContext ctx) {
-//        Map<String, LogFile.Variable> map = logFile.getVariableList();
+        Map<String, List<LogFile.Variable>> map = LogFile.getVariableList();
 //        for (String key : map.keySet()) {
 //            System.out.println(key + " " + map.get(key));
 //        }
@@ -68,20 +75,29 @@ public class LogTranslator extends JavaBaseListener {
     }
 
     // ------------------------------------------------------------------------
+
+    /**
+     * Method visits qualified names of import declarations, in case if it is import statement,
+     * evaluate it and create new LoggerLoader for this Java source code file.
+     * Change import to NGMON's LogFactory and Logger and add namespace import.
+     *
+     * @param ctx - ANTLR's internal context of JavaParser.QualifiedNameContext
+     */
     @Override
     public void enterQualifiedName(@NotNull JavaParser.QualifiedNameContext ctx) {
         if (ctx.getParent().getClass() == JavaParser.ImportDeclarationContext.class) {
             // Determine actual logging framework
             if (LoggerFactory.getActualLoggingFramework() == null) {
-                loggerLoader = LoggerFactory.determineLoggingFramework(ctx.getText());
+                loggerLoader = LoggerFactory.determineCreateLoggingFramework(ctx.getText());
 
                 if (loggerLoader == null) {
                     // this is not log import, we can safely skip it
                     return;
                 }
             }
-            // Change logger factory
+            // Change logger factory import
             if (ctx.getText().toLowerCase().contains(loggerLoader.getLogFactory().toLowerCase())) {
+                System.out.println(loggerLoader.getLogFactory());
                 System.out.println("logfactory=" + ctx.getText());
                 rewriter.replace(ctx.getStart(), ctx.getStop(), Utils.getNgmonLogFactoryImport());
             }
@@ -160,8 +176,14 @@ public class LogTranslator extends JavaBaseListener {
 
     @Override
     public void exitFormalParameterList(@NotNull JavaParser.FormalParameterListContext ctx) {
-        // TODO #1 formal parameter list include declaration of variables as well.
-
+        String varName;
+        String varType;
+        for (JavaParser.FormalParameterContext parameter : ctx.formalParameter()) {
+//            System.out.println("param=" + parameter.getText());
+            varType = parameter.type().getText();
+            varName = parameter.variableDeclaratorId().getText();
+            storeVariable(parameter, varName, varType, false);
+        }
     }
 
     @Override
@@ -213,6 +235,7 @@ public class LogTranslator extends JavaBaseListener {
                 if (exp.getText().startsWith(logName + ".")) {
                     // Check if Log call is in current checkerLogMethods() 'isXEnabled()'
                     ParseTree methodCall = exp.expression(0).getChild(exp.expression(0).getChildCount() - 1);
+
                     if (loggerLoader.getCheckerLogMethods().contains(methodCall.getText())) {
 //                    if (exp.expression(0).getChild(exp.expression(0).getChildCount() - 1).getText().matches("is.*Enabled")) {
                         // Now we can safely replace logName by LogGlobal
@@ -220,8 +243,9 @@ public class LogTranslator extends JavaBaseListener {
                         rewriter.replace(log.start, log.stop,
                                 Utils.getQualifiedNameEnd(Utils.getNgmonLogGlobal()));
                     } else {
+                        // TODO
                         System.err.println("Not implemented translation of log call! " +
-                                "Don't know what to do with '" + exp.getText() + "'.");
+                                "Don't know what to do with '" + exp.getText() + "'." + loggerLoader.getCheckerLogMethods());
                     }
                 }
             }
@@ -249,6 +273,9 @@ public class LogTranslator extends JavaBaseListener {
                     log.generateMethodName();
                     log.setLevel(methodCall.getText());
 
+                    log.setTag(null);
+                    logFile.addLog(log);
+
                     // TODO add transformed method to appropriate XYZNamespace  - create mapping file-variables/methods
                 }
                 // else throw new exception or add it to methodList?
@@ -263,9 +290,7 @@ public class LogTranslator extends JavaBaseListener {
      *   @param expressionList expressionList statement to be evaluated (method_call)
      */
     private Log transformMethodStatement(JavaParser.ExpressionListContext expressionList) {
-//        System.out.println("Transforming " + expressionList.getText());
         Log log = new Log();
-
         // Handle 'plus' separated log - transformation of 'Log.X("This is " + sparta + "!")'
         // Handle comma separated log statement 'Log.X("this is", sparta)'
         for (JavaParser.ExpressionContext ec : expressionList.expression()) {
@@ -282,7 +307,10 @@ public class LogTranslator extends JavaBaseListener {
     }
 
     /**
-     * Parse expression data (recursive tree of expressions in LOG.X(expression) call
+     * Parse data from expression nodes - recursive tree of expressions in LOG.X(expression) call
+     *
+     * @param log - Log to be filled with data from this log method statement
+     * @param expression - ANTLR's internal representation of JavaParser.ExpressionContext context
      */
     private void fillCurrentLog(Log log, JavaParser.ExpressionContext expression) {
         if (expression == null) {
@@ -336,6 +364,8 @@ public class LogTranslator extends JavaBaseListener {
 
     /**
      * Drop quotes, extra spaces, commas, non-alphanum characters
+     * into more fashionable way for later ngmon log method naming generation
+     * @param str - string to be changed
      */
     private String cultivate(String str) {
         str = str.substring(1, str.length() - 1).trim();
@@ -344,6 +374,11 @@ public class LogTranslator extends JavaBaseListener {
         return str;
     }
 
+    /**
+     * Method returns last part of actuale log type from import.
+     * Used for searching of declaration of 'old/to be changed' logger
+     * @return class name of currently used logger in java file
+     */
     public String getLogType() {
         if (logType == null) {
             return null;
@@ -353,12 +388,34 @@ public class LogTranslator extends JavaBaseListener {
         }
     }
 
+    /**
+     * Simplified helper method for storing variables into variable list. More data based on context is passed to
+     * checkAndStoreVariable() which actually stores variable and all related information into variable list.
+     *
+     * @param ctx - superclass of given context, used for getting given context positions and tokens
+     * @param variableName - name of variable to be stored into variable list
+     * @param variableTypeName - type of variable to be stored into variable list
+     * @param isField - true if variable is declared in class, not in method body or as formal parameter in method
+     */
+
     private void storeVariable(ParserRuleContext ctx, String variableName, String variableTypeName, boolean isField) {
         checkAndStoreVariable(variableName, variableTypeName, ctx.start.getLine(),
                 ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
                 ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex(), isField);
     }
 
+    /**
+     * Stores variable and all related information into variable list.
+     *
+     * @param variableName
+     * @param variableType
+     * @param lineNumber
+     * @param lineStartPosition
+     * @param lineStopPosition
+     * @param startPosition
+     * @param stopPosition
+     * @param isField
+     */
     void checkAndStoreVariable(String variableName, String variableType, int lineNumber,
                                int lineStartPosition, int lineStopPosition, int startPosition, int stopPosition, boolean isField) {
         LogFile.Variable p = logFile.new Variable();

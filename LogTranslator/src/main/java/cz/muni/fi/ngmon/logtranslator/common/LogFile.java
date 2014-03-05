@@ -9,6 +9,10 @@ import java.util.Map;
  * This object represents .java file with all variables found.
  * Variable contains more detailed information about specific
  * variable in list.
+ *
+ * LogFile is used for incorporating Log instances belonging to same
+ * namespace.
+ *
  */
 public class LogFile {
 
@@ -16,10 +20,15 @@ public class LogFile {
     private static Map<String, List<Variable>> variableList = new LinkedHashMap<>();
     private String fileName;
     private String namespace;
+    private List<Log> logs;
 
+    public LogFile() {
+        logs = new ArrayList<>();
+    }
     public static Map<String, List<Variable>> getVariableList() {
         return variableList;
     }
+
 
     public void putVariableList(String variableName, Variable variable) {
         List<Variable> vars;
@@ -52,6 +61,14 @@ public class LogFile {
         this.namespace = namespace;
     }
 
+    public List<Log> getLogs() {
+        return logs;
+    }
+
+    public void addLog(Log log) {
+        this.logs.add(log);
+    }
+
     @Override
     public String toString() {
         return "LogFile{" +
@@ -68,7 +85,7 @@ public class LogFile {
         private int stopPosition;
         private int fileStartPosition;
         private int fileStopPosition;
-        private boolean isField; // variable is declared in class, not in method body
+        private boolean isField; // true if variable is declared in class, not in method body
 
         public String getName() {
             return name;

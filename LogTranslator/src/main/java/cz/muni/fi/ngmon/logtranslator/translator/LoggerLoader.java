@@ -7,10 +7,8 @@ import java.util.List;
 
 public abstract class LoggerLoader {
 
-
     private List<String> logger;
     private String logFactory;
-
 
 
     public List<String> getLogger() {
@@ -50,9 +48,18 @@ public abstract class LoggerLoader {
         return Collections.unmodifiableCollection(methods);
     }
 
+    /**
+     * Method generates 'checker methods' for given logging system.
+     * Checker methods are in following design 'isLevelEnabled'.
+     * Level is passed into this method by parameter levels.
+     *
+     * @param levels list of levels to generate methods from
+     * @return collection of generated checker methods
+     */
     public Collection generateCheckerMethods(List<String> levels) {
         List<String> list = new ArrayList<>(levels.size());
         for (String level : levels) {
+            level = Character.toUpperCase(level.charAt(0)) + level.substring(1);
             list.add("is" + level + "Enabled");
         }
         return Collections.unmodifiableCollection(list);
