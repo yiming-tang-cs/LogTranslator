@@ -65,5 +65,14 @@ public abstract class LoggerLoader {
         return Collections.unmodifiableCollection(list);
     }
 
+    public boolean containsLogFactory(String declaration) {
+        for (String factory : this.getFactoryInitializations()) {
+            if (declaration.contains(factory)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
 }

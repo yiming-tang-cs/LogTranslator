@@ -1,5 +1,7 @@
 package cz.muni.fi.ngmon.logtranslator.common;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -9,23 +11,27 @@ import java.util.Map;
  * This object represents .java file with all variables found.
  * Variable contains more detailed information about specific
  * variable in list.
- *
+ * <p/>
  * LogFile is used for incorporating Log instances belonging to same
- * namespace.
- *
+ * the namespace.
  */
 public class LogFile {
 
     // Mapping of variableName : <variableProperties>
-    private static Map<String, List<Variable>> variableList = new LinkedHashMap<>();
-    private String fileName;
+    private Map<String, List<Variable>> variableList = new LinkedHashMap<>();
+    private String filepath;
     private String namespace;
+    private String namespaceClass;
+    private String packageName;
     private List<Log> logs;
 
-    public LogFile() {
+    public LogFile(String filename) {
+        filepath = filename;
         logs = new ArrayList<>();
+
     }
-    public static Map<String, List<Variable>> getVariableList() {
+
+    public Map<String, List<Variable>> getVariableList() {
         return variableList;
     }
 
@@ -45,12 +51,8 @@ public class LogFile {
         return variableList.get(variableName);
     }
 
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
+    public String getFilepath() {
+        return filepath;
     }
 
     public String getNamespace() {
@@ -59,6 +61,31 @@ public class LogFile {
 
     public void setNamespace(String namespace) {
         this.namespace = namespace;
+    }
+
+    public String getNamespaceEnd() {
+        if (namespace == null) {
+            System.err.println("Error! Namespace is null!");
+        }
+        StringBuilder stringBuilder = new StringBuilder(namespace.substring(namespace.lastIndexOf(".") + 1));
+        stringBuilder.replace(0, 1, stringBuilder.substring(0, 1).toUpperCase());
+        return stringBuilder.toString();
+    }
+
+    public String getNamespaceClass() {
+        return namespaceClass;
+    }
+
+    public void setNamespaceClass(String namespaceClass) {
+        this.namespaceClass = namespaceClass;
+    }
+
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public void setPackageName(String packageName) {
+        this.packageName = packageName;
     }
 
     public List<Log> getLogs() {
@@ -73,8 +100,56 @@ public class LogFile {
     public String toString() {
         return "LogFile{" +
                 "variableList=" + variableList +
-                ", fileName='" + fileName + '\'' +
+                ", filepath='" + filepath + '\'' +
                 '}';
+    }
+
+    /**
+     * Simplified helper method for storing variables into variable list. More data based on context is passed to
+     * checkAndStoreVariable() which actually stores variable and all related information into variable list.
+     *
+     * @param ctx               superclass of given context, used for getting given context positions and tokens
+     * @param variableName      name of variable to be stored into variable list
+     * @param variableTypeName  type of variable to be stored into variable list
+     * @param isField           true if variable is declared in class, not in method body or as formal parameter in method
+     */
+
+    public void storeVariable(ParserRuleContext ctx, String variableName, String variableTypeName, boolean isField) {
+        checkAndStoreVariable(variableName, variableTypeName, ctx.start.getLine(),
+                ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
+                ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex(), isField);
+    }
+
+    /**
+     * Stores variable and all related information into variable list.
+     *
+     * @param variableName variable name
+     * @param variableType variable type as string
+     * @param lineNumber variable line number occurrence
+     * @param lineStartPosition variable occurrence start line position
+     * @param lineStopPosition variable occurrence stop line position
+     * @param startPosition variable occurrence start position
+     * @param stopPosition variable occurrence stop position
+     * @param isField false if variable is declared in method, true otherwise
+     */
+    private void checkAndStoreVariable(String variableName, String variableType, int lineNumber,
+                                       int lineStartPosition, int lineStopPosition, int startPosition, int stopPosition, boolean isField) {
+        LogFile.Variable p = this.new Variable();
+
+        if (variableName == null || variableType == null) {
+            throw new NullPointerException("Variable name or type are null!");
+        } else {
+            p.setName(variableName);
+            p.setType(variableType);
+        }
+
+        p.setLineNumber(lineNumber);
+        p.setStartPosition(lineStartPosition);
+        p.setStopPosition(lineStopPosition);
+        p.setFileStartPosition(startPosition);
+        p.setFileStopPosition(stopPosition);
+        p.setField(isField);
+        this.putVariableList(variableName, p);
     }
 
     public class Variable {
@@ -111,32 +186,16 @@ public class LogFile {
             this.lineNumber = lineNumber;
         }
 
-        public int getStartPosition() {
-            return startPosition;
-        }
-
         public void setStartPosition(int startPosition) {
             this.startPosition = startPosition;
-        }
-
-        public int getStopPosition() {
-            return stopPosition;
         }
 
         public void setStopPosition(int stopPosition) {
             this.stopPosition = stopPosition;
         }
 
-        public int getFileStartPosition() {
-            return fileStartPosition;
-        }
-
         public void setFileStartPosition(int fileStartPosition) {
             this.fileStartPosition = fileStartPosition;
-        }
-
-        public int getFileStopPosition() {
-            return fileStopPosition;
         }
 
         public void setFileStopPosition(int fileStopPosition) {

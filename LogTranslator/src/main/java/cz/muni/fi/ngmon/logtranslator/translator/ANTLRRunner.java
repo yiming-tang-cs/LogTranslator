@@ -2,7 +2,7 @@ package cz.muni.fi.ngmon.logtranslator.translator;
 
 import cz.muni.fi.ngmon.logtranslator.antlr.JavaLexer;
 import cz.muni.fi.ngmon.logtranslator.antlr.JavaParser;
-import cz.muni.fi.ngmon.logtranslator.common.FileInfo;
+import cz.muni.fi.ngmon.logtranslator.common.LogFile;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RuleContext;
@@ -15,14 +15,14 @@ import java.io.InputStream;
 
 public class ANTLRRunner {
     static CommonTokenStream tokens;
-    private static FileInfo currentFileInfo;
+    private static LogFile currentFile;
 //    public static CommonTokenStream getTokens() {
 //        return tokens;
 //    }
 
-    public static void run(FileInfo fileInfo) {
-        currentFileInfo = fileInfo;
-        String file = fileInfo.getFilepath();
+    public static void run(LogFile logFile) {
+        currentFile = logFile;
+        String file = logFile.getFilepath();
         InputStream antlrInputStream;
 
         try {
@@ -37,10 +37,10 @@ public class ANTLRRunner {
 
 //            System.out.println("ParseTree = " + tree.getText());
             ParseTreeWalker walker = new ParseTreeWalker();
-            LogTranslator listener = new LogTranslator(tokens, file);
+            LogTranslator listener = new LogTranslator(tokens, logFile);
             walker.walk(listener, tree);
 
-          //  System.out.println("modified=\n" + listener.getRewriter().getText());
+//            System.out.println("modified=\n" + listener.getRewriter().getText());
 
 
         } catch (IOException e){
@@ -50,7 +50,7 @@ public class ANTLRRunner {
         }
     }
 
-    public static FileInfo getCurrentFileInfo() {
-        return currentFileInfo;
+    public static LogFile getCurrentFile() {
+        return currentFile;
     }
 }

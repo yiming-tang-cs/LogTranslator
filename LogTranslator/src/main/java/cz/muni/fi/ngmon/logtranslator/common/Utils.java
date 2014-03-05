@@ -4,8 +4,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 public class Utils {
 
@@ -19,7 +21,7 @@ public class Utils {
     static String ngmonEmptyLogStatement;
     static String ngmonLogLength;
     static List<String> BANNED_LIST = Arrays.asList("a", "an", "the");
-
+    static List<String> MATH_OPERATORS = Arrays.asList("+", "-", "*", "/");
 
 //    static final String COMMA = ",";
 //    static final String PLUS = "+";
@@ -53,25 +55,25 @@ public class Utils {
         return loggingApplicationHome;
     }
 
-    public static void setLoggingApplicationHome(String newLoggingApplicationHome) {
-        loggingApplicationHome = newLoggingApplicationHome;
-    }
+//    public static void setLoggingApplicationHome(String newLoggingApplicationHome) {
+//        loggingApplicationHome = newLoggingApplicationHome;
+//    }
 
     public static int getNgmonLogLength() {
         return Integer.parseInt(ngmonLogLength);
     }
 
-    public String getNgmonEmptyLogStatement() {
-        return ngmonEmptyLogStatement;
-    }
-
-    public String getNgmonLoggerAbstractNamespaceImport() {
-        return ngmonLoggerAbstractNamespaceImport;
-    }
-
-    public String getNgmonAnnotationNamespaceImport() {
-        return ngmonAnnotationNamespaceImport;
-    }
+//    public String getNgmonEmptyLogStatement() {
+//        return ngmonEmptyLogStatement;
+//    }
+//
+//    public String getNgmonLoggerAbstractNamespaceImport() {
+//        return ngmonLoggerAbstractNamespaceImport;
+//    }
+//
+//    public String getNgmonAnnotationNamespaceImport() {
+//        return ngmonAnnotationNamespaceImport;
+//    }
 
     public static String getNgmonLogFactoryImport() {
         return ngmonLogFactoryImport;
@@ -84,21 +86,47 @@ public class Utils {
     public static String getNgmonLogGlobal() {
         return ngmonLogGlobal;
     }
-
-    public String getLoggingApplicationNamespace() {
-        return loggingApplicationNamespace;
-    }
-
-    public void setLoggingApplicationNamespace(String newLoggingApplicationNamespace) {
-
-
-
-        loggingApplicationNamespace = newLoggingApplicationNamespace;
-    }
-
+//
+//    public String getLoggingApplicationNamespace() {
+//        return loggingApplicationNamespace;
+//    }
+//
+//    public void setLoggingApplicationNamespace(String newLoggingApplicationNamespace) {
+//
+//
+//
+//        loggingApplicationNamespace = newLoggingApplicationNamespace;
+//    }
 
 
     public static String getQualifiedNameEnd(String str) {
         return str.substring(str.lastIndexOf(".") + 1);
+    }
+
+
+    public static List<LogFile> generateNamespaces(List<LogFile> logFileList) {
+        Set<String> namespaceList = new LinkedHashSet<>();
+
+        for (LogFile lf : logFileList) {
+//            System.out.println("packageName=" + lf.getPackageName());
+            if (lf.getPackageName() == null) {
+                System.out.println("null packageName in file " + lf.getFilepath());
+            }
+            namespaceList.add(lf.getPackageName());
+//            System.out.println(lf.getNamespace());
+            //set default namespace for now
+            lf.setNamespace(loggingApplicationNamespace);
+        }
+        System.out.println();
+        return logFileList;
+    }
+
+    public static boolean containsMathOperator(String text) {
+        for (String operator : MATH_OPERATORS) {
+            if (text.contains(operator)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

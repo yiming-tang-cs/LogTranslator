@@ -11,23 +11,23 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Locate all files, where there is any log call.
  */
 public class LogFilesFinder {
 
-    static Map<Path, String> processFileList = new LinkedHashMap<>();
+    static List<LogFile> processFiles = new ArrayList<>();
 
-    public static Map<Path, String> startSearchIn(String loggingApplicationHome) {
+    public static List<LogFile> commenceSearch(String loggingApplicationHome) {
         Path path = Paths.get(loggingApplicationHome);
 
         try {
             if (Files.exists(path, LinkOption.NOFOLLOW_LINKS) && Files.isDirectory(path) && Files.isReadable(path)) {
                 Files.walkFileTree(path, new JavaLogFinder());
-                System.out.println(processFileList.size());
+//                System.out.println(processFileList.size());
             } else {
                 System.err.format("Location %s does not exist.%n", loggingApplicationHome);
                 System.exit(15);
@@ -35,7 +35,7 @@ public class LogFilesFinder {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return processFileList;
+        return processFiles;
     }
 }
 
@@ -47,8 +47,11 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
         int count = 0;
         try (DirectoryStream<Path> files = Files.newDirectoryStream(dir)) {
             for (Path path : files) {
-                if (Files.isDirectory(path)) count++;
-                if ((!path.toString().contains("/src/test/")) && (path.toString().endsWith(".java"))) {
+                if (Files.isDirectory(path)) {
+                    count++;
+                    continue;
+                }
+                if ((!path.toString().contains("/src/test/") || !path.toString().contains("/target/classes"))  && (path.toString().endsWith(".java"))) {
                     count++;
                 }
             }
@@ -82,8 +85,10 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
                     found = (line.toLowerCase().matches(logSearch) ||
                             (line.toLowerCase().matches(importSearch)));
                     if (found) {
-//                        System.out.format("%s: line=%s%n", file.toString(), line);
-                        LogFilesFinder.processFileList.put(file, packageName);
+//                        System.out.format("%s: line=%s %s%n", file.toString(), packageName, line);
+                        LogFile logFile = new LogFile(file.toString());
+                        logFile.setPackageName(packageName);
+                        LogFilesFinder.processFiles.add(logFile);
                         break;
                     }
                 }
