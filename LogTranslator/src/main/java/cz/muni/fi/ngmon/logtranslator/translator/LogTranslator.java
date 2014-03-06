@@ -11,6 +11,7 @@ import org.antlr.v4.runtime.TokenStreamRewriter;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -298,7 +299,7 @@ public class LogTranslator extends JavaBaseListener {
         // Handle comma separated log statement 'Log.X("this is", sparta)'
 
         // TODO!
-        System.out.println(expressionList.getText());
+//        System.out.println(expressionList.getText());
 
         for (JavaParser.ExpressionContext ec : expressionList.expression()) {
             fillCurrentLog(log, ec);
@@ -339,7 +340,7 @@ public class LogTranslator extends JavaBaseListener {
         } else if (childCount == 1) {
             determineLogTypeAndStore(log, expression);
         } else {
-            System.out.println();
+            // TODO
             System.err.printf("Error! ChildCount=%d: %s %d:%s%n", childCount, expression.getText(), expression.getStart().getLine(), logFile.getFilepath());
         }
     }
@@ -407,20 +408,41 @@ public class LogTranslator extends JavaBaseListener {
                     foundVar = returnLastValue(varName);
                 }
 
-                /** handle call of another method in class.
+                /**
+                 * Handle call of another method in class.
                  * Start another ANTLR process, look for method declarations and return type.
                  * Put it All back here.
                  */
             } else if (findMe.getText().matches("\\w+(.*?)")) {
-                System.out.println("do me!" + findMe.getText());
-                HelperLogTranslator.run(logFile, findMe.getText());
+                List<String> methodArgumentsTypeList = new ArrayList<>();
+//                System.out.println("do me!" + findMe.getStart().getLine() + " " + findMe.getText() +
+//                        findMe.getChildCount() + findMe.expressionList().getText());
+
+                if (findMe.expressionList() != null) {
+                    LogFile.Variable tempList;
+//                    System.err.println("formal params there " + findMe.expressionList().getText());
+                    for (JavaParser.ExpressionContext ec : findMe.expressionList().expression()) {
+                        if (ec.getText().startsWith("\"") && ec.getText().endsWith("\"")) {
+                            methodArgumentsTypeList.add("String");
+
+                        } else if ((tempList = returnLastValue(ec.getText())) != null) {
+                            methodArgumentsTypeList.add(tempList.getType());
+                        } else {
+                            System.err.println("not found " + ec.getText());
+                        }
+                    }
+
+                } else {
+                    methodArgumentsTypeList = null;
+                }
+                HelperLogTranslator.lookMethod(logFile, findMe.getText(), methodArgumentsTypeList);
                 foundVar = returnLastValue(findMe.getText());
 
-                /** Mathematical expression - use double as type */
 
+                /** Mathematical expression - use double as type */
             } else if (Utils.containsMathOperator(findMe.getText())) {
                 varName = findMe.getText();
-                varType = "float";
+                varType = "double";
                 logFile.storeVariable(findMe, varName, varType, false);
                 foundVar = returnLastValue(varName);
 
@@ -442,6 +464,7 @@ public class LogTranslator extends JavaBaseListener {
      * @return returns Variable object for given variable input
      */
     private LogFile.Variable returnLastValue(String variable) {
+//        System.out.println("looking for" + variable);
         List<LogFile.Variable> list = logFile.getVariableList().get(variable);
         return list.get(list.size() - 1);
     }

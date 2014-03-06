@@ -15,9 +15,12 @@ public class TranslatorStarter {
         List<LogFile> logFiles = LogFilesFinder.commenceSearch(Utils.getLoggingApplicationHome());
 //        2) Find & set namespace. If new namespace, flush/write actual data into logFile
         Utils.generateNamespaces(logFiles);
+        int counter = 0;
         for (LogFile logFile : logFiles) {
 //        3) Visit logFile
             ANTLRRunner.run(logFile);
+            counter++;
+            System.out.printf("Processed %d of %d files.%n", counter, logFiles.size());
         }
 
 //        LogFile file = new LogFile("/home/mtoth/skola/dp/LogFilterBase/LogTranslator/src/main/resources/sourceExamples/TestingClass.java");
