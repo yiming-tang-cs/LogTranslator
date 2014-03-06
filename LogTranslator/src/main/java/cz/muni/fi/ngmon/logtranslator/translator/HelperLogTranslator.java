@@ -70,7 +70,6 @@ class MethodListener extends JavaBaseListener {
     @Override
     public void exitMethodDeclaration(@NotNull JavaParser.MethodDeclarationContext ctx) {
         if ((ctx.formalParameters().formalParameterList() != null)) {
-
             if (argumentTypes != null) {
                 // if formalArguments count in method == argumentTypes.size() - proceed
                 if (((int) Math.ceil(ctx.formalParameters().formalParameterList().getChildCount() / 2.0)) == argumentTypes.size()) {
@@ -83,14 +82,15 @@ class MethodListener extends JavaBaseListener {
                         i++;
                     }
                     if (i == correct) {
-//                    System.out.println("==Found method=" + ctx.type().getText() + " " + ctx.formalParameters().getText());
-                      store(ctx);
+                        // Found corresponding method, store it.
+                        store(ctx);
                     }
                 }
-            } else {
-                if (ctx.Identifier().getText().equals(findMethod.substring(0, findMethod.indexOf('(')))) {
-                    store(ctx);
-                }
+            }
+        } else {
+            if (ctx.Identifier().getText().equals(findMethod.substring(0, findMethod.indexOf('(')))) {
+//                System.out.println("storing " + ctx.Identifier().getText() + ctx.formalParameters().getText());
+                store(ctx);
             }
         }
     }

@@ -23,6 +23,7 @@ public class LoggerFactory {
         loggingFrameworks.put("log4j", Arrays.asList(null, "org.apache.log4j.Logger")); // same situation as in  JULi (Logger.getLogger or .getRootLogger)
         loggingFrameworks.put("log4j2", Arrays.asList("org.apache.logging.log4j.LogManager", "org.apache.logging.log4j.Logger"));
 
+        loggingFrameworks.put("unknown", Arrays.asList(""));
         loggingFrameworks.put("custom", Arrays.asList("cz.muni.fi.ngmon.logtranslator.customlogger.LogFactory", "cz.muni.fi.ngmon.logtranslator.customlogger.Logger"));
 
     }
@@ -30,6 +31,11 @@ public class LoggerFactory {
 //    public static String getObtainedImport() {
 //        return obtainedImport;
 //    }
+
+
+    public static Map<String, List<String>> getLoggingFrameworks() {
+        return loggingFrameworks;
+    }
 
     public static List<String> getActualLoggingImports() {
         return loggingFrameworks.get(actualLoggingFramework);
@@ -46,11 +52,15 @@ public class LoggerFactory {
 
     public static LoggerLoader determineCreateLoggingFramework(String obtImport) {
         LoggerLoader loader;
-        for (String key : loggingFrameworks.keySet()) {
-            if (loggingFrameworks.get(key).contains(obtImport)) {
-                setActualLoggingFramework(key);
+        if (obtImport.equals("failsafe")) {
+            setActualLoggingFramework("failsafe");
+        } else {
+            for (String key : loggingFrameworks.keySet()) {
+                if (loggingFrameworks.get(key).contains(obtImport)) {
+                    setActualLoggingFramework(key);
 //                obtainedImport = obtImport;
-                break;
+                    break;
+                }
             }
         }
 
@@ -61,17 +71,26 @@ public class LoggerFactory {
         } else {
             switch (actualLoggingFramework) {
                 case "juli":
-                    loader = new JULLogger(); break;
+                    loader = new JULLogger();
+                    break;
                 case "commons":
-                    loader = new CommonsLoggingLoader(); break;
+                    loader = new CommonsLoggingLoader();
+                    break;
                 case "slf4j":
-                    loader = new Slf4jLoggerLoader(); break;
+                    loader = new Slf4jLoggerLoader();
+                    break;
                 case "log4j":
-                    loader = new Log4jLoggerLoader(); break;
+                    loader = new Log4jLoggerLoader();
+                    break;
                 case "log4j2":
-                    loader = new Log4jLoggerLoader(); break;
+                    loader = new Log4jLoggerLoader();
+                    break;
+                case "failsafe":
+                    loader = new FailsafeLoggerLoader();
+                    break;
                 case "custom":
-                    loader = new CustomLoggerLoader(); break;
+                    loader = new CustomLoggerLoader();
+                    break;
                 default:
                     loader = null;
             }

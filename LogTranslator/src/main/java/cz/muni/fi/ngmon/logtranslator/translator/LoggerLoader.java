@@ -59,7 +59,7 @@ public abstract class LoggerLoader {
     public Collection generateCheckerMethods(List<String> levels) {
         List<String> list = new ArrayList<>(levels.size());
         for (String level : levels) {
-            level = Character.toUpperCase(level.charAt(0)) + level.substring(1);
+            level = (level.length() > 0) ? Character.toUpperCase(level.charAt(0)) + level.substring(1) : "";
             list.add("is" + level + "Enabled");
         }
         return Collections.unmodifiableCollection(list);

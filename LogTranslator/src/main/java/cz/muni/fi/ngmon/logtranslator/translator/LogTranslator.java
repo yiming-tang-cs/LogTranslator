@@ -12,6 +12,7 @@ import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -23,6 +24,7 @@ public class LogTranslator extends JavaBaseListener {
     private int currentLine = 0;
     private String logName = null; // reference to original LOG variable name
     private String logType = null; // reference to original LOG variable type
+    private boolean isExtending = false;
 
 
     public LogTranslator(BufferedTokenStream tokens, LogFile logfile) {
@@ -72,6 +74,15 @@ public class LogTranslator extends JavaBaseListener {
 
     // ------------------------------------------------------------------------
 
+
+    @Override
+    public void enterClassDeclaration(@NotNull JavaParser.ClassDeclarationContext ctx) {
+        if (ctx.getText().contains("extends")) {
+            System.err.println("extending! " + ctx.getChild(0).getText() + " " + ctx.getChild(1).getText() + " " + ctx.getChild(2).getText() + " " + ctx.getChild(3).getText());
+            isExtending = true;
+        }
+    }
+
     /**
      * Method visits qualified names of import declarations, in case if it is import statement,
      * evaluate it and create new LoggerLoader for this Java source code file.
@@ -93,10 +104,15 @@ public class LogTranslator extends JavaBaseListener {
                 }
             }
             // Change logger factory import
-            if (ctx.getText().toLowerCase().contains(loggerLoader.getLogFactory().toLowerCase())) {
+            if (loggerLoader.getLogFactory() != null) {
+                if (ctx.getText().toLowerCase().contains(loggerLoader.getLogFactory().toLowerCase())) {
 //                System.out.println("loggerLoader.LogFactory=" + loggerLoader.getLogFactory());
 //                System.out.println("logfactory=" + ctx.getText());
-                rewriter.replace(ctx.getStart(), ctx.getStop(), Utils.getNgmonLogFactoryImport());
+                    rewriter.replace(ctx.getStart(), ctx.getStop(), Utils.getNgmonLogFactoryImport());
+                }
+//                else {
+//                    System.err.println("ERROR!" + ctx.getText() + "in \n" + ctx.start.getLine() + " " + logFile.getFilepath());
+//                }
             }
             // Change logger and add namespace, logGlobal imports
             for (String logImport : loggerLoader.getLogger()) {
@@ -258,9 +274,20 @@ public class LogTranslator extends JavaBaseListener {
     @Override
     public void exitStatementExpression(@NotNull JavaParser.StatementExpressionContext ctx) {
         // Process LOG.XYZ(stuff);
-        if (logName == null) {
-            System.err.println("Unable to change log calls, when log factory has not been defined! Error. Exiting. " + logFile.getFilepath());
-            System.exit(10);
+        if ((logName == null) && isExtending) {
+//            if (extending, visit that class and find log declaration :) ) and use it here -- you WISH! it can be impossible to find extending class
+//            there might be a chance, that this class extends otherClass, which contains defined LOG.
+//            System.err.println("Unable to change log calls, when log factory has not been defined! Error. Exiting. " +
+//                    logFile.getFilepath() + "\n " + ctx.getText());
+
+            if (ctx.getText().toLowerCase().startsWith("log")) {
+                System.out.println("our extending log statements!" + ctx.expression().expression(0).expression(0).getText());
+                logName = ctx.expression().expression(0).expression(0).getText();
+                if (LoggerFactory.getActualLoggingFramework() == null) {
+                    loggerLoader = LoggerFactory.determineCreateLoggingFramework("failsafe");
+                }
+            }
+
         }
         if (ctx.getText().startsWith(logName + ".")) {
 //            System.out.println("exitStmnt     = " + ctx.getText() + " " + ctx.expression().getChildCount());
@@ -284,6 +311,9 @@ public class LogTranslator extends JavaBaseListener {
                 }
                 // else throw new exception or add it to methodList?
             }
+        } else {
+            // ok this is not a LOG statements... we can throw it away?
+//            System.out.println("===> " + ctx.getText() + logFile.getFilepath() + " " + ctx.start.getLine());
         }
     }
 
@@ -295,21 +325,27 @@ public class LogTranslator extends JavaBaseListener {
      */
     private Log transformMethodStatement(JavaParser.ExpressionListContext expressionList) {
         Log log = new Log();
+        boolean isSpecial = false;
         // Handle 'plus' separated log - transformation of 'Log.X("This is " + sparta + "!")'
         // Handle comma separated log statement 'Log.X("this is", sparta)'
 
-        // TODO!
-//        System.out.println(expressionList.getText());
+        // TODO if expressions are separated by commas and/or first argument contains '%x' or '{}'
+        // delicately handle such situation
+        if (expressionList != null) {
+            if (expressionList.expression(0).getText().contains("{}") || expressionList.expression(0).getText().contains("%")) {
+                System.out.println(expressionList.getText() + " is special case!");
+                isSpecial = true;
+                // if (currentFramework == slf4j) then handle 2 types of messages: '"msgs {}", logFile' and classic '"das" + das + "dsad"';
+                // handle {} and "" ?
+            }
 
-        for (JavaParser.ExpressionContext ec : expressionList.expression()) {
-            fillCurrentLog(log, ec);
-        }
-
-        // TODO implement slf4j framework -- really needed?
-        if (LoggerFactory.getActualLoggingFramework().equals("slf4j") && expressionList.getText().contains("{}")) {
-            System.out.println(expressionList.getText() + " is special slf4j {}");
-            // if (currentFramework == slf4j) then handle 2 types of messages: '"msgs {}", logFile' and classic '"das" + das + "dsad"';
-            // handle {} and "" ?
+            for (JavaParser.ExpressionContext ec : expressionList.expression()) {
+                fillCurrentLog(log, ec, isSpecial);
+            }
+        } else {
+            // ExpressionList is empty! That means it is 'Log.X()' statement.
+            log.setTag("EMPTY STATEMENT");
+            // TODO
         }
         return log;
     }
@@ -321,12 +357,18 @@ public class LogTranslator extends JavaBaseListener {
      *
      * @param log        Log to be filled with data from this log method statement
      * @param expression ANTLR's internal representation of JavaParser.ExpressionContext context
+     * @param isSpecial  If true, first argument/expression contains declaration of whole log ( '%s' '{}')
      */
-    private void fillCurrentLog(Log log, JavaParser.ExpressionContext expression) {
+    private void fillCurrentLog(Log log, JavaParser.ExpressionContext expression, boolean isSpecial) {
         if (expression == null) {
             System.err.println("Expression is null");
             return;
         }
+
+        if (isSpecial) {
+            System.out.println("MAGIC BEGINS here! " + expression.getText());
+        }
+
         int childCount = expression.getChildCount();
         if (childCount == 3) {
             if (expression.expression(1) != null) {
@@ -335,12 +377,21 @@ public class LogTranslator extends JavaBaseListener {
             }
             for (JavaParser.ExpressionContext ec : expression.expression().subList(0, expression.expression().size() - 1)) {
 //                System.out.println("ec=" + ec.getText());
-                fillCurrentLog(log, ec);
+                fillCurrentLog(log, ec, isSpecial);
             }
         } else if (childCount == 1) {
             determineLogTypeAndStore(log, expression);
-        } else {
+        } else if (expression.children.size() == 4) {
             // TODO
+            List<String> stringList = Arrays.asList("format", "print");
+//            System.out.println("asd" + expression.expression(0).getText());
+            if (Utils.listContainsItem(stringList, expression.expression(0).getText())) {
+                for (JavaParser.ExpressionContext ch : expression.expressionList().expression()) {
+//                    System.out.println("ch=" + ch.getText());
+                    determineLogTypeAndStore(log, ch);
+                }
+            }
+        } else {
             System.err.printf("Error! ChildCount=%d: %s %d:%s%n", childCount, expression.getText(), expression.getStart().getLine(), logFile.getFilepath());
         }
     }
@@ -364,6 +415,7 @@ public class LogTranslator extends JavaBaseListener {
      * @param findMe variable to find
      */
     private LogFile.Variable findVariable(JavaParser.ExpressionContext findMe) {
+//        System.out.println("findMe " + findMe.getText() + logFile.getFilepath());
         LogFile.Variable foundVar = null;
         for (String key : logFile.getVariableList().keySet()) {
             if (findMe.getText().equals(key)) {
@@ -440,7 +492,8 @@ public class LogTranslator extends JavaBaseListener {
 
 
                 /** Mathematical expression - use double as type */
-            } else if (Utils.containsMathOperator(findMe.getText())) {
+            } else if (Utils.listContainsItem(Utils.MATH_OPERATORS, findMe.getText())) {
+//                containsMathOperator(findMe.getText()))
                 varName = findMe.getText();
                 varType = "double";
                 logFile.storeVariable(findMe, varName, varType, false);
@@ -479,7 +532,7 @@ public class LogTranslator extends JavaBaseListener {
 //    public boolean isComposite(String object) {
 //        boolean composite = false;
 //        //System.out.println("obj=" + object);
-//        // TODO - make it more sophisticated
+//        // TODO - make it more sophisticated ??
 //        if (object.contains(".")) {
 //            composite = true;
 //        }
@@ -494,9 +547,13 @@ public class LogTranslator extends JavaBaseListener {
      * @param str string to be changed
      */
     private String cultivate(String str) {
+//        System.out.print("cultivating  " + str);
         str = str.substring(1, str.length() - 1).trim();
         str = str.replaceAll("\\d+", "");   // remove all digits as well?
-        str = str.replaceAll("\\W", " ").replaceAll("\\s+", " ");
+        str = str.replaceAll("%\\w", " "); // remove all single chars
+        str = str.replaceAll("\\W", " ").replaceAll("\\s+", " ").trim();
+
+//        System.out.print("  -->" + str + "\n");
         return str;
     }
 

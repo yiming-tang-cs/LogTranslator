@@ -21,7 +21,7 @@ public class Utils {
     static String ngmonEmptyLogStatement;
     static String ngmonLogLength;
     static List<String> BANNED_LIST = Arrays.asList("a", "an", "the");
-    static List<String> MATH_OPERATORS = Arrays.asList("+", "-", "*", "/");
+    public static List<String> MATH_OPERATORS = Arrays.asList("+", "-", "*", "/");
 
 //    static final String COMMA = ",";
 //    static final String PLUS = "+";
@@ -124,6 +124,15 @@ public class Utils {
     public static boolean containsMathOperator(String text) {
         for (String operator : MATH_OPERATORS) {
             if (text.contains(operator)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean listContainsItem(List<String> list, String text) {
+        for (String item : list){
+            if (text.contains(item)) {
                 return true;
             }
         }

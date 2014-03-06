@@ -1,5 +1,7 @@
 package cz.muni.fi.ngmon.logtranslator.common;
 
+import cz.muni.fi.ngmon.logtranslator.translator.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -12,7 +14,9 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Locate all files, where there is any log call.
@@ -41,6 +45,25 @@ public class LogFilesFinder {
 
 
 class JavaLogFinder extends SimpleFileVisitor<Path> {
+
+    private static List<String> importList;
+    private static List<String> classStartList = Arrays.asList("class", "interface", "enum", "annotation");
+
+    static {
+        Map<String, List<String>> logFws = LoggerFactory.getLoggingFrameworks();
+        List<String> helper = new ArrayList<>();
+        importList = new ArrayList<>();
+
+        for (String key : logFws.keySet()) {
+            helper.addAll(logFws.get(key));
+        }
+
+        for (String item : helper) {
+            if (item != null) {
+                importList.add(item);
+            }
+        }
+    }
 
     @Override
     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
@@ -71,20 +94,39 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
             // If this file contains 'import *log*;' or '*log*.(*);' statement
             // add file to processFileList -- make list rather bigger then shorter
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-                String importSearch = "^import.*?log.*;$";
-                String logSearch = "^\\s+log[a-z]*.(.*);$";
-                boolean found;
+
+                /**
+                 * 1) Search imports first - iterate import in our map if it contains "log"
+                 * 2) If foundLog, add file to processFiles
+                 * 3) if not foundLog in imports, look for suspicious LOG
+                 */
+
+                String logSearch = "^\\.*?log[a-z]*\\.(trace|debug|warn|error|fatal|log)\\(.*\\).*$";
+                boolean foundLog = false;
+                boolean foundImport = false;
+                boolean searchLogsOnly = false;
                 String line;
                 String packageName = null;
 
                 while ((line = reader.readLine()) != null) {
                     line = line.trim();
-                    if (line.startsWith("package ")) {
-                        packageName = line.substring(8, line.length()-1);
+                    if (!searchLogsOnly) {
+                        if (line.startsWith("package ")) {
+                            packageName = line.substring(8, line.length()-1);
+                        }
+                        if (line.startsWith("import")) {
+                            foundImport = Utils.listContainsItem(importList, line);
+                        }
+                        if (Utils.listContainsItem(classStartList, line)) {
+                            // search logs only from now, but be stricter/more effective
+                            searchLogsOnly = true;
+                        }
+                    } else {
+                        /** There is high possibility that there is no logger. Quick search only */
+                        foundLog = line.toLowerCase().matches(logSearch);
+//                        if (foundLog) System.err.println("XXX found log call! " + line + " " + file);
                     }
-                    found = (line.toLowerCase().matches(logSearch) ||
-                            (line.toLowerCase().matches(importSearch)));
-                    if (found) {
+                    if (foundLog || foundImport) {
 //                        System.out.format("%s: line=%s %s%n", file.toString(), packageName, line);
                         LogFile logFile = new LogFile(file.toString());
                         logFile.setPackageName(packageName);
