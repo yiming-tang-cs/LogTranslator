@@ -78,7 +78,8 @@ public class LogTranslator extends JavaBaseListener {
     @Override
     public void enterClassDeclaration(@NotNull JavaParser.ClassDeclarationContext ctx) {
         if (ctx.getText().contains("extends")) {
-            System.err.println("extending! " + ctx.getChild(0).getText() + " " + ctx.getChild(1).getText() + " " + ctx.getChild(2).getText() + " " + ctx.getChild(3).getText());
+//            System.err.println("extending! " + ctx.getChild(0).getText() + " " + ctx.getChild(1).getText() +
+//              " " + ctx.getChild(2).getText() + " " + ctx.getChild(3).getText());
             isExtending = true;
         }
     }
@@ -100,6 +101,7 @@ public class LogTranslator extends JavaBaseListener {
 
                 if (loggerLoader == null) {
                     // this is not log import, we can safely skip it
+//                    System.err.println("No loggingFw=" + LoggerFactory.getActualLoggingFramework() + " " + ctx.getText());
                     return;
                 }
             }
@@ -205,11 +207,16 @@ public class LogTranslator extends JavaBaseListener {
      */
     @Override
     public void exitConstDeclaration(@NotNull JavaParser.ConstDeclarationContext ctx) {
-//        System.err.println("constDec=" + ctx.getText() + " in file=" + logFile.getFilepath());
-        if (loggerLoader.containsLogFactory(ctx.getText())) {
+        System.out.println("constDec=" + ctx.getText() + "\t\t" + logFile.getFilepath());
+        if (loggerLoader != null && loggerLoader.containsLogFactory(ctx.getText())) {
+            System.out.println("constDeclLoggerloader=" + ctx.getText() + " " + ctx.constantDeclarator(0).Identifier().getText() +
+                    " " + ctx.type().getText() + "\n" + logFile.getFilepath());
             if (this.logName == null) this.logName = ctx.constantDeclarator(0).Identifier().getText();
             replaceLogFactory(ctx);
+
         } else {
+            System.out.println("storing constDecl=" + ctx.getText() + " " +
+                    ctx.constantDeclarator(0).Identifier().getText() + " " + ctx.type().getText());
             logFile.storeVariable(ctx, ctx.constantDeclarator(0).Identifier().getText(), ctx.type().getText(), true);
 //            System.out.printf("stored=%s %s %s%n", ctx, ctx.constantDeclarator(0).Identifier().getText(), ctx.type().getText());
         }
@@ -281,7 +288,8 @@ public class LogTranslator extends JavaBaseListener {
 //                    logFile.getFilepath() + "\n " + ctx.getText());
 
             if (ctx.getText().toLowerCase().startsWith("log")) {
-                System.out.println("our extending log statements!" + ctx.expression().expression(0).expression(0).getText());
+                System.out.println("our extending log statements! " + ctx.expression().expression(0).expression(0).getText() +
+                        " " + logFile.getFilepath());
                 logName = ctx.expression().expression(0).expression(0).getText();
                 if (LoggerFactory.getActualLoggingFramework() == null) {
                     loggerLoader = LoggerFactory.determineCreateLoggingFramework("failsafe");
@@ -333,7 +341,7 @@ public class LogTranslator extends JavaBaseListener {
         // delicately handle such situation
         if (expressionList != null) {
             if (expressionList.expression(0).getText().contains("{}") || expressionList.expression(0).getText().contains("%")) {
-                System.out.println(expressionList.getText() + " is special case!");
+//                System.out.println(expressionList.getText() + " is special case!");
                 isSpecial = true;
                 // if (currentFramework == slf4j) then handle 2 types of messages: '"msgs {}", logFile' and classic '"das" + das + "dsad"';
                 // handle {} and "" ?
@@ -370,7 +378,16 @@ public class LogTranslator extends JavaBaseListener {
         }
 
         int childCount = expression.getChildCount();
-        if (childCount == 3) {
+
+        if (childCount == 1) {
+            determineLogTypeAndStore(log, expression);
+        } else if (childCount == 2) {
+            // TODO BIG!! LOG.fatal("Error reported on file " + f + "... exiting", new Exception());
+            // 'new Exception()' found only
+            System.out.println("2Exception=" + expression.getText());
+
+        /** Recursively call this method to find out more information about *this* statement */
+        } else if (childCount == 3) {
             if (expression.expression(1) != null) {
 //                System.out.format("var=%s exp(0)=%s exp(1)=%s%n", expression.getText(), expression.expression(0).getText(), expression.expression(1).getText());
                 determineLogTypeAndStore(log, expression.expression(1));
@@ -379,10 +396,10 @@ public class LogTranslator extends JavaBaseListener {
 //                System.out.println("ec=" + ec.getText());
                 fillCurrentLog(log, ec, isSpecial);
             }
-        } else if (childCount == 1) {
-            determineLogTypeAndStore(log, expression);
-        } else if (expression.children.size() == 4) {
-            // TODO
+
+//        } else if (expression.children.size() == 4) {
+        } else if (childCount == 4) {
+            // TODO ?
             List<String> stringList = Arrays.asList("format", "print");
 //            System.out.println("asd" + expression.expression(0).getText());
             if (Utils.listContainsItem(stringList, expression.expression(0).getText())) {
@@ -392,10 +409,18 @@ public class LogTranslator extends JavaBaseListener {
                 }
             }
         } else {
+
             System.err.printf("Error! ChildCount=%d: %s %d:%s%n", childCount, expression.getText(), expression.getStart().getLine(), logFile.getFilepath());
         }
     }
 
+    /**
+     * Method determines type of variable and stores it for this particular logger.
+     *
+     * @param log current log instance to store variables for given method
+     * @param expression ANTLR's internal representation of JavaParser.ExpressionContext context
+     *                   which holds information about variable
+     */
     public void determineLogTypeAndStore(Log log, JavaParser.ExpressionContext expression) {
         if (expression.getText().startsWith("\"")) {
             log.addComment(cultivate(expression.getText()));
@@ -412,7 +437,8 @@ public class LogTranslator extends JavaBaseListener {
      * Use ANTLR's grun tool to see proper structure.
      * After separating store variable using storeVariable() method.
      *
-     * @param findMe variable to find
+     * @param findMe  ANTLR's internal representation of JavaParser.ExpressionContext context
+     *                which holds variable to find
      */
     private LogFile.Variable findVariable(JavaParser.ExpressionContext findMe) {
 //        System.out.println("findMe " + findMe.getText() + logFile.getFilepath());
@@ -450,7 +476,7 @@ public class LogTranslator extends JavaBaseListener {
                 logFile.storeVariable(findMe, findMe.getText(), "String", false);
                 foundVar = returnLastValue(findMe.getText()); //logFile.getVariableList().get(findMe.getText()).get(0);
 
-                /** handle 'new String(data, UTF_8)' */
+            /** handle 'new String(data, UTF_8)' */
             } else if (findMe.getText().contains("new")) {
                 // declaration of 'new String(data, ENC)'
                 if (findMe.creator() != null) {
@@ -460,11 +486,20 @@ public class LogTranslator extends JavaBaseListener {
                     foundVar = returnLastValue(varName);
                 }
 
-                /**
-                 * Handle call of another method in class.
-                 * Start another ANTLR process, look for method declarations and return type.
-                 * Put it All back here.
-                 */
+            /**
+             * Handle 'this' call
+             */
+            } else if (findMe.getText().startsWith("this")) {
+                if (findMe.getText().equals("this")) {
+                    // do nothing!
+                } else {
+                    System.err.println("'this.' call found method!" + findMe.getText());
+                }
+            /**
+             * Handle call of another method in class.
+             * Start another ANTLR process, look for method declarations and return type.
+             * Put it All back here.
+             */
             } else if (findMe.getText().matches("\\w+(.*?)")) {
                 List<String> methodArgumentsTypeList = new ArrayList<>();
 //                System.out.println("do me!" + findMe.getStart().getLine() + " " + findMe.getText() +
@@ -487,18 +522,24 @@ public class LogTranslator extends JavaBaseListener {
                 } else {
                     methodArgumentsTypeList = null;
                 }
-                HelperLogTranslator.lookMethod(logFile, findMe.getText(), methodArgumentsTypeList);
+                // TODO make deeper method-checking, ie class is extended
+                if (!HelperLogTranslator.findMethod(logFile, findMe.getText(), methodArgumentsTypeList)) {
+                    // Method has not been found in class. Store it anyway.
+                    // Exactly same situation as variable containing "."
+                    logFile.storeVariable(findMe, findMe.getText(), "String", false);
+                }
                 foundVar = returnLastValue(findMe.getText());
+//                System.out.println("find me " + findMe.getText());
 
 
-                /** Mathematical expression - use double as type */
+            /** Mathematical expression - use double as type */
             } else if (Utils.listContainsItem(Utils.MATH_OPERATORS, findMe.getText())) {
 //                containsMathOperator(findMe.getText()))
                 varName = findMe.getText();
                 varType = "double";
                 logFile.storeVariable(findMe, varName, varType, false);
                 foundVar = returnLastValue(varName);
-
+            /** We have ran out of luck. Have not found given variable in my known parsing list. */
             } else {
                 System.err.println("Unable to find variable " + findMe.getText() + " in file " +
                         findMe.start.getLine() + " :" + logFile.getFilepath() + "\n" + logFile.getVariableList());
@@ -517,8 +558,9 @@ public class LogTranslator extends JavaBaseListener {
      * @return returns Variable object for given variable input
      */
     private LogFile.Variable returnLastValue(String variable) {
-//        System.out.println("looking for" + variable);
+//        System.out.println("looking for" + variable + " " + logFile.getFilepath());
         List<LogFile.Variable> list = logFile.getVariableList().get(variable);
+//        System.out.println("returning " + list);
         return list.get(list.size() - 1);
     }
 

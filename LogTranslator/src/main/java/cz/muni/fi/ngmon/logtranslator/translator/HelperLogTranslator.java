@@ -11,15 +11,15 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
 public class HelperLogTranslator {
 
 
-    public static void run(LogFile logFile, String lookFor, List<String> methodArgumentTypes) {
+    public static boolean run(LogFile logFile, String lookFor, List<String> methodArgumentTypes) {
         InputStream antlrInputStream;
+        MethodListener listener = null;
         try {
             antlrInputStream = new FileInputStream(logFile.getFilepath());
             ANTLRInputStream ais = new ANTLRInputStream(antlrInputStream);
@@ -29,21 +29,23 @@ public class HelperLogTranslator {
             ParseTree tree = parser.compilationUnit();
 
             ParseTreeWalker walker = new ParseTreeWalker();
-            MethodListener listener = new MethodListener(logFile, lookFor, methodArgumentTypes);
+            listener = new MethodListener(logFile, lookFor, methodArgumentTypes);
             walker.walk(listener, tree);
+            return listener.isFound();
 
-        } catch (IOException e) {
-            System.err.println("Unable to handle file=" + e.toString());
         } catch (Exception e) {
+            System.err.println("helper: Unable to handle file=" + e.toString());
             e.printStackTrace();
+            return false;
         }
     }
 
-    public static void lookMethod(LogFile logFile, String methodName, List<String> typeArguments) {
+    public static boolean findMethod(LogFile logFile, String methodName, List<String> typeArguments) {
+        System.out.println("Searching for method=" + methodName);
         if (typeArguments == null) {
-            HelperLogTranslator.run(logFile, methodName, null);
+            return HelperLogTranslator.run(logFile, methodName, null);
         } else {
-            HelperLogTranslator.run(logFile, methodName, typeArguments);
+            return HelperLogTranslator.run(logFile, methodName, typeArguments);
         }
     }
 }
@@ -53,11 +55,17 @@ class MethodListener extends JavaBaseListener {
     private final List<String> argumentTypes;
     private LogFile logfile;
     private String findMethod;
+    private boolean found;
 
     MethodListener(LogFile logFile, String findMethod, List<String> argumentTypes) {
         this.argumentTypes = argumentTypes;
         this.findMethod = findMethod;
         this.logfile = logFile;
+        found = false;
+    }
+
+    public boolean isFound() {
+        return found;
     }
 
     /**
@@ -88,6 +96,7 @@ class MethodListener extends JavaBaseListener {
                 }
             }
         } else {
+//            System.out.println("finding " + findMethod + " " + ctx.getText());
             if (ctx.Identifier().getText().equals(findMethod.substring(0, findMethod.indexOf('(')))) {
 //                System.out.println("storing " + ctx.Identifier().getText() + ctx.formalParameters().getText());
                 store(ctx);
@@ -99,5 +108,6 @@ class MethodListener extends JavaBaseListener {
         String varType = (ctx.type() == null) ? varType = "void" : ctx.type().getText();
 //        System.out.println("Storing " + findMethod + " " + varType);
         logfile.storeVariable(ctx, findMethod, varType, false);
+        found = true;
     }
 }

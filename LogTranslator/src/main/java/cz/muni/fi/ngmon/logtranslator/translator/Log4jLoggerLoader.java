@@ -32,7 +32,7 @@ public class Log4jLoggerLoader extends LoggerLoader {
         this.checkerLogMethods = generateCheckerMethods(levels);
         this.translateLogMethods = generateTranslateMethods(levels, log4jCustomizedMethods);
         // TODO translate or remove isEnabled method checker!
-        this.translateLogMethods.add("isEnabled");
+//        this.translateLogMethods.add("isEnabled"); UNMODIFIABLE collection!
 
     }
 

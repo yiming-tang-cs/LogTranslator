@@ -17,16 +17,13 @@ public class FailsafeLoggerLoader extends LoggerLoader {
     public FailsafeLoggerLoader() {
         super();
         List<String> imports = LoggerFactory.getActualLoggingImports();
-        setLogger(null);
-        setLogFactory(null);  // take care, log4j has no logFactory
+        setLogger(Arrays.asList(""));
+        setLogFactory("");  // take care, log4j has no logFactory
 
         // Does log4j has any custom methods? Add them into this list.
         List<String> failsafeCustomizedMethods = Arrays.asList("log", "entry", "printf");
         this.checkerLogMethods = generateCheckerMethods(levels);
         this.translateLogMethods = generateTranslateMethods(levels, failsafeCustomizedMethods);
-        // TODO translate or remove isEnabled method checker!
-        this.translateLogMethods.add("isEnabled");
-
     }
 
 

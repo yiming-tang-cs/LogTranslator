@@ -22,8 +22,8 @@ public class LoggerFactory {
         loggingFrameworks.put("slf4j", Arrays.asList("org.slf4j.LoggerFactory", "org.slf4j.Logger"));
         loggingFrameworks.put("log4j", Arrays.asList(null, "org.apache.log4j.Logger")); // same situation as in  JULi (Logger.getLogger or .getRootLogger)
         loggingFrameworks.put("log4j2", Arrays.asList("org.apache.logging.log4j.LogManager", "org.apache.logging.log4j.Logger"));
-
         loggingFrameworks.put("unknown", Arrays.asList(""));
+
         loggingFrameworks.put("custom", Arrays.asList("cz.muni.fi.ngmon.logtranslator.customlogger.LogFactory", "cz.muni.fi.ngmon.logtranslator.customlogger.Logger"));
 
     }
