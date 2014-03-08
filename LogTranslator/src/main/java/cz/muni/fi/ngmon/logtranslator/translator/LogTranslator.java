@@ -384,9 +384,17 @@ public class LogTranslator extends JavaBaseListener {
         } else if (childCount == 2) {
             // TODO BIG!! LOG.fatal("Error reported on file " + f + "... exiting", new Exception());
             // 'new Exception()' found only
-            System.out.println("2Exception=" + expression.getText());
+            System.out.println("2Exception=" + expression.getText() + " " + expression.getChild(0).getText() + " " + expression.creator().getText());
+            // new is followed by 'creator context'
+            if (expression.getChild(0).getText().equals("new")) {
+                determineLogTypeAndStore(log, expression);
+            } else {
+                System.err.println("Error " + expression.getText());
+            }
+//            if (expression.getText().contains("new") && expression.getText().toLowerCase().contains("exception")) {
 
-        /** Recursively call this method to find out more information about *this* statement */
+
+            /** Recursively call this method to find out more information about *this* statement */
         } else if (childCount == 3) {
             if (expression.expression(1) != null) {
 //                System.out.format("var=%s exp(0)=%s exp(1)=%s%n", expression.getText(), expression.expression(0).getText(), expression.expression(1).getText());
@@ -417,7 +425,7 @@ public class LogTranslator extends JavaBaseListener {
     /**
      * Method determines type of variable and stores it for this particular logger.
      *
-     * @param log current log instance to store variables for given method
+     * @param log        current log instance to store variables for given method
      * @param expression ANTLR's internal representation of JavaParser.ExpressionContext context
      *                   which holds information about variable
      */
@@ -437,8 +445,8 @@ public class LogTranslator extends JavaBaseListener {
      * Use ANTLR's grun tool to see proper structure.
      * After separating store variable using storeVariable() method.
      *
-     * @param findMe  ANTLR's internal representation of JavaParser.ExpressionContext context
-     *                which holds variable to find
+     * @param findMe ANTLR's internal representation of JavaParser.ExpressionContext context
+     *               which holds variable to find
      */
     private LogFile.Variable findVariable(JavaParser.ExpressionContext findMe) {
 //        System.out.println("findMe " + findMe.getText() + logFile.getFilepath());
@@ -476,30 +484,35 @@ public class LogTranslator extends JavaBaseListener {
                 logFile.storeVariable(findMe, findMe.getText(), "String", false);
                 foundVar = returnLastValue(findMe.getText()); //logFile.getVariableList().get(findMe.getText()).get(0);
 
-            /** handle 'new String(data, UTF_8)' */
+                /** handle 'new String(data, UTF_8)' or 'new Exception()' */
             } else if (findMe.getText().contains("new")) {
-                // declaration of 'new String(data, ENC)'
+                // declaration of 'new String(data, ENC)' or 'new Exception()'
                 if (findMe.creator() != null) {
-                    varType = findMe.creator().createdName().getText();
-                    varName = findMe.creator().classCreatorRest().arguments().expressionList().expression(0).getText();
+                    if (findMe.creator().getText().contains("Exception")) {
+                        // TODO this _might_ be a problem in future
+                        varName = "new " + findMe.creator().getText();
+                        varType = "String";
+                    } else {
+                        varType = findMe.creator().createdName().getText();
+                        varName = findMe.creator().classCreatorRest().arguments().expressionList().expression(0).getText();
+                    }
                     logFile.storeVariable(findMe, varName, varType, false);
                     foundVar = returnLastValue(varName);
+
                 }
 
-            /**
-             * Handle 'this' call
-             */
+                /** Handle 'this' call */
             } else if (findMe.getText().startsWith("this")) {
                 if (findMe.getText().equals("this")) {
                     // do nothing!
                 } else {
                     System.err.println("'this.' call found method!" + findMe.getText());
                 }
-            /**
-             * Handle call of another method in class.
-             * Start another ANTLR process, look for method declarations and return type.
-             * Put it All back here.
-             */
+                /**
+                 * Handle call of another method in class.
+                 * Start another ANTLR process, look for method declarations and return type.
+                 * Put it All back here.
+                 */
             } else if (findMe.getText().matches("\\w+(.*?)")) {
                 List<String> methodArgumentsTypeList = new ArrayList<>();
 //                System.out.println("do me!" + findMe.getStart().getLine() + " " + findMe.getText() +
@@ -532,14 +545,21 @@ public class LogTranslator extends JavaBaseListener {
 //                System.out.println("find me " + findMe.getText());
 
 
-            /** Mathematical expression - use double as type */
+                /** Mathematical expression - use double as type */
             } else if (Utils.listContainsItem(Utils.MATH_OPERATORS, findMe.getText())) {
 //                containsMathOperator(findMe.getText()))
                 varName = findMe.getText();
                 varType = "double";
                 logFile.storeVariable(findMe, varName, varType, false);
                 foundVar = returnLastValue(varName);
-            /** We have ran out of luck. Have not found given variable in my known parsing list. */
+
+                /** If variable begins with NEGATION '!' */
+            } else if (findMe.getText().startsWith("!")) {
+                varName = findMe.getText().substring(1);
+//                logFile.storeVariable(findMe, varName, varType, false);
+                foundVar = returnLastValue(varName);
+
+                /** We have ran out of luck. Have not found given variable in my known parsing list. */
             } else {
                 System.err.println("Unable to find variable " + findMe.getText() + " in file " +
                         findMe.start.getLine() + " :" + logFile.getFilepath() + "\n" + logFile.getVariableList());

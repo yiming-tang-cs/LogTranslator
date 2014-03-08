@@ -13,6 +13,7 @@ public class TranslatorStarter {
         Utils.initialize();
 //        1) Search through all ".java" files in given directory. Look for "log.{debug,warn,error,fatal}
         List<LogFile> logFiles = LogFilesFinder.commenceSearch(Utils.getLoggingApplicationHome());
+//        logFiles = Arrays.asList(new LogFile("/home/mtoth/example-app/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/qjournal/server/JournalNode.java"));
 //        2) Find & set namespace. If new namespace, flush/write actual data into logFile
         Utils.generateNamespaces(logFiles);
         int counter = 0;
@@ -22,10 +23,5 @@ public class TranslatorStarter {
             counter++;
             System.out.printf("Processed %d of %d files.%n", counter, logFiles.size());
         }
-
-//        LogFile file = new LogFile("/home/mtoth/skola/dp/LogFilterBase/LogTranslator/src/main/resources/sourceExamples/TestingClass.java");
-//        fileInfo = new FileInfo("/home/mtoth/skola/dp/LogFilterBase/LogTranslator/src/main/resources/sourceExamples/WebApp.java");
-//        ANTLRRunner.run(file);
-
     }
 }
