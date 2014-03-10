@@ -22,6 +22,10 @@ public class Utils {
     static String ngmonLogLength;
     static List<String> BANNED_LIST = Arrays.asList("a", "an", "the");
     public static List<String> MATH_OPERATORS = Arrays.asList("+", "-", "*", "/");
+    public static List<String> BOOLEAN_OPERATORS = Arrays.asList("&&", "||");
+    public static List<String> PRIMITIVE_TYPES = Arrays.asList("boolean", "byte", "int", "long", "double", "float", "char");
+
+
 
 //    static final String COMMA = ",";
 //    static final String PLUS = "+";
