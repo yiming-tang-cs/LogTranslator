@@ -25,8 +25,6 @@ public class Utils {
     public static List<String> BOOLEAN_OPERATORS = Arrays.asList("&&", "||");
     public static List<String> PRIMITIVE_TYPES = Arrays.asList("boolean", "byte", "int", "long", "double", "float", "char");
 
-
-
 //    static final String COMMA = ",";
 //    static final String PLUS = "+";
 //    static final Collection<String> separators = Arrays.asList(COMMA, PLUS);
@@ -96,9 +94,6 @@ public class Utils {
 //    }
 //
 //    public void setLoggingApplicationNamespace(String newLoggingApplicationNamespace) {
-//
-//
-//
 //        loggingApplicationNamespace = newLoggingApplicationNamespace;
 //    }
 
@@ -125,14 +120,6 @@ public class Utils {
         return logFileList;
     }
 
-    public static boolean containsMathOperator(String text) {
-        for (String operator : MATH_OPERATORS) {
-            if (text.contains(operator)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     public static boolean listContainsItem(List<String> list, String text) {
         for (String item : list){
