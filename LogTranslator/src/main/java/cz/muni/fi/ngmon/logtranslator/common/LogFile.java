@@ -115,6 +115,7 @@ public class LogFile {
      */
 
     public void storeVariable(ParserRuleContext ctx, String variableName, String variableTypeName, boolean isField) {
+//        System.out.println("Storing var=" + variableName + " " + variableTypeName);
         checkAndStoreVariable(variableName, variableTypeName, ctx.start.getLine(),
                 ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
                 ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex(), isField);
