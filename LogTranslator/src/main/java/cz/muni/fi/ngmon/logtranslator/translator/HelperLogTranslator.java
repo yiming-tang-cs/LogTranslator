@@ -19,7 +19,7 @@ public class HelperLogTranslator {
 
     public static boolean run(LogFile logFile, String lookFor, List<String> methodArgumentTypes) {
         InputStream antlrInputStream;
-        MethodListener listener = null;
+        MethodListener listener;
         try {
             antlrInputStream = new FileInputStream(logFile.getFilepath());
             ANTLRInputStream ais = new ANTLRInputStream(antlrInputStream);
@@ -105,9 +105,9 @@ class MethodListener extends JavaBaseListener {
     }
 
     public void store(JavaParser.MethodDeclarationContext ctx) {
-        String varType = (ctx.type() == null) ? varType = "void" : ctx.type().getText();
+        String varType = (ctx.type() == null) ? "void" : ctx.type().getText();
 //        System.out.println("Storing " + findMethod + " " + varType);
-        logfile.storeVariable(ctx, findMethod, varType, false);
+        logfile.storeVariable(ctx, findMethod, varType, false, null);
         found = true;
     }
 }

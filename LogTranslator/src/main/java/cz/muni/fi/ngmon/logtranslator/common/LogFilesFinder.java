@@ -43,7 +43,11 @@ public class LogFilesFinder {
     }
 }
 
-
+/**
+ * Class looks for 'log' statements in files from current directory and adds
+ * files to list of files, which will be later translated by ANTLR.
+ *
+ */
 class JavaLogFinder extends SimpleFileVisitor<Path> {
 
     private static List<String> importList;

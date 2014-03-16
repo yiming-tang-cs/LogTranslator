@@ -4,7 +4,6 @@ import cz.muni.fi.ngmon.logtranslator.common.LogFile;
 import cz.muni.fi.ngmon.logtranslator.common.LogFilesFinder;
 import cz.muni.fi.ngmon.logtranslator.common.Utils;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class TranslatorStarter {
@@ -15,7 +14,7 @@ public class TranslatorStarter {
 //        1) Search through all ".java" files in given directory. Look for "log.{debug,warn,error,fatal}
         List<LogFile> logFiles = LogFilesFinder.commenceSearch(Utils.getLoggingApplicationHome());
 
-        logFiles = Arrays.asList(new LogFile("/home/mtoth/example-app/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/blockmanagement/BlockManager.java"));
+//        logFiles = Arrays.asList(new LogFile("/home/mtoth/example-app/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/NameNode.java"));
 //        2) Find & set namespace. If new namespace, flush/write actual data into logFile
         Utils.generateNamespaces(logFiles);
         int counter = 0;

@@ -78,9 +78,32 @@ public class LogTranslator extends JavaBaseListener {
     @Override
     public void enterClassDeclaration(@NotNull JavaParser.ClassDeclarationContext ctx) {
         if (ctx.getText().contains("extends")) {
-//            System.err.println("extending! " + ctx.getChild(0).getText() + " " + ctx.getChild(1).getText() +
-//              " " + ctx.getChild(2).getText() + " " + ctx.getChild(3).getText());
+//            System.out.println("extending! " + ctx.getChild(0).getText() + " " + ctx.getChild(1).getText() +
+//              " " + ctx.getChild(2).getText() + " " + ctx.getChild(3).getText() + logFile.getFilepath());
             isExtending = true;
+            // TODO - implement extending mechanism and remove some simple 'assumptions'  - "Assuming external variable from static import"
+            /*  If extending class type is not full package qualified name, look for imports to determine package &
+                appropriate file path location to get all variables from that file. (might be already parsed
+                by ANTLR and stored needed variables. - look for isField = true) Else parse file and change order
+                of this file from TranslationStarter.logFiles list/order
+             */
+//            System.out.println("classDeclaration=" + ctx.getText().substring(0, 80) + " " + ctx.type().getText());
+        }
+    }
+
+    @Override
+    public void exitImportDeclaration(@NotNull JavaParser.ImportDeclarationContext ctx) {
+        // Store import classes - might be used later for extending purposes and finding appropriate class
+        logFile.addImport(ctx.qualifiedName().getText());
+        if (ctx.getText().contains("static")) {
+            logFile.setContainsStaticImport(true);
+            if (ctx.getText().substring(0, ctx.getText().length() - 1).endsWith("*")) {
+                int star = ctx.getText().length() - 3;
+                int lastDot = ctx.getText().substring(0, ctx.getText().length() - 4).lastIndexOf(".") + 1;
+                String staticImport = ctx.getText().substring(lastDot, star );
+                System.out.println("staticImport = " + staticImport);
+                logFile.addStaticImports(staticImport);
+            }
         }
     }
 
@@ -156,7 +179,7 @@ public class LogTranslator extends JavaBaseListener {
         } else {
             // It is not LOG variable, so let's store information about it for further log transformations
             if (ctx.variableDeclarators().variableDeclarator().size() == 1) {
-                logFile.storeVariable(ctx, varName, ctx.type().getText(), true);
+                logFile.storeVariable(ctx, varName, ctx.type().getText(), true, null);
             } else {
                 // Let's hope there are no 2 loggers defined on same line - should be impossible as well
 //                System.err.println("exitFieldDeclaration variableDeclarator().size() > 1!" + ctx.getText() + "\n" + logFile.getFilepath());
@@ -164,31 +187,40 @@ public class LogTranslator extends JavaBaseListener {
                 String varType = ctx.type().getText();
                 for (JavaParser.VariableDeclaratorContext varContext : ctx.variableDeclarators().variableDeclarator()) {
                     varName = varContext.variableDeclaratorId().getText();
-                    logFile.storeVariable(varContext, varName, varType, true);
+                    logFile.storeVariable(varContext, varName, varType, true, null);
                 }
             }
         }
     }
 
-
+    /**
+     * Store one/more local variable declarations to variable list
+     *
+     * @param ctx ANTLR's JavaParser.LocalVariableDeclarationContext context
+     */
     @Override
     public void exitLocalVariableDeclaration(@NotNull JavaParser.LocalVariableDeclarationContext ctx) {
         String varType = ctx.type().getText();
 
         if (ctx.variableDeclarators().variableDeclarator().size() == 1) {
             String variable = ctx.variableDeclarators().variableDeclarator(0).variableDeclaratorId().getText();
-            logFile.storeVariable(ctx, variable, varType, false);
+            logFile.storeVariable(ctx, variable, varType, false, null);
         } else {
             // Multiple variables are defined on one line. Ugly.. handle.
             List<JavaParser.VariableDeclaratorContext> variables = ctx.variableDeclarators().variableDeclarator();
             for (JavaParser.VariableDeclaratorContext var : variables) {
                 String varName = var.variableDeclaratorId().getText();
 //                System.out.println("Storing var=" + varType + " " + varName + " " + ctx.getText());
-                logFile.storeVariable(ctx, varName, varType, false);
+                logFile.storeVariable(ctx, varName, varType, false, null);
             }
         }
     }
 
+    /**
+     * Parse variable names and types from method formal parameters.
+     *
+     * @param ctx ANTLR's JavaParser.FormalParameterListContext context
+     */
     @Override
     public void exitFormalParameterList(@NotNull JavaParser.FormalParameterListContext ctx) {
         String varName;
@@ -197,7 +229,7 @@ public class LogTranslator extends JavaBaseListener {
 //            System.out.println("param=" + parameter.getText());
             varType = parameter.type().getText();
             varName = parameter.variableDeclaratorId().getText();
-            logFile.storeVariable(parameter, varName, varType, false);
+            logFile.storeVariable(parameter, varName, varType, false, null);
         }
     }
 
@@ -219,11 +251,16 @@ public class LogTranslator extends JavaBaseListener {
         } else {
 //            System.out.println("storing constDecl=" + ctx.getText() + " " +
 //                    ctx.constantDeclarator(0).Identifier().getText() + " " + ctx.type().getText());
-            logFile.storeVariable(ctx, ctx.constantDeclarator(0).Identifier().getText(), ctx.type().getText(), true);
+            logFile.storeVariable(ctx, ctx.constantDeclarator(0).Identifier().getText(), ctx.type().getText(), true, null);
 //            System.out.printf("stored=%s %s %s%n", ctx, ctx.constantDeclarator(0).Identifier().getText(), ctx.type().getText());
         }
     }
 
+    /**
+     * Store exception variables from 'catch clause' statements.
+     *
+     * @param ctx ANTLR's JavaParser.CatchClauseContext context
+     */
     @Override
     public void enterCatchClause(@NotNull JavaParser.CatchClauseContext ctx) {
         // Store exception into variable list
@@ -243,17 +280,28 @@ public class LogTranslator extends JavaBaseListener {
             // Store Exception as variable type name (as we can not tell which exception has higher priority)
             errorTypeName = "Exception";
         }
-        logFile.storeVariable(ctx, errorVarName, errorTypeName, false);
+        logFile.storeVariable(ctx, errorVarName, errorTypeName, false, "Exception");
     }
 
+    /**
+     * Get type and name of variable from enhanced for-loop
+     *
+     * @param ctx ANTLR's JavaParser.EnhancedForControlContext context
+     */
     @Override
     public void exitEnhancedForControl(@NotNull JavaParser.EnhancedForControlContext ctx) {
         if (ctx.Identifier() != null) {
 //            System.out.printf("==LALALA %s %s %s%n", ctx.type().getText(), ctx.Identifier().getText(), ctx.expression().getText());
-            logFile.storeVariable(ctx, ctx.Identifier().getText(), ctx.type().getText(), false);
+            logFile.storeVariable(ctx, ctx.Identifier().getText(), ctx.type().getText(), false, null);
         }
     }
 
+    /**
+     * Translate log checking method to our static/global checker -
+     * LOG.isLevelEnabled() -> LogGlobal.isLevelEnabled()
+     *
+     * @param ctx ANTLR's JavaParser.BlockStatementContext context
+     */
     @Override
     public void exitBlockStatement(@NotNull JavaParser.BlockStatementContext ctx) {
         // Translate "if (LOG.isXEnabled())" statement to "if (LogGlobal.isXEnabled())"
@@ -290,6 +338,10 @@ public class LogTranslator extends JavaBaseListener {
         }
     }
 
+    /**
+     * TODO docs + fix - main rewriting part of ANTLR
+     * @param ctx ANTLR's JavaParser.StatementExpressionContext context
+     */
     @Override
     public void exitStatementExpression(@NotNull JavaParser.StatementExpressionContext ctx) {
         // Process LOG.XYZ(stuff);
@@ -333,7 +385,7 @@ public class LogTranslator extends JavaBaseListener {
             }
         }
 //        else {
-            // ok this is not a LOG statements... we can throw it away?
+        // ok this is not a LOG statements... we can throw it away?
 //            System.out.println("===> " + ctx.getText() + logFile.getFilepath() + " " + ctx.start.getLine());
 //        }
     }
@@ -463,11 +515,13 @@ public class LogTranslator extends JavaBaseListener {
      *               which holds variable to find
      */
     private LogFile.Variable findVariable(JavaParser.ExpressionContext findMe) {
-//        System.out.println("findMe " + findMe.getText() + "  " + logFile.getFilepath());
+//        System.out.println("findMe " + findMe.getText() + "  " + findMe.start.getLine() + ":" + logFile.getFilepath());
         LogFile.Variable foundVar = null;
+        boolean isArray = isArray(findMe);
         for (String key : logFile.getVariableList().keySet()) {
             if (findMe.getText().equals(key)) {
                 List<LogFile.Variable> variableList = logFile.getVariableList().get(findMe.getText());
+                // search for non-array variable value
                 if (variableList.size() > 1) {
                     // get closest line number (or field member)
                     int closest = currentLine;
@@ -480,8 +534,20 @@ public class LogTranslator extends JavaBaseListener {
                 } else {
                     foundVar = variableList.get(0);
                 }
+            } else if (isArray) {
+                // look for array[] definition (without any stuff inside)
+                if (isArray(key)) {
+                    if ((findMe.getChildCount() > 3) && (findMe.expression(1).getText() != null)) {
+                        // search for array declaration in variable list
+//                        System.out.printf("search for %s[] \n", findMe.expression(0).getText() );
+                        if (key.equals(findMe.expression(0).getText() + "[]")) {
+                            foundVar = logFile.getVariableList().get(key).get(0);
+                        }
+                    }
+                }
             }
         }
+
 
         if (foundVar == null) {
             String varType;
@@ -495,7 +561,9 @@ public class LogTranslator extends JavaBaseListener {
              */
             if (findMe.getText().contains(".")) {
 //                System.out.println("looking for " + findMe.getText());
-                logFile.storeVariable(findMe, findMe.getText(), "String", false);
+                // TODO change newNgmonName to simpler version?
+
+                logFile.storeVariable(findMe, findMe.getText(), "String", false, null);
                 foundVar = returnLastValue(findMe.getText()); //logFile.getVariableList().get(findMe.getText()).get(0);
 
                 /** handle 'new String(data, UTF_8)' or 'new Exception()' */
@@ -510,7 +578,7 @@ public class LogTranslator extends JavaBaseListener {
                         varType = findMe.creator().createdName().getText();
                         varName = findMe.creator().classCreatorRest().arguments().expressionList().expression(0).getText();
                     }
-                    logFile.storeVariable(findMe, varName, varType, false);
+                    logFile.storeVariable(findMe, varName, varType, false, null);
                     foundVar = returnLastValue(varName);
 
                 }
@@ -518,14 +586,15 @@ public class LogTranslator extends JavaBaseListener {
                 /** Handle 'this' call */
             } else if (findMe.getText().startsWith("this")) {
                 if (findMe.getText().equals("this")) {
-                    // TODO - check it
+                    // TODO - check it or negate if expression!
                     // We can ignore value assignment // so return all after DOT: this.'variable'
 //                    foundVar = logFile.getVariableList().get()
                 } else {
                     System.err.println("'this.' call found method!" + findMe.getText());
                 }
 
-                /** If variable is array [] */
+                /** If variable is array [], find declared variable earlier and use it's type.
+                 * If type is not found, use String as default. */
             } else if (findMe.getText().contains("[") && findMe.getText().contains("]")) {
                 varName = findMe.getText();
 
@@ -536,7 +605,7 @@ public class LogTranslator extends JavaBaseListener {
                     varType = "String";
                 }
 //                System.out.println("array=" + varName + " " + findMe.expression(0).getText());
-                logFile.storeVariable(findMe, varName, varType, false);
+                logFile.storeVariable(findMe, varName, varType, false, null);
                 foundVar = returnLastValue(varName);
 
                 /** if X is instanceof Y,
@@ -544,13 +613,12 @@ public class LogTranslator extends JavaBaseListener {
             } else if (findMe.getText().contains("instanceof")) {
                 // TODO #1 Rename variables and set them before ngmon Log itself.  bc instance ofXYZ... => boolean isInstanceOfY = bc;
                 // add new parameter to logFile.storeVariable() - newVariableName
-                System.out.println("instanceof=" + findMe.getText());
-                varName = "isInstanceOf" + findMe.primary().expression().type().getText();//.expression(0).type().getText();
+//                System.out.println("instanceof=" + findMe.getText());
+                varName = findMe.primary().expression().expression(0).primary().getText();//.expression(0).type().getText();
                 varType = "boolean";
-//                newVariableName = varName;
-//                varName = (bc instanceof Y);
-                System.out.println("var=" + varName);
-                logFile.storeVariable(findMe, varName, varType, false);
+                String newNgmonName = "isInstanceOf" + findMe.primary().expression().type().getText();
+//                System.out.printf("var=%s newName=%s, original=%s", varName, newNgmonName, findMe.getText());
+                logFile.storeVariable(findMe, varName, varType, false, newNgmonName);
 
 
                 /**
@@ -559,7 +627,7 @@ public class LogTranslator extends JavaBaseListener {
                  * Put it All back here. */
                 // TODO - fix this regexp "\\w+\\(.*?\\)" or "\\w+(.*?)"
             } else if (findMe.getText().matches("\\w+\\(.*?\\)")) {
-                System.out.println("method=" + findMe.getText());
+//                System.out.println("method=" + findMe.getText());
                 List<String> methodArgumentsTypeList = new ArrayList<>();
 //                System.out.println("do me!" + findMe.getStart().getLine() + " " + findMe.getText() +
 //                        findMe.getChildCount() + findMe.expressionList().getText());
@@ -585,7 +653,9 @@ public class LogTranslator extends JavaBaseListener {
                 if (!HelperLogTranslator.findMethod(logFile, findMe.getText(), methodArgumentsTypeList)) {
                     // Method has not been found in class. Store it anyway.
                     // Exactly same situation as variable containing "."
-                    logFile.storeVariable(findMe, findMe.getText(), "String", false);
+                    // todo add new name?
+//                    logFile.storeVariable(findMe, findMe.getText(), "String", false, newName);
+                    logFile.storeVariable(findMe, findMe.getText(), "String", false, null);
                 }
                 foundVar = returnLastValue(findMe.getText());
 //                System.out.println("find me " + findMe.getText());
@@ -596,7 +666,7 @@ public class LogTranslator extends JavaBaseListener {
 //                containsMathOperator(findMe.getText()))
                 varName = findMe.getText();
                 varType = "double";
-                logFile.storeVariable(findMe, varName, varType, false);
+                logFile.storeVariable(findMe, varName, varType, false, null);
                 foundVar = returnLastValue(varName);
 
                 /** If variable begins with NEGATION '!' */
@@ -615,21 +685,38 @@ public class LogTranslator extends JavaBaseListener {
                 varName = "is" + varName.replace(varName.charAt(0), (Character.toUpperCase(varName.charAt(0)))); // isVarName
                 varType = "boolean";
                 // TODO implement newVariableName
-                logFile.storeVariable(findMe, varName, varType, false);
+                logFile.storeVariable(findMe, varName, varType, false, null);
                 foundVar = returnLastValue(varName);
+
+                /** if whole text is uppercase & we have static imports, assume this is static variable
+                 * and store it */
+            } else if (logFile.isContainsStaticImport() && findMe.getText().equals(findMe.getText().toUpperCase())) {
+                System.err.println("Assuming external variable from static import " + findMe.getText());
+                logFile.storeVariable(findMe, findMe.getText(), "String", false, null);
+
 
                 /** We have ran out of luck. Have not found given variable in my known parsing list. */
             } else {
-                System.err.println("Unable to find variable " + findMe.getText() + " in file " +
+                System.out.println("Unable to find variable " + findMe.getText() + " in file " +
                         findMe.start.getLine() + " :" + logFile.getFilepath() + "\n" + logFile.getVariableList().keySet());
-//                Thread.dumpStack();
-
-                System.exit(100);
+                if (Utils.ignoreParsingErrors) {
+                    return null;
+                } else {
+                    Thread.dumpStack();
+                    System.exit(100);
+                }
             }
         }
         return foundVar;
     }
 
+    private boolean isArray(JavaParser.ExpressionContext context) {
+        return (context.getText().contains("[") && context.getText().contains("]"));
+    }
+
+    private boolean isArray(String text) {
+        return (text.contains("[") && text.contains("]"));
+    }
 
     /**
      * Always return last added variable from variable list. This is guaranteed

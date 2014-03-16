@@ -20,6 +20,7 @@ public class Utils {
     static String ngmonLoggerAbstractNamespaceImport;
     static String ngmonEmptyLogStatement;
     static String ngmonLogLength;
+    public static boolean ignoreParsingErrors;
     static List<String> BANNED_LIST = Arrays.asList("a", "an", "the");
     public static List<String> MATH_OPERATORS = Arrays.asList("+", "-", "*", "/");
     public static List<String> BOOLEAN_OPERATORS = Arrays.asList("&&", "||");
@@ -46,6 +47,7 @@ public class Utils {
             ngmonLoggerAbstractNamespaceImport = properties.getProperty("ngmon_logger_abstract_ns_import");
             ngmonEmptyLogStatement = properties.getProperty("ngmon_empty_log_statement");
             ngmonLogLength = properties.getProperty("ngmon_log_length", "7");
+            ignoreParsingErrors = Boolean.parseBoolean(properties.getProperty("ignoreParsingErrors"));
         } catch (IOException e) {
             e.printStackTrace();
         }

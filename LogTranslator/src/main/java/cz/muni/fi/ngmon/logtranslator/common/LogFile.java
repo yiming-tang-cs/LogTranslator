@@ -24,10 +24,17 @@ public class LogFile {
     private String namespaceClass;
     private String packageName;
     private List<Log> logs;
+    private boolean containsStaticImport;
+    private List<String> staticImports;
+    private List<String> imports;
+    private boolean extendingClass;
+    private String extendingClassFilepath;
+    private boolean parsedFile = false;
 
     public LogFile(String filename) {
         filepath = filename;
         logs = new ArrayList<>();
+        this.imports = new ArrayList<>();
 
     }
 
@@ -92,6 +99,31 @@ public class LogFile {
         return logs;
     }
 
+    public boolean isContainsStaticImport() {
+        return containsStaticImport;
+    }
+
+    public void setContainsStaticImport(boolean containsStaticImport) {
+        this.staticImports = new ArrayList<>();
+        this.containsStaticImport = containsStaticImport;
+    }
+
+    public List<String> getStaticImports() {
+        return staticImports;
+    }
+
+    public void addStaticImports(String staticImport) {
+        staticImports.add(staticImport);
+    }
+
+    public void addImport(String importQualifiedName) {
+        this.imports.add(importQualifiedName);
+    }
+
+    public List<String> getImports() {
+        return imports;
+    }
+
     public void addLog(Log log) {
         this.logs.add(log);
     }
@@ -114,9 +146,9 @@ public class LogFile {
      * @param isField           true if variable is declared in class, not in method body or as formal parameter in method
      */
 
-    public void storeVariable(ParserRuleContext ctx, String variableName, String variableTypeName, boolean isField) {
+    public void storeVariable(ParserRuleContext ctx, String variableName, String variableTypeName, boolean isField, String newNgmonName) {
 //        System.out.println("Storing var=" + variableName + " " + variableTypeName);
-        checkAndStoreVariable(variableName, variableTypeName, ctx.start.getLine(),
+        checkAndStoreVariable(variableName, variableTypeName, newNgmonName, ctx.start.getLine(),
                 ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
                 ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex(), isField);
     }
@@ -133,7 +165,7 @@ public class LogFile {
      * @param stopPosition variable occurrence stop position
      * @param isField false if variable is declared in method, true otherwise
      */
-    private void checkAndStoreVariable(String variableName, String variableType, int lineNumber,
+    private void checkAndStoreVariable(String variableName, String variableType, String newNgmonName, int lineNumber,
                                        int lineStartPosition, int lineStopPosition, int startPosition, int stopPosition, boolean isField) {
         LogFile.Variable p = this.new Variable();
 
@@ -143,12 +175,13 @@ public class LogFile {
             p.setName(variableName);
             p.setType(variableType);
         }
+        if (newNgmonName != null) p.setNgmonName(newNgmonName);
 
         p.setLineNumber(lineNumber);
-        p.setStartPosition(lineStartPosition);
-        p.setStopPosition(lineStopPosition);
-        p.setFileStartPosition(startPosition);
-        p.setFileStopPosition(stopPosition);
+//        p.setStartPosition(lineStartPosition);
+//        p.setStopPosition(lineStopPosition);
+//        p.setFileStartPosition(startPosition);
+//        p.setFileStopPosition(stopPosition);
         p.setField(isField);
         this.putVariableList(variableName, p);
     }
@@ -156,12 +189,22 @@ public class LogFile {
     public class Variable {
         private String name; // ?
         private String type;
+        private String ngmonName;
         private int lineNumber;
-        private int startPosition;
-        private int stopPosition;
-        private int fileStartPosition;
-        private int fileStopPosition;
+//        private int startPosition;
+//        private int stopPosition;
+//        private int fileStartPosition;
+//        private int fileStopPosition;
         private boolean isField; // true if variable is declared in class, not in method body
+
+
+        public String getNgmonName() {
+            return ngmonName;
+        }
+
+        public void setNgmonName(String ngmonName) {
+            this.ngmonName = ngmonName;
+        }
 
         public String getName() {
             return name;
@@ -187,21 +230,21 @@ public class LogFile {
             this.lineNumber = lineNumber;
         }
 
-        public void setStartPosition(int startPosition) {
-            this.startPosition = startPosition;
-        }
-
-        public void setStopPosition(int stopPosition) {
-            this.stopPosition = stopPosition;
-        }
-
-        public void setFileStartPosition(int fileStartPosition) {
-            this.fileStartPosition = fileStartPosition;
-        }
-
-        public void setFileStopPosition(int fileStopPosition) {
-            this.fileStopPosition = fileStopPosition;
-        }
+//        public void setStartPosition(int startPosition) {
+//            this.startPosition = startPosition;
+//        }
+//
+//        public void setStopPosition(int stopPosition) {
+//            this.stopPosition = stopPosition;
+//        }
+//
+//        public void setFileStartPosition(int fileStartPosition) {
+//            this.fileStartPosition = fileStartPosition;
+//        }
+//
+//        public void setFileStopPosition(int fileStopPosition) {
+//            this.fileStopPosition = fileStopPosition;
+//        }
 
         public boolean isField() {
             return isField;
