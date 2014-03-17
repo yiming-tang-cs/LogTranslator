@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * Locate all files, where there is any log call.
@@ -24,6 +26,7 @@ import java.util.Map;
 public class LogFilesFinder {
 
     static List<LogFile> processFiles = new ArrayList<>();
+    static SortedSet<String> allJavaFiles = new TreeSet<>();
 
     public static List<LogFile> commenceSearch(String loggingApplicationHome) {
         Path path = Paths.get(loggingApplicationHome);
@@ -41,12 +44,15 @@ public class LogFilesFinder {
         }
         return processFiles;
     }
+
+    public static SortedSet<String> getAllJavaFiles() {
+        return allJavaFiles;
+    }
 }
 
 /**
  * Class looks for 'log' statements in files from current directory and adds
  * files to list of files, which will be later translated by ANTLR.
- *
  */
 class JavaLogFinder extends SimpleFileVisitor<Path> {
 
@@ -78,8 +84,9 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
                     count++;
                     continue;
                 }
-                if ((!path.toString().contains("/src/test/") || !path.toString().contains("/target/classes"))  && (path.toString().endsWith(".java"))) {
+                if ((!path.toString().contains("/src/test/") || !path.toString().contains("/target/classes")) && (path.toString().endsWith(".java"))) {
                     count++;
+                    LogFilesFinder.allJavaFiles.add(path.toString());
                 }
             }
         }
@@ -94,7 +101,8 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
     @Override
     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
         // Exclude all files in maven test/ directory and process only "java" files
-        if (file.toString().endsWith(".java") && (!file.toString().contains("/src/test/"))) {
+        if (file.toString().endsWith(".java") && (!file.toString().contains("/src/test/"))
+                && (!file.toString().contains("/Test")) && (!file.toString().contains("/target/")) ) {
             // If this file contains 'import *log*;' or '*log*.(*);' statement
             // add file to processFileList -- make list rather bigger then shorter
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
@@ -116,7 +124,7 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
                     line = line.trim();
                     if (!searchLogsOnly) {
                         if (line.startsWith("package ")) {
-                            packageName = line.substring(8, line.length()-1);
+                            packageName = line.substring(8, line.length() - 1);
                         }
                         if (line.startsWith("import")) {
                             foundImport = Utils.listContainsItem(importList, line);

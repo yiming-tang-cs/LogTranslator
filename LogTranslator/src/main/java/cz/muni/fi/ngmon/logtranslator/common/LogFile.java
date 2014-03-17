@@ -3,9 +3,11 @@ package cz.muni.fi.ngmon.logtranslator.common;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This object represents .java file with all variables found.
@@ -19,6 +21,7 @@ public class LogFile {
 
     // Mapping of variableName : <variableProperties>
     private Map<String, List<Variable>> variableList = new LinkedHashMap<>();
+    private Set<LogFile> connectedLogFilesList = new HashSet<>();
     private String filepath;
     private String namespace;
     private String namespaceClass;
@@ -29,7 +32,7 @@ public class LogFile {
     private List<String> imports;
     private boolean extendingClass;
     private String extendingClassFilepath;
-    private boolean parsedFile = false;
+    private boolean finishedParsing = false;
 
     public LogFile(String filename) {
         filepath = filename;
@@ -122,6 +125,22 @@ public class LogFile {
 
     public List<String> getImports() {
         return imports;
+    }
+
+    public boolean isFinishedParsing() {
+        return finishedParsing;
+    }
+
+    public void setFinishedParsing(boolean finishedParsing) {
+        this.finishedParsing = finishedParsing;
+    }
+
+    public void addConnectedLogFilesList(LogFile logFile) {
+        this.connectedLogFilesList.add(logFile);
+    }
+
+    public Set<LogFile> getConnectedLogFilesList() {
+        return connectedLogFilesList;
     }
 
     public void addLog(Log log) {

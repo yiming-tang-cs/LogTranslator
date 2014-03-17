@@ -16,14 +16,16 @@ import java.io.InputStream;
 public class ANTLRRunner {
     static CommonTokenStream tokens;
     private static LogFile currentFile;
+    static boolean ignoreLogs = false;
 //    public static CommonTokenStream getTokens() {
 //        return tokens;
 //    }
 
-    public static void run(LogFile logFile) {
+    public static void run(LogFile logFile, boolean ignoreLogStatements) {
         currentFile = logFile;
         String file = logFile.getFilepath();
         InputStream antlrInputStream;
+        ignoreLogs = ignoreLogStatements;
 
         try {
             // -- ANTLR part --
@@ -45,6 +47,10 @@ public class ANTLRRunner {
 
         } catch (IOException e){
             System.err.println("Unable to handle file=" + e.toString());
+        } catch (NullPointerException exc) {
+            System.err.println("NullPointerException! " + logFile.getFilepath() );
+            exc.printStackTrace();
+            System.exit(100);
         } catch (Exception e) {
             e.printStackTrace();
         }

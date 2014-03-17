@@ -4,6 +4,7 @@ import cz.muni.fi.ngmon.logtranslator.antlr.JavaBaseListener;
 import cz.muni.fi.ngmon.logtranslator.antlr.JavaParser;
 import cz.muni.fi.ngmon.logtranslator.common.Log;
 import cz.muni.fi.ngmon.logtranslator.common.LogFile;
+import cz.muni.fi.ngmon.logtranslator.common.LogFilesFinder;
 import cz.muni.fi.ngmon.logtranslator.common.Utils;
 import org.antlr.v4.runtime.BufferedTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -11,6 +12,7 @@ import org.antlr.v4.runtime.TokenStreamRewriter;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -69,26 +71,118 @@ public class LogTranslator extends JavaBaseListener {
         // do cleanUp()
         LoggerFactory.setActualLoggingFramework(null);
         loggerLoader = null;
+        logFile.setFinishedParsing(true);
 
     }
 
     // ------------------------------------------------------------------------
 
-
+    /**
+     * If extending class type is not full package qualified name, look for imports to determine package &
+     * appropriate file path location to get all variables from that file. (might be already parsed
+     * by ANTLR and stored needed variables. - look for isField = true) Else parse file and change order
+     * of this file from TranslationStarter.logFiles list/order.
+     *
+     * @param ctx ANTLR's JavaParser.ClassDeclarationContext context
+     */
     @Override
     public void enterClassDeclaration(@NotNull JavaParser.ClassDeclarationContext ctx) {
-        if (ctx.getText().contains("extends")) {
-//            System.out.println("extending! " + ctx.getChild(0).getText() + " " + ctx.getChild(1).getText() +
-//              " " + ctx.getChild(2).getText() + " " + ctx.getChild(3).getText() + logFile.getFilepath());
+        if (ctx.type() != null) {
+//            System.out.println("extending!" + ctx.type().getText() + " : " + header);
             isExtending = true;
             // TODO - implement extending mechanism and remove some simple 'assumptions'  - "Assuming external variable from static import"
-            /*  If extending class type is not full package qualified name, look for imports to determine package &
-                appropriate file path location to get all variables from that file. (might be already parsed
-                by ANTLR and stored needed variables. - look for isField = true) Else parse file and change order
-                of this file from TranslationStarter.logFiles list/order
-             */
-//            System.out.println("classDeclaration=" + ctx.getText().substring(0, 80) + " " + ctx.type().getText());
+
+            String extendingFileTosearch = null;
+            boolean isPackage = false;
+
+            // Get class type & look up filepath - based on childCount (number of dots in type) resolve correct type
+//            System.out.println(ctx.type().classOrInterfaceType().getChildCount() + "  " + ctx.type().classOrInterfaceType().getText());
+            switch (ctx.type().classOrInterfaceType().getChildCount()) {
+                case 1:
+                    // no dots - pure type - has to be in application as source file
+                    extendingFileTosearch = ctx.type().getText();
+                    break;
+                case 2:
+                    // Class<DiamondType> - handle same as 3
+                case 3:
+                    // inner class of some other class - get Main class type
+                    extendingFileTosearch = ctx.type().classOrInterfaceType().Identifier(0).getText();
+                    break;
+                default:
+                    // it's a package type - if it is not "our application's namespace" - ignore it
+                    if (ctx.type().getText().startsWith(Utils.getApplicationNamespace())) {
+                        isPackage = true;
+                        extendingFileTosearch = ctx.type().getText();
+                    }
+            }
+//            System.out.println(extendingFileTosearch + " is package? " + isPackage);
+            if (extendingFileTosearch != null) addExtendingClassVariables(extendingFileTosearch, isPackage);
+
         }
+    }
+
+    /**
+     * From given extending class type, find appropriate file path to this extending class.
+     * Use current import list to determine whole package and then look for files.
+     * From import list use only relevant parts - based on application's namespace.
+     *
+     * @param extendingFileToSearch search for this class type (or package if isPackage is true)
+     * @param isPackage             true if extendingFileToSearch Class type is qualified name package
+     * @return true if we successfully parsed extending class and added new variables to current logFile
+     */
+    private boolean addExtendingClassVariables(String extendingFileToSearch, boolean isPackage) {
+        System.out.println("lookfor=" + extendingFileToSearch);
+        String fileNameFromImport;
+        String tempFileImport = null;
+        boolean parsedExtendingClass = false;
+
+        if (isPackage) {
+            tempFileImport = extendingFileToSearch;
+        } else {
+            for (String fileImport : logFile.getImports()) {
+                if (Utils.getQualifiedNameEnd(fileImport).equals(extendingFileToSearch)) {
+                    tempFileImport = fileImport;
+                    break;
+                }
+            }
+        }
+
+        if (tempFileImport == null) {
+            // Not found in imports && not package itself, it has to be single class type name.
+            // Class type is definitely from this package, so append logFile's current package name
+            tempFileImport = logFile.getPackageName() + "." + extendingFileToSearch;
+        }
+
+        fileNameFromImport = tempFileImport.replaceAll("\\.", File.separator) + ".java";
+        System.out.println(tempFileImport + " vs " + extendingFileToSearch + " =>" + fileNameFromImport);
+
+        List<LogFile> lfiles = TranslatorStarter.getLogFiles();
+        for (LogFile lf : lfiles) {
+            if (lf.getFilepath().contains(fileNameFromImport)) {
+                System.out.println("GOT IT " + lf.getFilepath());
+                if (!lf.isFinishedParsing()) {
+                    // parseFile & connect it with this logFile
+                    System.out.println("Starting ANTLR on " + lf.getFilepath());
+                    ANTLRRunner.run(lf, true);
+                    parsedExtendingClass = true;
+                    logFile.addConnectedLogFilesList(lf);
+                }
+            }
+        }
+
+        if (!parsedExtendingClass) {
+            // We haven't found/added variables from extending class - search from all files
+//            for ()
+            System.out.println("\nHaven't found " + fileNameFromImport + " yet, digging deeper\n");
+            for (String javaFile : LogFilesFinder.getAllJavaFiles()) {
+//                System.out.println(javaFile + " x " + fileNameFromImport );
+                if (javaFile.contains(fileNameFromImport)) {
+                    System.out.println("\t\tFound=" + javaFile);
+                }
+            }
+        }
+
+        return parsedExtendingClass;
     }
 
     @Override
@@ -100,7 +194,7 @@ public class LogTranslator extends JavaBaseListener {
             if (ctx.getText().substring(0, ctx.getText().length() - 1).endsWith("*")) {
                 int star = ctx.getText().length() - 3;
                 int lastDot = ctx.getText().substring(0, ctx.getText().length() - 4).lastIndexOf(".") + 1;
-                String staticImport = ctx.getText().substring(lastDot, star );
+                String staticImport = ctx.getText().substring(lastDot, star);
                 System.out.println("staticImport = " + staticImport);
                 logFile.addStaticImports(staticImport);
             }
@@ -340,18 +434,20 @@ public class LogTranslator extends JavaBaseListener {
 
     /**
      * TODO docs + fix - main rewriting part of ANTLR
+     *
      * @param ctx ANTLR's JavaParser.StatementExpressionContext context
      */
     @Override
     public void exitStatementExpression(@NotNull JavaParser.StatementExpressionContext ctx) {
         // Process LOG.XYZ(stuff);
         if ((logName == null) && isExtending) {
-//            If (extending, visit that class and find log declaration :) ) and use it here -- you WISH!
-//            It can be unnecessary hard to find extending class, There might be a chance, that this class
-//            extends otherClass, which contains defined LOG. So we will go with failsafe logger
+            /** If (extending, visit that class and find log declaration :) ) and use it here -- you WISH!
+             * It can be unnecessary hard to find extending class, There might be a chance, that this class
+             * extends otherClass, which contains defined LOG. So we will go with failsafe logger
+             */
+
 //            System.err.println("Unable to change log calls, when log factory has not been defined! Error. Exiting. " +
 //                    logFile.getFilepath() + "\n " + ctx.getText());
-
             if (ctx.getText().toLowerCase().startsWith("log")) {
                 System.out.println("our extending log statements! " + ctx.expression().expression(0).expression(0).getText() +
                         " " + logFile.getFilepath());
@@ -361,33 +457,37 @@ public class LogTranslator extends JavaBaseListener {
                 }
             }
         }
-        if (ctx.getText().startsWith(logName + ".")) {
-//            System.out.println("exitStmnt     = " + ctx.getText() + " " + ctx.expression().getChildCount());
-            if ((ctx.expression().expression(0) != null) && (ctx.expression().expression(0).getChildCount() == 3)) {
-                // Get "XYZ" Log call into methodCall
-                ParseTree methodCall = ctx.expression().expression(0).getChild(2);
 
-                // if Log.operation is in currentLoggerMethodList - transform it,
-                if (loggerLoader.getTranslateLogMethods().contains(methodCall.getText())) {
+        // should we only parse variables?
+        if (!ANTLRRunner.ignoreLogs) {
+            if (ctx.getText().startsWith(logName + ".")) {
+//            System.out.println("exitStmnt     = " + ctx.getText() + " " + ctx.expression().getChildCount());
+                if ((ctx.expression().expression(0) != null) && (ctx.expression().expression(0).getChildCount() == 3)) {
+                    // Get "XYZ" Log call into methodCall
+                    ParseTree methodCall = ctx.expression().expression(0).getChild(2);
+
+                    // if Log.operation is in currentLoggerMethodList - transform it,
+                    if (loggerLoader.getTranslateLogMethods().contains(methodCall.getText())) {
 //                    System.out.println("yes, '" + methodCall +"' is in current logger method list.");
 
-                    Log log = transformMethodStatement(ctx.expression().expressionList());
-                    log.generateMethodName();
-                    log.setLevel(methodCall.getText());
+                        Log log = transformMethodStatement(ctx.expression().expressionList());
+                        log.generateMethodName();
+                        log.setLevel(methodCall.getText());
 
-                    log.setTag(null);
-                    logFile.addLog(log);
+                        log.setTag(null);
+                        logFile.addLog(log);
 
-                    // TODO add transformed method to appropriate XYZNamespace
-                    // TODO create mapping file-variables/methods (LogFile - ) @DONE
+                        // TODO add transformed method to appropriate XYZNamespace
+                        // TODO create mapping file-variables/methods (LogFile - ) @DONE
+                    }
+                    // else throw new exception or add it to methodList?
                 }
-                // else throw new exception or add it to methodList?
             }
-        }
 //        else {
-        // ok this is not a LOG statements... we can throw it away?
+            // ok this is not a LOG statements... we can throw it away?
 //            System.out.println("===> " + ctx.getText() + logFile.getFilepath() + " " + ctx.start.getLine());
 //        }
+        }
     }
 
     /**
@@ -516,38 +616,7 @@ public class LogTranslator extends JavaBaseListener {
      */
     private LogFile.Variable findVariable(JavaParser.ExpressionContext findMe) {
 //        System.out.println("findMe " + findMe.getText() + "  " + findMe.start.getLine() + ":" + logFile.getFilepath());
-        LogFile.Variable foundVar = null;
-        boolean isArray = isArray(findMe);
-        for (String key : logFile.getVariableList().keySet()) {
-            if (findMe.getText().equals(key)) {
-                List<LogFile.Variable> variableList = logFile.getVariableList().get(findMe.getText());
-                // search for non-array variable value
-                if (variableList.size() > 1) {
-                    // get closest line number (or field member)
-                    int closest = currentLine;
-                    for (LogFile.Variable p : variableList) {
-                        if (currentLine - p.getLineNumber() < closest) {
-                            closest = currentLine - p.getLineNumber();
-                            foundVar = p;
-                        }
-                    }
-                } else {
-                    foundVar = variableList.get(0);
-                }
-            } else if (isArray) {
-                // look for array[] definition (without any stuff inside)
-                if (isArray(key)) {
-                    if ((findMe.getChildCount() > 3) && (findMe.expression(1).getText() != null)) {
-                        // search for array declaration in variable list
-//                        System.out.printf("search for %s[] \n", findMe.expression(0).getText() );
-                        if (key.equals(findMe.expression(0).getText() + "[]")) {
-                            foundVar = logFile.getVariableList().get(key).get(0);
-                        }
-                    }
-                }
-            }
-        }
-
+        LogFile.Variable foundVar = findVariableInLogFile(logFile, findMe);
 
         if (foundVar == null) {
             String varType;
@@ -654,6 +723,7 @@ public class LogTranslator extends JavaBaseListener {
                     // Method has not been found in class. Store it anyway.
                     // Exactly same situation as variable containing "."
                     // todo add new name?
+//                    String newName = findMe.primary().Identifier().getText();
 //                    logFile.storeVariable(findMe, findMe.getText(), "String", false, newName);
                     logFile.storeVariable(findMe, findMe.getText(), "String", false, null);
                 }
@@ -684,7 +754,6 @@ public class LogTranslator extends JavaBaseListener {
                 varName = findMe.primary().expression().expression(0).getText();
                 varName = "is" + varName.replace(varName.charAt(0), (Character.toUpperCase(varName.charAt(0)))); // isVarName
                 varType = "boolean";
-                // TODO implement newVariableName
                 logFile.storeVariable(findMe, varName, varType, false, null);
                 foundVar = returnLastValue(varName);
 
@@ -694,6 +763,11 @@ public class LogTranslator extends JavaBaseListener {
                 System.err.println("Assuming external variable from static import " + findMe.getText());
                 logFile.storeVariable(findMe, findMe.getText(), "String", false, null);
 
+                /** Last chance - look into extending classes and their variables */
+            } else if (logFile.getConnectedLogFilesList() != null) {
+                for (LogFile lf : logFile.getConnectedLogFilesList()) {
+                    foundVar = findVariableInLogFile(lf, findMe);
+                }
 
                 /** We have ran out of luck. Have not found given variable in my known parsing list. */
             } else {
@@ -704,6 +778,47 @@ public class LogTranslator extends JavaBaseListener {
                 } else {
                     Thread.dumpStack();
                     System.exit(100);
+                }
+            }
+        }
+        return foundVar;
+    }
+
+    /**
+     * Search for variable in given LogFile.
+     * @param logFile to search in
+     * @param findMe varaible to look for
+     * @return found Variable in given logFile, null if not found
+     */
+    public LogFile.Variable findVariableInLogFile(LogFile logFile, JavaParser.ExpressionContext findMe) {
+        LogFile.Variable foundVar = null;
+        boolean isArray = isArray(findMe);
+        for (String key : logFile.getVariableList().keySet()) {
+            if (findMe.getText().equals(key)) {
+                List<LogFile.Variable> variableList = logFile.getVariableList().get(findMe.getText());
+                // search for non-array variable value
+                if (variableList.size() > 1) {
+                    // get closest line number (or field member)
+                    int closest = currentLine;
+                    for (LogFile.Variable p : variableList) {
+                        if (currentLine - p.getLineNumber() < closest) {
+                            closest = currentLine - p.getLineNumber();
+                            foundVar = p;
+                        }
+                    }
+                } else {
+                    foundVar = variableList.get(0);
+                }
+            } else if (isArray) {
+                // look for array[] definition (without any stuff inside)
+                if (isArray(key)) {
+                    if ((findMe.getChildCount() > 3) && (findMe.expression(1).getText() != null)) {
+                        // search for array declaration in variable list
+//                        System.out.printf("search for %s[] \n", findMe.expression(0).getText() );
+                        if (key.equals(findMe.expression(0).getText() + "[]")) {
+                            foundVar = logFile.getVariableList().get(key).get(0);
+                        }
+                    }
                 }
             }
         }

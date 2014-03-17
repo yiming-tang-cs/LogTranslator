@@ -11,8 +11,8 @@ import java.util.Set;
 
 public class Utils {
 
-    static String loggingApplicationHome;
-    static String loggingApplicationNamespace;
+    static String applicationHome;
+    static String applicationNamespace;
     static String ngmonLogImport;
     static String ngmonLogFactoryImport;
     static String ngmonLogGlobal;
@@ -38,8 +38,8 @@ public class Utils {
             InputStream is = new FileInputStream(propertyFile);
             properties.load(is);
 
-            loggingApplicationHome = properties.getProperty("application_home");
-            loggingApplicationNamespace = properties.getProperty("application_namespace");
+            applicationHome = properties.getProperty("application_home");
+            applicationNamespace = properties.getProperty("application_namespace");
             ngmonLogImport = properties.getProperty("ngmon_log_import");
             ngmonLogFactoryImport = properties.getProperty("ngmon_log_factory_import");
             ngmonLogGlobal = properties.getProperty("ngmon_log_global");
@@ -55,12 +55,12 @@ public class Utils {
 
 
     // TODO which methods are necessary to be abstract?
-    public static String getLoggingApplicationHome() {
-        return loggingApplicationHome;
+    public static String getApplicationHome() {
+        return applicationHome;
     }
 
 //    public static void setLoggingApplicationHome(String newLoggingApplicationHome) {
-//        loggingApplicationHome = newLoggingApplicationHome;
+//        applicationHome = newLoggingApplicationHome;
 //    }
 
     public static int getNgmonLogLength() {
@@ -91,12 +91,12 @@ public class Utils {
         return ngmonLogGlobal;
     }
 //
-//    public String getLoggingApplicationNamespace() {
-//        return loggingApplicationNamespace;
-//    }
+    public static String getApplicationNamespace() {
+        return applicationNamespace;
+    }
 //
 //    public void setLoggingApplicationNamespace(String newLoggingApplicationNamespace) {
-//        loggingApplicationNamespace = newLoggingApplicationNamespace;
+//        applicationNamespace = newLoggingApplicationNamespace;
 //    }
 
 
@@ -106,6 +106,7 @@ public class Utils {
 
 
     public static List<LogFile> generateNamespaces(List<LogFile> logFileList) {
+        // TODO
         Set<String> namespaceList = new LinkedHashSet<>();
 
         for (LogFile lf : logFileList) {
@@ -116,7 +117,7 @@ public class Utils {
             namespaceList.add(lf.getPackageName());
 //            System.out.println(lf.getNamespace());
             //set default namespace for now
-            lf.setNamespace(loggingApplicationNamespace);
+            lf.setNamespace(applicationNamespace);
         }
         System.out.println();
         return logFileList;

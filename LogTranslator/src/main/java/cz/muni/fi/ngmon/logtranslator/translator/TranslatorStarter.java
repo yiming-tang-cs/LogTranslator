@@ -4,25 +4,44 @@ import cz.muni.fi.ngmon.logtranslator.common.LogFile;
 import cz.muni.fi.ngmon.logtranslator.common.LogFilesFinder;
 import cz.muni.fi.ngmon.logtranslator.common.Utils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TranslatorStarter {
+
+    private static List<LogFile> logFiles;
+    private static List<LogFile> tempList = new ArrayList<>();
 
     public static void main(String[] args) {
 //        0) Initialize property file
         Utils.initialize();
 //        1) Search through all ".java" files in given directory. Look for "log.{debug,warn,error,fatal}
-        List<LogFile> logFiles = LogFilesFinder.commenceSearch(Utils.getLoggingApplicationHome());
+        logFiles = LogFilesFinder.commenceSearch(Utils.getApplicationHome());
 
-//        logFiles = Arrays.asList(new LogFile("/home/mtoth/example-app/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/NameNode.java"));
+
+// START OF DEBUGGING PURPOSES ONLY!
+        for (LogFile lf : logFiles) {
+            if (lf.getFilepath().equals("/home/mtoth/example-app-all/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/HftpFileSystem.java")) {
+                tempList.add(lf);
+            }
+        }
+// END OF DEBUGGING PURPOSES ONLY!
 //        2) Find & set namespace. If new namespace, flush/write actual data into logFile
         Utils.generateNamespaces(logFiles);
         int counter = 0;
-        for (LogFile logFile : logFiles) {
+        for (LogFile logFile : tempList) { // REMOVE DEBUGGING ONLY!!
+//        for (LogFile logFile : logFiles) {
 //        3) Visit logFile
-            ANTLRRunner.run(logFile);
-            counter++;
-            System.out.printf("Processed %d of %d files.%n", counter, logFiles.size());
+            if (!logFile.isFinishedParsing()) {
+                ANTLRRunner.run(logFile, false);
+                counter++;
+                System.out.printf("Processed %d of %d files.%n", counter, logFiles.size());
+            }
         }
     }
+
+    public static List<LogFile> getLogFiles() {
+        return logFiles;
+    }
+
 }
