@@ -74,7 +74,7 @@ public class LoggerFactory {
                     loader = new JULLogger();
                     break;
                 case "commons":
-                    loader = new CommonsLoggingLoader();
+                    loader = new CommonsLoggerLoader();
                     break;
                 case "slf4j":
                     loader = new Slf4jLoggerLoader();

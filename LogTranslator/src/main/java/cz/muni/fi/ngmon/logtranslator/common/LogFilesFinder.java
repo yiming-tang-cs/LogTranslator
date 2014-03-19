@@ -26,6 +26,7 @@ import java.util.TreeSet;
 public class LogFilesFinder {
 
     static List<LogFile> processFiles = new ArrayList<>();
+    static List<LogFile> processFilesNoLogDeclaration = new ArrayList<>();
     static SortedSet<String> allJavaFiles = new TreeSet<>();
 
     public static List<LogFile> commenceSearch(String loggingApplicationHome) {
@@ -102,7 +103,8 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
         // Exclude all files in maven test/ directory and process only "java" files
         if (file.toString().endsWith(".java") && (!file.toString().contains("/src/test/"))
-                && (!file.toString().contains("/Test")) && (!file.toString().contains("/target/")) ) {
+                && (!file.toString().contains("/Test")) && (!file.toString().contains("/target/"))) {
+
             // If this file contains 'import *log*;' or '*log*.(*);' statement
             // add file to processFileList -- make list rather bigger then shorter
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
@@ -118,16 +120,20 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
                 boolean foundImport = false;
                 boolean searchLogsOnly = false;
                 String line;
-                String packageName = null;
+                String packageName;
+
+                LogFile logFile = new LogFile(file.toString());
 
                 while ((line = reader.readLine()) != null) {
                     line = line.trim();
                     if (!searchLogsOnly) {
                         if (line.startsWith("package ")) {
                             packageName = line.substring(8, line.length() - 1);
+                            logFile.setPackageName(packageName);
                         }
                         if (line.startsWith("import")) {
-                            foundImport = Utils.listContainsItem(importList, line);
+                            String lineTemp = line.substring("import ".length(), line.length() - 1);
+                            foundImport = Utils.listEqualsItem(importList, lineTemp);
                         }
                         if (Utils.listContainsItem(classStartList, line)) {
                             // search logs only from now, but be stricter/more effective
@@ -136,13 +142,17 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
                     } else {
                         /** There is high possibility that there is no logger. Quick search only */
                         foundLog = line.toLowerCase().matches(logSearch);
-//                        if (foundLog) System.err.println("XXX found log call! " + line + " " + file);
+                        if (foundLog) {
+                            System.err.println("XXX found log call! " + line + " " + file);
+                        }
                     }
-                    if (foundLog || foundImport) {
+
+                    if (foundImport) {
 //                        System.out.format("%s: line=%s %s%n", file.toString(), packageName, line);
-                        LogFile logFile = new LogFile(file.toString());
-                        logFile.setPackageName(packageName);
                         LogFilesFinder.processFiles.add(logFile);
+                        break;
+                    } else if (foundLog) {
+                        LogFilesFinder.processFilesNoLogDeclaration.add(logFile);
                         break;
                     }
                 }

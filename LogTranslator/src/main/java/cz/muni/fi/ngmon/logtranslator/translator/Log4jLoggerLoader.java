@@ -13,9 +13,7 @@ import java.util.List;
         http://logging.apache.org/log4j/2.x/log4j-api/apidocs/index.html
      */
 
-
 public class Log4jLoggerLoader extends LoggerLoader {
-
 
     private Collection<String> translateLogMethods;
     private Collection checkerLogMethods;
@@ -31,11 +29,7 @@ public class Log4jLoggerLoader extends LoggerLoader {
         List<String> log4jCustomizedMethods = Arrays.asList("log", "entry", "printf");
         this.checkerLogMethods = generateCheckerMethods(levels);
         this.translateLogMethods = generateTranslateMethods(levels, log4jCustomizedMethods);
-        // TODO translate or remove isEnabled method checker!
-//        this.translateLogMethods.add("isEnabled"); UNMODIFIABLE collection!
-
     }
-
 
     @Override
     public Collection getTranslateLogMethods() {
@@ -56,7 +50,6 @@ public class Log4jLoggerLoader extends LoggerLoader {
             factories = new String[]{"LogManager.getLogger"};
         }
         return factories;
-
     }
 
 }

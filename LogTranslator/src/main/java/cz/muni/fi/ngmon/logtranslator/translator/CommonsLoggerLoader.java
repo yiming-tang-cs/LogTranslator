@@ -1,6 +1,5 @@
 package cz.muni.fi.ngmon.logtranslator.translator;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -13,12 +12,12 @@ import java.util.List;
     http://commons.apache.org/proper/commons-logging/apidocs/org/apache/commons/logging/impl/Log4JLogger.html
  */
 
-public class CommonsLoggingLoader extends LoggerLoader {
+public class CommonsLoggerLoader extends LoggerLoader {
 
     private Collection translateLogMethods;
     private Collection checkerLogMethods;
 
-    public CommonsLoggingLoader() {
+    public CommonsLoggerLoader() {
         super();
 //        org.apache.commons.logging.Log or org.apache.commons.logging.impl.Log4JLogger
         List<String> imports = LoggerFactory.getActualLoggingImports();

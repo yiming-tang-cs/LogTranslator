@@ -5,11 +5,14 @@ import cz.muni.fi.ngmon.logtranslator.common.LogFilesFinder;
 import cz.muni.fi.ngmon.logtranslator.common.Utils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class TranslatorStarter {
 
     private static List<LogFile> logFiles;
+    private static Set<LogFile> nonLogLogFiles = new HashSet<>();
     private static List<LogFile> tempList = new ArrayList<>();
 
     public static void main(String[] args) {
@@ -29,10 +32,11 @@ public class TranslatorStarter {
 //        2) Find & set namespace. If new namespace, flush/write actual data into logFile
         Utils.generateNamespaces(logFiles);
         int counter = 0;
-        for (LogFile logFile : tempList) { // REMOVE DEBUGGING ONLY!!
-//        for (LogFile logFile : logFiles) {
+//        for (LogFile logFile : tempList) { // REMOVE DEBUGGING ONLY!!
+        for (LogFile logFile : logFiles) {
 //        3) Visit logFile
             if (!logFile.isFinishedParsing()) {
+                System.out.println("Starting " + logFile.getFilepath());
                 ANTLRRunner.run(logFile, false);
                 counter++;
                 System.out.printf("Processed %d of %d files.%n", counter, logFiles.size());
@@ -42,6 +46,10 @@ public class TranslatorStarter {
 
     public static List<LogFile> getLogFiles() {
         return logFiles;
+    }
+
+    public static void addNonLogLogFile(LogFile logFile) {
+        nonLogLogFiles.add(logFile);
     }
 
 }

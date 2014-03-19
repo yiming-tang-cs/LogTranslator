@@ -16,7 +16,7 @@ import java.io.InputStream;
 public class ANTLRRunner {
     static CommonTokenStream tokens;
     private static LogFile currentFile;
-    static boolean ignoreLogs = false;
+    boolean ignoreLogs = false;
 //    public static CommonTokenStream getTokens() {
 //        return tokens;
 //    }
@@ -25,7 +25,7 @@ public class ANTLRRunner {
         currentFile = logFile;
         String file = logFile.getFilepath();
         InputStream antlrInputStream;
-        ignoreLogs = ignoreLogStatements;
+
 
         try {
             // -- ANTLR part --
@@ -39,7 +39,7 @@ public class ANTLRRunner {
 
 //            System.out.println("ParseTree = " + tree.getText());
             ParseTreeWalker walker = new ParseTreeWalker();
-            LogTranslator listener = new LogTranslator(tokens, logFile);
+            LogTranslator listener = new LogTranslator(tokens, logFile, ignoreLogStatements);
             walker.walk(listener, tree);
 
 //            System.out.println("modified=\n" + listener.getRewriter().getText());
@@ -48,7 +48,7 @@ public class ANTLRRunner {
         } catch (IOException e){
             System.err.println("Unable to handle file=" + e.toString());
         } catch (NullPointerException exc) {
-            System.err.println("NullPointerException! " + logFile.getFilepath() );
+            System.err.println("NullPointerException! " + logFile.getFilepath());
             exc.printStackTrace();
             System.exit(100);
         } catch (Exception e) {

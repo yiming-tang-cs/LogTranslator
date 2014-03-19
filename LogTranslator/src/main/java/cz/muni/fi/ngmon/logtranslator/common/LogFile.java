@@ -75,7 +75,8 @@ public class LogFile {
 
     public String getNamespaceEnd() {
         if (namespace == null) {
-            System.err.println("Error! Namespace is null!");
+            System.err.println("Error! Namespace is null! PackageName=" + packageName + " " + filepath);
+            this.namespace = packageName;
         }
         StringBuilder stringBuilder = new StringBuilder(namespace.substring(namespace.lastIndexOf(".") + 1));
         stringBuilder.replace(0, 1, stringBuilder.substring(0, 1).toUpperCase());
