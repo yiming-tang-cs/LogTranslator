@@ -14,6 +14,7 @@ public class TranslatorStarter {
     private static List<LogFile> logFiles;
     private static Set<LogFile> nonLogLogFiles = new HashSet<>();
     private static List<LogFile> tempList = new ArrayList<>();
+    private static int counter = 0;
 
     public static void main(String[] args) {
 //        0) Initialize property file
@@ -24,22 +25,20 @@ public class TranslatorStarter {
 
 // START OF DEBUGGING PURPOSES ONLY!
         for (LogFile lf : logFiles) {
-            if (lf.getFilepath().equals("/home/mtoth/example-app-all/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/HftpFileSystem.java")) {
+            if (lf.getFilepath().equals("/home/mtoth/example-app-all/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/metrics2/impl/MetricsSystemImpl.java")) {
                 tempList.add(lf);
             }
         }
 // END OF DEBUGGING PURPOSES ONLY!
 //        2) Find & set namespace. If new namespace, flush/write actual data into logFile
         Utils.generateNamespaces(logFiles);
-        int counter = 0;
 //        for (LogFile logFile : tempList) { // REMOVE DEBUGGING ONLY!!
         for (LogFile logFile : logFiles) {
 //        3) Visit logFile
             if (!logFile.isFinishedParsing()) {
                 System.out.println("Starting " + logFile.getFilepath());
-                ANTLRRunner.run(logFile, false);
-                counter++;
-                System.out.printf("Processed %d of %d files.%n", counter, logFiles.size());
+                ANTLRRunner.run(logFile, false, false);
+                System.out.printf("Processed %d of %d files. Extra files parsed by extedning%d%n", counter - nonLogLogFiles.size(), logFiles.size(), nonLogLogFiles.size());
             }
         }
     }
@@ -52,4 +51,11 @@ public class TranslatorStarter {
         nonLogLogFiles.add(logFile);
     }
 
+    /**
+     * Before exiting of processed java file by ANTLR,
+     * raise counter by one.
+     */
+    public static void addProcessedFilesCounter() {
+        counter++;
+    }
 }

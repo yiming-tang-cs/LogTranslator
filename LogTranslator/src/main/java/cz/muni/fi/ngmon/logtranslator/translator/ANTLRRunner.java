@@ -21,7 +21,7 @@ public class ANTLRRunner {
 //        return tokens;
 //    }
 
-    public static void run(LogFile logFile, boolean ignoreLogStatements) {
+    public static void run(LogFile logFile, boolean ignoreLogStatements, boolean isExtendingClass) {
         currentFile = logFile;
         String file = logFile.getFilepath();
         InputStream antlrInputStream;
@@ -39,7 +39,7 @@ public class ANTLRRunner {
 
 //            System.out.println("ParseTree = " + tree.getText());
             ParseTreeWalker walker = new ParseTreeWalker();
-            LogTranslator listener = new LogTranslator(tokens, logFile, ignoreLogStatements);
+            LogTranslator listener = new LogTranslator(tokens, logFile, ignoreLogStatements, isExtendingClass);
             walker.walk(listener, tree);
 
 //            System.out.println("modified=\n" + listener.getRewriter().getText());

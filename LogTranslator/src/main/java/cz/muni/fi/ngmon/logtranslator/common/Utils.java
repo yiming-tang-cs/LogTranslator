@@ -54,7 +54,7 @@ public class Utils {
     }
 
 
-    // TODO which methods are necessary to be abstract?
+    // TODO Decide which methods are necessary to be abstract?
     public static String getApplicationHome() {
         return applicationHome;
     }
@@ -107,7 +107,7 @@ public class Utils {
 
 
     public static List<LogFile> generateNamespaces(List<LogFile> logFileList) {
-        // TODO
+        // TODO - generate namespaces
         Set<String> namespaceList = new LinkedHashSet<>();
 
         for (LogFile lf : logFileList) {

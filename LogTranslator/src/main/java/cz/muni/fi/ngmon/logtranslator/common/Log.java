@@ -60,9 +60,9 @@ public class Log {
         return methodName;
     }
 
-    public void setMethodName(String methodName) {
-        this.methodName = methodName;
-    }
+//    public void setMethodName(String methodName) {
+//        this.methodName = methodName;
+//    }
 
     public void generateMethodName() {
         StringBuilder logName = new StringBuilder();
@@ -71,7 +71,7 @@ public class Log {
 
         for (String comment : comments) {
             for (String str : comment.split(" ")) {
-                if (counter != 0) {
+                if (counter != 0)  {
                     logName.append("_");
                 }
                 if (!Utils.BANNED_LIST.contains(str)) logName.append(str);
