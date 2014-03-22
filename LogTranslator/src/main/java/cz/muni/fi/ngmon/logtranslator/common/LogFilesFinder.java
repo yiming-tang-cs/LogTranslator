@@ -140,7 +140,8 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
                             searchLogsOnly = true;
                         }
                     } else {
-                        /** There is high possibility that there is no logger. Quick search only */
+                        /** There is high possibility that there is no logger.
+                         *  Quick search only for 'log.method(*)' in file. */
                         foundLog = line.toLowerCase().matches(logSearch);
                         if (foundLog) {
                             System.err.println("XXX found log call! " + line + " " + file);

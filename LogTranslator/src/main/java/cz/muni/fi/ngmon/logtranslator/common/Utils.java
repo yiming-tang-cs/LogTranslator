@@ -4,17 +4,19 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 
 public class Utils {
 
+    public final static List<String> MATH_OPERATORS = Arrays.asList("+", "-", "*", "/");
+    public final static List<String> BOOLEAN_OPERATORS = Arrays.asList("&&", "||");
+    public final static List<String> PRIMITIVE_TYPES = Arrays.asList("boolean", "byte", "int", "long", "double", "float", "char");
+    public static final String NEGATION = "!";
+    static final List<String> BANNED_LIST = Arrays.asList("a", "an", "the");
     public static boolean ignoreParsingErrors;
-    public static List<String> MATH_OPERATORS = Arrays.asList("+", "-", "*", "/");
-    public static List<String> BOOLEAN_OPERATORS = Arrays.asList("&&", "||");
-    public static List<String> PRIMITIVE_TYPES = Arrays.asList("boolean", "byte", "int", "long", "double", "float", "char");
     static String applicationHome;
     static String applicationNamespace;
     static String ngmonLogImport;
@@ -24,7 +26,7 @@ public class Utils {
     static String ngmonLoggerAbstractNamespaceImport;
     static String ngmonEmptyLogStatement;
     static String ngmonLogLength;
-    static List<String> BANNED_LIST = Arrays.asList("a", "an", "the");
+    private static int applicationNamespaceLength;
 
 //    static final String COMMA = ",";
 //    static final String PLUS = "+";
@@ -40,6 +42,8 @@ public class Utils {
 
             applicationHome = properties.getProperty("application_home");
             applicationNamespace = properties.getProperty("application_namespace");
+            int tmpLength = Integer.parseInt(properties.getProperty("application_namespace_length"));
+            applicationNamespaceLength = (tmpLength == 0) ? (applicationNamespace.length() + 2) : tmpLength;
             ngmonLogImport = properties.getProperty("ngmon_log_import");
             ngmonLogFactoryImport = properties.getProperty("ngmon_log_factory_import");
             ngmonLogGlobal = properties.getProperty("ngmon_log_global");
@@ -106,22 +110,59 @@ public class Utils {
     }
 
 
+    /**
+     * Generate few namespaces for this logging application. Resolve number of namespaces
+     * for this app based on applicationNamespaceLength property and set them to LogFiles.
+     *
+     * @param logFileList input list of logFiles, which contain only filepath and package qualified name.
+     * @return same list of logFiles, but each of them has filled appropriate namespace.
+     */
     public static List<LogFile> generateNamespaces(List<LogFile> logFileList) {
-        // TODO - generate namespaces
-        Set<String> namespaceList = new LinkedHashSet<>();
-
+        Set<String> namespaceSet = new TreeSet<>();
+        System.out.println("appnamespaceLength=" + applicationNamespaceLength);
         for (LogFile lf : logFileList) {
 //            System.out.println("packageName=" + lf.getPackageName());
             if (lf.getPackageName() == null) {
-                System.out.println("null packageName in file " + lf.getFilepath());
+                System.err.println("null packageName in file " + lf.getFilepath());
             }
-            namespaceList.add(lf.getPackageName());
-//            System.out.println(lf.getNamespace());
-            //set default namespace for now
-            lf.setNamespace(applicationNamespace);
+            String namespace = createNamespace(lf.getPackageName());
+            namespaceSet.add(namespace);
+            lf.setNamespace(namespace);
         }
-        System.out.println();
+
+        StringBuilder sb = new StringBuilder();
+        for (String s : namespaceSet) {
+            sb.append(s).append("\n");
+        }
+        System.out.println("namespaceSet=" + sb.toString());
         return logFileList;
+    }
+
+    /**
+     * Create ngmon log namespace which will contain all calls for this logs.
+     * This method sets granularity level of ngmon log messages.
+     * If original packageName length is longer then applicationNamespaceLength
+     * property, make it shorter.
+     *
+     * @param packageName string to change
+     * @return shortened packageName from ngmon length rules
+     */
+    private static String createNamespace(String packageName) {
+        int numberOfDots = packageName.length() - packageName.replace(".", "").length();
+
+        if (numberOfDots < applicationNamespaceLength) {
+            return packageName;
+        } else {
+            StringBuilder newPackageName = new StringBuilder();
+            String[] pckgs = packageName.split("\\.", applicationNamespaceLength + 1);
+            pckgs[pckgs.length - 1] = "";
+            for (String p : pckgs) {
+                if (!p.equals("")) newPackageName.append(p).append(".");
+            }
+            // remove last extra dot
+            newPackageName.deleteCharAt(newPackageName.length() - 1);
+            return newPackageName.toString();
+        }
     }
 
 

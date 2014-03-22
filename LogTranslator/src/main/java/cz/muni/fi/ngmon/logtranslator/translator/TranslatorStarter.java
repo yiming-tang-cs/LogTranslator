@@ -22,23 +22,23 @@ public class TranslatorStarter {
 //        1) Search through all ".java" files in given directory. Look for "log.{debug,warn,error,fatal}
         logFiles = LogFilesFinder.commenceSearch(Utils.getApplicationHome());
 
-
 // START OF DEBUGGING PURPOSES ONLY!
         for (LogFile lf : logFiles) {
-            if (lf.getFilepath().equals("/home/mtoth/example-app-all/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/metrics2/impl/MetricsSystemImpl.java")) {
+            if (lf.getFilepath().equals("/home/mtoth/example-app-all/hadoop-common-project/hadoop-auth-examples/src/main/java/org/apache/hadoop/security/authentication/examples/RequestLoggerFilter.java")) {
                 tempList.add(lf);
-            }
-        }
+        }}
 // END OF DEBUGGING PURPOSES ONLY!
+
 //        2) Find & set namespace. If new namespace, flush/write actual data into logFile
         Utils.generateNamespaces(logFiles);
-//        for (LogFile logFile : tempList) { // REMOVE DEBUGGING ONLY!!
+
+//        for (LogFile logFile : tempList) { // REMOVE DEBUGGING LINE ONLY!!
         for (LogFile logFile : logFiles) {
 //        3) Visit logFile
             if (!logFile.isFinishedParsing()) {
                 System.out.println("Starting " + logFile.getFilepath());
                 ANTLRRunner.run(logFile, false, false);
-                System.out.printf("Processed %d of %d files. Extra files parsed by extedning%d%n", counter - nonLogLogFiles.size(), logFiles.size(), nonLogLogFiles.size());
+                System.out.printf("Processed %d of %d files. Extra files parsed by extedning %d.%n", counter - nonLogLogFiles.size(), logFiles.size(), nonLogLogFiles.size());
             }
         }
     }

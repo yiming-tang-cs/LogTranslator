@@ -12,7 +12,7 @@ public class Log {
     private List<String> comments;
     private List<LogFile.Variable> variables;
     private String level;
-    private String tag;
+    private List<String> tag;
     private String methodName;
 
     public Log() {
@@ -48,12 +48,15 @@ public class Log {
         this.level = level;
     }
 
-    public String getTag() {
+    public List<String> getTag() {
         return tag;
     }
 
     public void setTag(String tag) {
-        this.tag = tag;
+        if (this.tag == null) {
+            this.tag = new ArrayList<>();
+        }
+        this.tag.add(tag);
     }
 
     public String getMethodName() {
