@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Log class is a representation of one log call method with all
  * related variables used in this one method call.
- * Log is used for generating new methods for ngmon.
+ * Log is used for generating new methods for NGMON.
  */
 public class Log {
     private List<String> comments;
@@ -63,26 +63,8 @@ public class Log {
         return methodName;
     }
 
-//    public void setMethodName(String methodName) {
-//        this.methodName = methodName;
-//    }
-
-    public void generateMethodName() {
-        StringBuilder logName = new StringBuilder();
-        int counter = 0;
-        int logNameLength = Utils.getNgmonLogLength();
-
-        for (String comment : comments) {
-            for (String str : comment.split(" ")) {
-                if (counter != 0)  {
-                    logName.append("_");
-                }
-                if (!Utils.BANNED_LIST.contains(str)) logName.append(str);
-                counter++;
-                if (counter >= logNameLength) break;
-            }
-        }
-        methodName = logName.toString();
+    public void setMethodName(String methodName) {
+        this.methodName = methodName;
     }
 
     @Override

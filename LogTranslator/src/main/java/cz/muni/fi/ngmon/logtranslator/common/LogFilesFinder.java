@@ -133,7 +133,7 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
                         }
                         if (line.startsWith("import")) {
                             String lineTemp = line.substring("import ".length(), line.length() - 1);
-                            foundImport = Utils.listEqualsItem(importList, lineTemp);
+                            foundImport = Utils.itemInList(importList, lineTemp);
                         }
                         if (Utils.listContainsItem(classStartList, line)) {
                             // search logs only from now, but be stricter/more effective

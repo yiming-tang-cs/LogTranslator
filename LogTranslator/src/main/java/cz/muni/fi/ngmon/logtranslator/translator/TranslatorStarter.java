@@ -3,6 +3,7 @@ package cz.muni.fi.ngmon.logtranslator.translator;
 import cz.muni.fi.ngmon.logtranslator.common.LogFile;
 import cz.muni.fi.ngmon.logtranslator.common.LogFilesFinder;
 import cz.muni.fi.ngmon.logtranslator.common.Utils;
+import cz.muni.fi.ngmon.logtranslator.generator.HelperGenerator;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,15 +31,21 @@ public class TranslatorStarter {
 // END OF DEBUGGING PURPOSES ONLY!
 
 //        2) Find & set namespace. If new namespace, flush/write actual data into logFile
-        Utils.generateNamespaces(logFiles);
+        HelperGenerator.generateNamespaces(logFiles);
 
-//        for (LogFile logFile : tempList) { // REMOVE DEBUGGING LINE ONLY!!
-        for (LogFile logFile : logFiles) {
+        for (LogFile logFile : tempList) { // REMOVE DEBUGGING LINE ONLY!!
+//        for (LogFile logFile : logFiles) {
 //        3) Visit logFile
             if (!logFile.isFinishedParsing()) {
                 System.out.println("Starting " + logFile.getFilepath());
                 ANTLRRunner.run(logFile, false, false);
                 System.out.printf("Processed %d of %d files. Extra files parsed by extedning %d.%n", counter - nonLogLogFiles.size(), logFiles.size(), nonLogLogFiles.size());
+            }
+
+            if (logFile.isFinishedParsing()) {
+                // a) generate namespace if not already generated
+                // b) fill with new log methods
+//                NamespaceFileCreator
             }
         }
     }

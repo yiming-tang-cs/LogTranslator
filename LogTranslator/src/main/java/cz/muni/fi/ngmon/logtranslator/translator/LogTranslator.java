@@ -6,6 +6,7 @@ import cz.muni.fi.ngmon.logtranslator.common.Log;
 import cz.muni.fi.ngmon.logtranslator.common.LogFile;
 import cz.muni.fi.ngmon.logtranslator.common.LogFilesFinder;
 import cz.muni.fi.ngmon.logtranslator.common.Utils;
+import cz.muni.fi.ngmon.logtranslator.generator.HelperGenerator;
 import org.antlr.v4.runtime.BufferedTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.TokenStreamRewriter;
@@ -77,12 +78,6 @@ public class LogTranslator extends JavaBaseListener {
         TranslatorStarter.addProcessedFilesCounter();
     }
 
-//    @Override
-//    public void exitClassDeclaration(@NotNull JavaParser.ClassDeclarationContext ctx) {
-//        There might be multiple classes
-//        logFile.setFinishedParsing(true);
-//    }
-
     // ------------------------------------------------------------------------
 
     /**
@@ -94,6 +89,7 @@ public class LogTranslator extends JavaBaseListener {
      */
     @Override
     public void enterClassDeclaration(@NotNull JavaParser.ClassDeclarationContext ctx) {
+
         if (ctx.type() != null) {
 
             String extendingFileTosearch = null;
@@ -381,7 +377,6 @@ public class LogTranslator extends JavaBaseListener {
      */
     @Override
     public void enterCatchClause(@NotNull JavaParser.CatchClauseContext ctx) {
-        // Store exception into variable list
         String errorVarName = null;
         String errorTypeName;
 
@@ -389,8 +384,8 @@ public class LogTranslator extends JavaBaseListener {
             errorVarName = ctx.getChild(ctx.getChildCount() - 3).getText();
         }
 
-        // Check for simple 'catch (Exception e)' or
-        // multi-exception 'catch (NullPointerException | IllegalArgumentException | IOException ex)' usage
+        /** Check for simple 'catch (Exception e)' or multi-exception
+         *  'catch (NullPointerException | IllegalArgumentException | IOException ex)' usage */
         if (ctx.catchType().getChildCount() == 1) {
 //            System.out.println(ctx.getChild(2).getText() + " " + ctx.getChild(3).getText());
             errorTypeName = ctx.getChild(2).getText();
@@ -472,7 +467,6 @@ public class LogTranslator extends JavaBaseListener {
     @Override
     public void exitStatementExpression(@NotNull JavaParser.StatementExpressionContext ctx) {
         // Process LOG.XYZ(stuff);
-//        if ((logName == null) && !isExtending) {
         if ((logName == null) && !ignoreLogs) {
             /** If (extending, visit that class and find log declaration :) ) and use it here -- you WISH!
              * It can be unnecessary hard to find extending class, There might be a chance, that this class
@@ -504,14 +498,18 @@ public class LogTranslator extends JavaBaseListener {
 //                    System.out.println("yes, '" + methodCall +"' is in current logger method list.");
 
                         Log log = transformMethodStatement(ctx.expression().expressionList());
-                        log.generateMethodName();
+                        HelperGenerator.generateMethodName(log);
                         log.setLevel(methodCall.getText());
-
-                        if (log.getTag() != null) {
-                            log.setTag(null);
-                        }
                         logFile.addLog(log);
-                        // TODO add transformed method to appropriate XYZNamespace
+
+//                        System.out.println(log);
+//                        System.out.println(logFile.getVariableList());
+                        /** TODO 1) add transformed method to appropriate XYZNamespace
+                         * TODO 2) ADD GOMATCH support here */
+                        // rewrite this log
+                        String ngmonLogReplacement = HelperGenerator.generateLogMethod(logName, log);
+                        System.out.println(ngmonLogReplacement);
+//                        rewriter.replace(null, null, null);
                     }
                     // else throw new exception or add it to methodList?
                 }
@@ -546,7 +544,9 @@ public class LogTranslator extends JavaBaseListener {
                 // handle {} and "" ?
             }
 
+
             for (JavaParser.ExpressionContext ec : expressionList.expression()) {
+//                System.out.println("ec=" + ec.getText());
                 fillCurrentLog(log, ec, isSpecial);
             }
         } else {
@@ -574,7 +574,7 @@ public class LogTranslator extends JavaBaseListener {
 
         if (isSpecial) {
             System.out.println("MAGIC BEGINS here! " + expression.getText());
-            // TODO - purpoise?
+            // TODO - purpose?
         }
 
         int childCount = expression.getChildCount();
@@ -596,13 +596,22 @@ public class LogTranslator extends JavaBaseListener {
 
             /** Recursively call this method to find out more information about *this* statement */
         } else if (childCount == 3) {
+//            System.out.println("==" + expression.getText());
             if (expression.expression(1) != null) {
 //                System.out.format("var=%s exp(0)=%s exp(1)=%s%n", expression.getText(), expression.expression(0).getText(), expression.expression(1).getText());
                 determineLogTypeAndStore(log, expression.expression(1));
             }
-            for (JavaParser.ExpressionContext ec : expression.expression().subList(0, expression.expression().size() - 1)) {
+
+            if (expression.expression().size() <= 1) {
+                determineLogTypeAndStore(log, expression.expression(0));
+                fillCurrentLog(log, expression.expression(0), isSpecial);
+            } else {
+//                System.out.println("+" + expression.expression(0).getText());
+
+                for (JavaParser.ExpressionContext ec : expression.expression().subList(0, expression.expression().size() - 1)) {
 //                System.out.println("ec=" + ec.getText());
-                fillCurrentLog(log, ec, isSpecial);
+                    fillCurrentLog(log, ec, isSpecial);
+                }
             }
 
 //        } else if (expression.children.size() == 4) {
@@ -629,6 +638,7 @@ public class LogTranslator extends JavaBaseListener {
      * @param expression ANTLR's internal representation of JavaParser.ExpressionContext context
      *                   which holds information about variable
      */
+
     public void determineLogTypeAndStore(Log log, JavaParser.ExpressionContext expression) {
         if (expression.getText().startsWith("\"")) {
             log.addComment(cultivate(expression.getText()));
@@ -765,7 +775,7 @@ public class LogTranslator extends JavaBaseListener {
                 System.out.println("looking for=" + findMe.getText() + " " + findMe.start.getLine() + " " + logFile.getFilepath());
                 if (!HelperLogTranslator.findMethod(logFile, findMe.getText(), methodArgumentsTypeList)) {
                     /** Method has not been found in class. Store it anyway.
-                      * Exactly same situation as variable containing "." */
+                     * Exactly same situation as variable containing "." */
                     ngmonNewName = findMe.expression(0).getText() + "MethodCall";
                     log.setTag("methodCall");
                     logFile.storeVariable(findMe, findMe.getText(), "String", false, ngmonNewName);
@@ -796,6 +806,7 @@ public class LogTranslator extends JavaBaseListener {
                 ngmonNewName = "is" + varName.replace(varName.charAt(0), (Character.toUpperCase(varName.charAt(0)))); // isVarName
                 varType = "boolean";
                 logFile.storeVariable(findMe, varName, varType, false, ngmonNewName);
+                log.setTag("boolean");
                 foundVar = returnLastValue(varName);
 
                 /** if whole text is uppercase & we have static imports, assume this is static variable
@@ -894,7 +905,7 @@ public class LogTranslator extends JavaBaseListener {
 
     /**
      * Drop quotes, extra spaces, commas, non-alphanum characters
-     * into more fashionable way for later ngmon log method naming generation
+     * into more fashionable way for later NGMON log method naming generation
      *
      * @param str string to be changed
      */

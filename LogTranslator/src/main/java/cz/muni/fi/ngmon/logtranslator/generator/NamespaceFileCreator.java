@@ -1,6 +1,11 @@
 package cz.muni.fi.ngmon.logtranslator.generator;
 
+import cz.muni.fi.ngmon.logtranslator.common.LogFile;
+import cz.muni.fi.ngmon.logtranslator.common.Utils;
 import org.stringtemplate.v4.ST;
+
+import java.util.HashSet;
+import java.util.Set;
 
 //package org.apache.hadoop.hdfs.nfs;
 //
@@ -25,13 +30,15 @@ public class NamespaceFileCreator {
               "package <package-name>;\n\n"
             + "import cz.muni.fi.annotation.Namespace;\n"
             + "import cz.muni.fi.logger.AbstractNamespace;\n\n"
-            + "@Namespace\n"
+            + Utils.getNgmonAnnotationNamespaceImport()+ "\n"
             + "public class <NAMESPACE_CLASSNAME> extends AbstractNamespace {\n\n"
             + "    <methods>"
             + "}";
 
 
     private ST template = new ST(NAMESPACE_JAVA_CLASS_TEMPLATE);
+    private Set<LogFile> logFileList = new HashSet<>();
+
 
     public void WriteOutTemplate() {
         System.out.println(template.render());
