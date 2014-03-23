@@ -5,6 +5,7 @@ import cz.muni.fi.ngmon.logtranslator.antlr.JavaParser;
 import cz.muni.fi.ngmon.logtranslator.common.Log;
 import cz.muni.fi.ngmon.logtranslator.common.LogFile;
 import cz.muni.fi.ngmon.logtranslator.common.LogFilesFinder;
+import cz.muni.fi.ngmon.logtranslator.common.TranslatorStarter;
 import cz.muni.fi.ngmon.logtranslator.common.Utils;
 import cz.muni.fi.ngmon.logtranslator.generator.HelperGenerator;
 import org.antlr.v4.runtime.BufferedTokenStream;
@@ -496,16 +497,11 @@ public class LogTranslator extends JavaBaseListener {
                     // if Log.operation is in currentLoggerMethodList - transform it,
                     if (loggerLoader.getTranslateLogMethods().contains(methodCall.getText())) {
 //                    System.out.println("yes, '" + methodCall +"' is in current logger method list.");
-
                         Log log = transformMethodStatement(ctx.expression().expressionList());
                         HelperGenerator.generateMethodName(log);
                         log.setLevel(methodCall.getText());
                         logFile.addLog(log);
-
-//                        System.out.println(log);
-//                        System.out.println(logFile.getVariableList());
-                        /** TODO 1) add transformed method to appropriate XYZNamespace
-                         * TODO 2) ADD GOMATCH support here */
+                         /* TODO - ADD GOMATCH support here */
                         // rewrite this log
                         String ngmonLogReplacement = HelperGenerator.generateLogMethod(logName, log);
                         System.out.println(ngmonLogReplacement);
@@ -591,8 +587,6 @@ public class LogTranslator extends JavaBaseListener {
             } else {
                 System.err.println("Error " + expression.getText());
             }
-//            if (expression.getText().contains("new") && expression.getText().toLowerCase().contains("exception")) {
-
 
             /** Recursively call this method to find out more information about *this* statement */
         } else if (childCount == 3) {
@@ -603,11 +597,12 @@ public class LogTranslator extends JavaBaseListener {
             }
 
             if (expression.expression().size() <= 1) {
-                determineLogTypeAndStore(log, expression.expression(0));
-                fillCurrentLog(log, expression.expression(0), isSpecial);
+//                System.out.println("exp=" + expression.expression(0).getText() + " vs " + expression.getText());
+                determineLogTypeAndStore(log, expression);
+//                redundant call?
+//                fillCurrentLog(log, expression.expression(0), isSpecial);
             } else {
 //                System.out.println("+" + expression.expression(0).getText());
-
                 for (JavaParser.ExpressionContext ec : expression.expression().subList(0, expression.expression().size() - 1)) {
 //                System.out.println("ec=" + ec.getText());
                     fillCurrentLog(log, ec, isSpecial);
@@ -674,11 +669,22 @@ public class LogTranslator extends JavaBaseListener {
              * 'l.getLedgerId()', 'KeeperException.create(code,path).getMessage()', ...
              */
             if (findMe.getText().contains(".")) {
-//                System.out.println("looking for " + findMe.getText());
-                // TODO change newNgmonName to simpler version?
+                StringBuilder newNgmonName = new StringBuilder(findMe.getText());
+                if (newNgmonName.toString().endsWith(".toString()")) {
+                    // delete '.toString()'
+                    newNgmonName.delete(newNgmonName.lastIndexOf("."), newNgmonName.length());
+                    if (newNgmonName.toString().endsWith("()")) {
+                        newNgmonName.delete(newNgmonName.length() - 2, newNgmonName.length());
+                    }
 
-                logFile.storeVariable(findMe, findMe.getText(), "String", false, null);
-                foundVar = returnLastValue(findMe.getText()); //logFile.getVariableList().get(findMe.getText()).get(0);
+                    // remove all dots and brackets from methodCall and raise dot-following letter to upper case
+                    newNgmonName.replace(0, newNgmonName.length(), removeDotsAndBracketsFromText(newNgmonName.toString()));
+                    newNgmonName.append("MethodCall");
+                    log.setTag("methodCall");
+                }
+//                System.out.println("2=" + findMe.getText());
+                logFile.storeVariable(findMe, findMe.getText(), "String", false, newNgmonName.toString());
+                foundVar = returnLastValue(findMe.getText());
 
                 /** handle 'new String(data, UTF_8)' or 'new Exception()' */
             } else if (findMe.getText().contains("new")) {
@@ -840,9 +846,9 @@ public class LogTranslator extends JavaBaseListener {
     }
 
     /**
-     * Search for variable in given LogFile.
+     * Search for variable in given LogFile's variable list.
      *
-     * @param logFile to search in
+     * @param logFile to search for this variable list
      * @param findMe  variable to look for
      * @return found Variable in given logFile, null if not found
      */
@@ -917,6 +923,30 @@ public class LogTranslator extends JavaBaseListener {
         str = str.replaceAll("\\W", " ").replaceAll("\\s+", " ").trim();
 //        System.out.print("  -->" + str + "\n");
         return str;
+    }
+
+    /**
+     * Method removes dots from text and upper-cases the following letter after ".".
+     * Also removes empty brackets and brackets with content are substituted with "_".
+     *
+     * @param text to be changed
+     * @return text without dots
+     */
+    private String removeDotsAndBracketsFromText(String text) {
+        // remove brackets, empty brackets first
+        text = text.replace("()", "");
+        text = text.replace("(", "_").replace(")", "_").replace("__", "");
+        // remove dots
+        StringBuilder newText = new StringBuilder(text);
+        int dotsCount = text.length() - text.replace(".", "").length();
+        int dotPos;
+        for (int i = 0; i < dotsCount; i++) {
+            dotPos = text.indexOf(".");
+            newText.deleteCharAt(dotPos);
+            newText.setCharAt(dotPos, Character.toUpperCase(newText.charAt(dotPos)));
+            text = newText.toString();
+        }
+        return newText.toString();
     }
 
     /**

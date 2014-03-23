@@ -1,9 +1,8 @@
-package cz.muni.fi.ngmon.logtranslator.translator;
+package cz.muni.fi.ngmon.logtranslator.common;
 
-import cz.muni.fi.ngmon.logtranslator.common.LogFile;
-import cz.muni.fi.ngmon.logtranslator.common.LogFilesFinder;
-import cz.muni.fi.ngmon.logtranslator.common.Utils;
 import cz.muni.fi.ngmon.logtranslator.generator.HelperGenerator;
+import cz.muni.fi.ngmon.logtranslator.generator.NgmonNamespaceFactory;
+import cz.muni.fi.ngmon.logtranslator.translator.ANTLRRunner;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -39,13 +38,13 @@ public class TranslatorStarter {
             if (!logFile.isFinishedParsing()) {
                 System.out.println("Starting " + logFile.getFilepath());
                 ANTLRRunner.run(logFile, false, false);
-                System.out.printf("Processed %d of %d files. Extra files parsed by extedning %d.%n", counter - nonLogLogFiles.size(), logFiles.size(), nonLogLogFiles.size());
+                System.out.printf("Processed %d of %d files. Extra files parsed by extending %d.%n", counter - nonLogLogFiles.size(), logFiles.size(), nonLogLogFiles.size());
             }
 
             if (logFile.isFinishedParsing()) {
                 // a) generate namespace if not already generated
                 // b) fill with new log methods
-//                NamespaceFileCreator
+                NgmonNamespaceFactory.addLogToNgmonNamespace(logFile);
             }
         }
     }

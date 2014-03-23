@@ -25,6 +25,7 @@ public class Utils {
     static String ngmonEmptyLogStatement;
     static String ngmonLogLength;
     static int applicationNamespaceLength;
+    private static String ngmonAnnotationNamespace;
 
 //    static final String COMMA = ",";
 //    static final String PLUS = "+";
@@ -46,6 +47,7 @@ public class Utils {
             ngmonLogFactoryImport = properties.getProperty("ngmon_log_factory_import");
             ngmonLogGlobal = properties.getProperty("ngmon_log_global");
             ngmonAnnotationNamespaceImport = properties.getProperty("ngmon_annotation_ns_import");
+            ngmonAnnotationNamespace = properties.getProperty("ngmon_annotation_ns", "@Namespace");
             ngmonLoggerAbstractNamespaceImport = properties.getProperty("ngmon_logger_abstract_ns_import");
             ngmonEmptyLogStatement = properties.getProperty("ngmon_empty_log_statement");
             ngmonLogLength = properties.getProperty("ngmon_log_length", "7");
@@ -73,9 +75,9 @@ public class Utils {
         return ngmonEmptyLogStatement;
     }
 
-//    public static String getNgmonLoggerAbstractNamespaceImport() {
-//        return ngmonLoggerAbstractNamespaceImport;
-//    }
+    public static String getNgmonLoggerAbstractNamespaceImport() {
+        return ngmonLoggerAbstractNamespaceImport;
+    }
 
     public static String getNgmonAnnotationNamespaceImport() {
         return ngmonAnnotationNamespaceImport;
@@ -128,5 +130,13 @@ public class Utils {
             }
         }
         return false;
+    }
+
+    public static int numberOfDotsInText(String text) {
+        return text.length() - text.replace(".", "").length();
+    }
+
+    public static String ngmonAnnotationNamespace() {
+        return ngmonAnnotationNamespace;
     }
 }

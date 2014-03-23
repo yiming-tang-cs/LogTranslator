@@ -16,7 +16,6 @@ import java.io.InputStream;
 public class ANTLRRunner {
     static CommonTokenStream tokens;
     private static LogFile currentFile;
-    boolean ignoreLogs = false;
 //    public static CommonTokenStream getTokens() {
 //        return tokens;
 //    }
@@ -34,10 +33,7 @@ public class ANTLRRunner {
             JavaLexer lexer = new JavaLexer(ais);
             tokens = new CommonTokenStream(lexer);
             JavaParser parser = new JavaParser(tokens);
-//            ParseTree tree = parser.compilationUnit();  -- difference??
             RuleContext tree = parser.compilationUnit();
-
-//            System.out.println("ParseTree = " + tree.getText());
             ParseTreeWalker walker = new ParseTreeWalker();
             LogTranslator listener = new LogTranslator(tokens, logFile, ignoreLogStatements, isExtendingClass);
             walker.walk(listener, tree);

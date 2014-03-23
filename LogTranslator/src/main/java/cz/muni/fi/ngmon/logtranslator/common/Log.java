@@ -14,6 +14,8 @@ public class Log {
     private String level;
     private List<String> tag;
     private String methodName;
+    private String generatedNgmonLog;
+    private String generatedReplacementLog;
 
     public Log() {
         comments = new ArrayList<>();
@@ -65,6 +67,22 @@ public class Log {
 
     public void setMethodName(String methodName) {
         this.methodName = methodName;
+    }
+
+    public String getGeneratedNgmonLog() {
+        return generatedNgmonLog;
+    }
+
+    public void setGeneratedNgmonLog(String generatedNgmonLog) {
+        this.generatedNgmonLog = generatedNgmonLog;
+    }
+
+    public String getGeneratedReplacementLog() {
+        return generatedReplacementLog;
+    }
+
+    public void setGeneratedReplacementLog(String generatedReplacementLog) {
+        this.generatedReplacementLog = generatedReplacementLog;
     }
 
     @Override
