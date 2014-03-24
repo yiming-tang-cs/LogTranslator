@@ -30,8 +30,8 @@ public class LogFile {
     private boolean containsStaticImport;
     private List<String> staticImports;
     private List<String> imports;
-    private boolean extendingClass;
-    private String extendingClassFilepath;
+//    private boolean extendingClass;
+//    private String extendingClassFilepath;
     private boolean finishedParsing = false;
 
     public LogFile(String filename) {

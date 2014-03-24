@@ -10,6 +10,10 @@ public class NgmonNamespaceFactory {
     private static Set<NamespaceFileCreator> namespaceFileCreatorSet = new HashSet<>();
 
 
+    public static Set<NamespaceFileCreator> getNamespaceFileCreatorSet() {
+        return namespaceFileCreatorSet;
+    }
+
     /**
      * Decide whether to create new ngmon namespace or just add only methods from
      * this logFile to already created NgmonNamespace file.
@@ -45,7 +49,7 @@ public class NgmonNamespaceFactory {
         NamespaceFileCreator nfc = new NamespaceFileCreator(logFile);
         namespaceFileCreatorSet.add(nfc);
         // create new java file from file path/namespace/package
-        FileCreator.create(logFile, nfc);
+        FileCreator.prepareNamespace(logFile, nfc);
     }
 
 }

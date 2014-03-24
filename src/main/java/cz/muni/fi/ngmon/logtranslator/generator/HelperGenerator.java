@@ -20,7 +20,7 @@ public class HelperGenerator {
      */
     public static List<LogFile> generateNamespaces(List<LogFile> logFileList) {
         Set<String> namespaceSet = new TreeSet<>();
-        System.out.println("appnamespaceLength=" + Utils.getApplicationNamespaceLength());
+//      TODO trace()  System.out.println("appnamespaceLength=" + Utils.getApplicationNamespaceLength());
         for (LogFile lf : logFileList) {
 //            System.out.println("packageName=" + lf.getPackageName());
             if (lf.getPackageName() == null) {
@@ -75,7 +75,12 @@ public class HelperGenerator {
     public static void generateMethodName(Log log) {
         if (log.getComments().size() == 0) {
             // TODO - maybe use some quick dirty hack (impossible imo)
-            log.setMethodName(Utils.getNgmonEmptyLogStatement());
+            StringBuilder tempName = new StringBuilder();
+            for (LogFile.Variable var : log.getVariables()) {
+                tempName.append(var.getNgmonName());
+            }
+
+            log.setMethodName(tempName.substring(0, Utils.getNgmonEmptyLogStatementMethodNameLength()) + Utils.getNgmonEmptyLogStatement());
         } else {
             StringBuilder logName = new StringBuilder();
             int counter = 0;
@@ -104,6 +109,7 @@ public class HelperGenerator {
      * @return log method calling in NGMON's syntax form
      */
     public static String generateLogMethod(String logName, Log log) {
+        // TODO/wish - if line is longer then 80 chars, append to newline!
         if (log != null) {
             // generate variables
             StringBuilder vars = new StringBuilder();

@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /*
- package org.apache.hadoop.hdfs.nfs;
+ package log_events.org.apache.hadoop.hdfs.nfs;
 
  import cz.muni.fi.annotation.Namespace;
  import cz.muni.fi.logger.AbstractNamespace;
@@ -35,21 +35,20 @@ public class NamespaceFileCreator {
     private Set<String> methods = new TreeSet<>();
     private String namespaceClassName;
     private String namespace;
-    private ST ngmonFileContent;
+    private ST namespaceFileContent;
     private String filePath;
-
 
     public NamespaceFileCreator(LogFile logFile) {
         namespaceClassName = logFile.getNamespaceClass();
         namespace = logFile.getNamespace();
-        ngmonFileContent = prepareNewNamespace(logFile);
+        namespaceFileContent = prepareNewNamespace(logFile);
 
         System.out.println("namespace=" + logFile.getNamespace() + " nsClass=" + logFile.getNamespaceClass());
-        System.out.println(ngmonFileContent.render());
+        System.out.println(namespaceFileContent.render());
     }
 
-    public ST getNgmonFileContent() {
-        return ngmonFileContent;
+    public ST getNamespaceFileContent() {
+        return namespaceFileContent;
     }
 
     public Set<LogFile> getLogFileList() {
@@ -68,9 +67,14 @@ public class NamespaceFileCreator {
         this.filePath = filePath;
     }
 
+    /**
+     *
+     * @param logFile
+     * @return
+     */
     private ST prepareNewNamespace(LogFile logFile) {
         String NAMESPACE_JAVA_CLASS_STRING_TEMPLATE =
-                "package <namespace>;\n\n"
+                "package log_events.<namespace>;\n\n"
                         + "import <namespaceImport>;\n"
                         + "import <abstractNamespaceImport>;\n\n"
                         + "<namespaceAnnotation>\n"
@@ -94,6 +98,11 @@ public class NamespaceFileCreator {
         return template;
     }
 
+    /**
+     *
+     * @param log
+     * @return
+     */
     private String prettyPrintMethod(Log log) {
         ST methodTemplate = new ST(
                 "public AbstractNamespace <methodName>(<formalParameters>) {\n" +
@@ -137,6 +146,15 @@ public class NamespaceFileCreator {
         // TODO append to methodList and regenerate whole file content, instead of looking up particular
         // method and inserting it in to appropriate position (?)  TreeSet
 //        methods.add()
+        if (this.getLogFileList().contains(logFile)) {
+            System.err.println("Nothing new should be added to this namespace Log");
+            System.exit(100);
+        }
+//        for (Log log : logFile.getLogs()) {
+//            if (methods.contains()log.getMethodName()
+//        }
+        namespaceFileContent.remove("methods");
+        namespaceFileContent.add("methods", methods);
     }
 
 

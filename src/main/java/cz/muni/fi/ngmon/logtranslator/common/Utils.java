@@ -26,10 +26,9 @@ public class Utils {
     static String ngmonLogLength;
     static int applicationNamespaceLength;
     private static String ngmonAnnotationNamespace;
-
-//    static final String COMMA = ",";
-//    static final String PLUS = "+";
-//    static final Collection<String> separators = Arrays.asList(COMMA, PLUS);
+    private static int ngmonEmptyLogStatementMethodNameLength;
+    private static String ngmongLogEventsImportPrefix;
+    private static String ngmonSimpleLoggerImport;
 
     public static void initialize() {
         String propertyFile = "src/main/resources/logtranslator.properties";
@@ -43,13 +42,16 @@ public class Utils {
             applicationNamespace = properties.getProperty("application_namespace");
             int tmpLength = Integer.parseInt(properties.getProperty("application_namespace_length"));
             applicationNamespaceLength = (tmpLength == 0) ? (applicationNamespace.length() + 2) : tmpLength;
+            ngmongLogEventsImportPrefix = properties.getProperty("ngmon_log_events_import_prefix", "log_events");
             ngmonLogImport = properties.getProperty("ngmon_log_import");
             ngmonLogFactoryImport = properties.getProperty("ngmon_log_factory_import");
+            ngmonSimpleLoggerImport = properties.getProperty("ngmon_simple_logger_import");
             ngmonLogGlobal = properties.getProperty("ngmon_log_global");
             ngmonAnnotationNamespaceImport = properties.getProperty("ngmon_annotation_ns_import");
             ngmonAnnotationNamespace = properties.getProperty("ngmon_annotation_ns", "@Namespace");
             ngmonLoggerAbstractNamespaceImport = properties.getProperty("ngmon_logger_abstract_ns_import");
             ngmonEmptyLogStatement = properties.getProperty("ngmon_empty_log_statement");
+            ngmonEmptyLogStatementMethodNameLength = Integer.valueOf(properties.getProperty("ngmon_empty_log_method_name_length", "8"));
             ngmonLogLength = properties.getProperty("ngmon_log_length", "7");
             ignoreParsingErrors = Boolean.parseBoolean(properties.getProperty("ignoreParsingErrors"));
         } catch (IOException e) {
@@ -67,12 +69,25 @@ public class Utils {
 //        applicationHome = newLoggingApplicationHome;
 //    }
 
+
+    public static String getNgmonSimpleLoggerImport() {
+        return ngmonSimpleLoggerImport;
+    }
+
+    public static String getNgmongLogEventsImportPrefix() {
+        return ngmongLogEventsImportPrefix;
+    }
+
     public static int getNgmonLogLength() {
         return Integer.parseInt(ngmonLogLength);
     }
 
     public static String getNgmonEmptyLogStatement() {
         return ngmonEmptyLogStatement;
+    }
+
+    public static int getNgmonEmptyLogStatementMethodNameLength() {
+        return ngmonEmptyLogStatementMethodNameLength;
     }
 
     public static String getNgmonLoggerAbstractNamespaceImport() {
@@ -95,14 +110,9 @@ public class Utils {
         return ngmonLogGlobal;
     }
 
-
     public static String getApplicationNamespace() {
         return applicationNamespace;
     }
-
-//    public void setLoggingApplicationNamespace(String newLoggingApplicationNamespace) {
-//        applicationNamespace = newLoggingApplicationNamespace;
-//    }
 
 
     public static int getApplicationNamespaceLength() {

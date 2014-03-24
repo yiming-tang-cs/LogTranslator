@@ -93,7 +93,7 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
         }
         // Skip this tree, it contains no directories or no java files
         if (count == 0) {
-            System.out.println("skipping tree " + dir);
+//           TODO debug() System.out.println("skipping tree " + dir);
             return FileVisitResult.SKIP_SUBTREE;
         }
         return FileVisitResult.CONTINUE;
@@ -143,9 +143,9 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
                         /** There is high possibility that there is no logger.
                          *  Quick search only for 'log.method(*)' in file. */
                         foundLog = line.toLowerCase().matches(logSearch);
-                        if (foundLog) {
-                            System.err.println("XXX found log call! " + line + " " + file);
-                        }
+//                        if (foundLog) {
+                            // TODO debug() System.out.println("XXX found log call! " + line + " " + file);
+//                        }
                     }
 
                     if (foundImport) {

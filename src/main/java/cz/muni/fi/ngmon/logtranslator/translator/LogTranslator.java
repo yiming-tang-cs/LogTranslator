@@ -30,6 +30,7 @@ public class LogTranslator extends JavaBaseListener {
     private String logType = null; // reference to original LOG variable type
     private boolean isExtending;
     private boolean ignoreLogs = false;
+//    private JavaParser.QualifiedNameContext importContext;  // position for final adding of correct "import log_events.<app-namespace>.CURRENT_NS;"
 
     public LogTranslator(BufferedTokenStream tokens, LogFile logfile, boolean ignoreLogStatements, boolean isExtending) {
         this.ignoreLogs = ignoreLogStatements;
@@ -163,6 +164,7 @@ public class LogTranslator extends JavaBaseListener {
 //                System.out.println("GOT IT " + logFile.getFilepath() + " " + lf.getFilepath());
                 if (!lf.isFinishedParsing() && (!logFile.getFilepath().equals(lf.getFilepath()))) {
                     // parseFile & connect it with this logFile
+                    // todo info()
                     System.out.println("Starting ANTLR on file " + lf.getFilepath() + " from " + logFile.getFilepath());
                     ANTLRRunner.run(lf, false, true);
                     parsedExtendingClass = true;
@@ -254,7 +256,7 @@ public class LogTranslator extends JavaBaseListener {
 //                    System.err.println("ERROR!" + ctx.getText() + "in \n" + ctx.start.getLine() + " " + logFile.getFilepath());
 //                }
                 }
-                // Change logger and add namespace, logGlobal imports
+                // Change logger and add current log_events namespace and logGlobal imports
                 for (String logImport : loggerLoader.getLogger()) {
                     if (ctx.getText().toLowerCase().equals(logImport.toLowerCase())) {
                         if (getLogType() == null) {
@@ -262,15 +264,11 @@ public class LogTranslator extends JavaBaseListener {
 //                        System.out.println("log=" + logType);
                         }
 
-                        String namespaceImport = "import " + ANTLRRunner.getCurrentFile().getNamespace() +
-                                "." + ANTLRRunner.getCurrentFile().getNamespaceEnd() + "Namespace;";
-                        String logGlobalImport = "import " + Utils.getNgmonLogGlobal();
-                        // Change Log import with Ngmon Log, currentNameSpace and LogGlobal imports
-                        rewriter.replace(ctx.start, ctx.stop, Utils.getNgmonLogImport() + ";\n"
-                                + namespaceImport + "\n" + logGlobalImport);
+                        replaceLogImports(ctx);
 
                         ANTLRRunner.getCurrentFile().setNamespaceClass(
                                 ANTLRRunner.getCurrentFile().getNamespaceEnd() + "Namespace");
+                        // TODO add "import log_events.Utils.getApplicationNamespace();" + currentNamespace logfileNS
                     }
                 }
             }
@@ -447,7 +445,13 @@ public class LogTranslator extends JavaBaseListener {
 //                    }
                     if (loggerLoader.getCheckerLogMethods().contains(methodCall.getText())) {
                         // Now we can safely replace logName by LogGlobal
-                        JavaParser.ExpressionContext log = exp.expression(0).expression(0);
+                        JavaParser.ExpressionContext log;
+                        if (exp.getText().startsWith(Utils.NEGATION)) {
+                            //FIX
+                            log = exp.expression(0).expression(0).expression(0);
+                        } else {
+                            log = exp.expression(0).expression(0);
+                        }
                         rewriter.replace(log.start, log.stop,
                                 Utils.getQualifiedNameEnd(Utils.getNgmonLogGlobal()));
                     } else {
@@ -504,7 +508,8 @@ public class LogTranslator extends JavaBaseListener {
                          /* TODO - ADD GOMATCH support here */
                         // rewrite this log
                         String ngmonLogReplacement = HelperGenerator.generateLogMethod(logName, log);
-                        System.out.println(ngmonLogReplacement);
+                        // TODO debug()
+                        System.out.println("logReplacements=" + ngmonLogReplacement);
 //                        rewriter.replace(null, null, null);
                     }
                     // else throw new exception or add it to methodList?
@@ -963,10 +968,21 @@ public class LogTranslator extends JavaBaseListener {
         }
     }
 
+    public void replaceLogImports(JavaParser.QualifiedNameContext context) {
+        String namespaceImport = "import " + Utils.getNgmongLogEventsImportPrefix() + "." +
+                ANTLRRunner.getCurrentFile().getNamespace() + "." +
+                ANTLRRunner.getCurrentFile().getNamespaceEnd() + "Namespace;";
+        String logGlobalImport = "import " + Utils.getNgmonLogGlobal() + ";";
+        String simpleLoggerImport = "import " + Utils.getNgmonSimpleLoggerImport() + ";";
+        // Change Log import with Ngmon Log, currentNameSpace and LogGlobal imports
+        rewriter.replace(context.start, context.stop, Utils.getNgmonLogImport() + ";\n"
+                + namespaceImport + "\n" + simpleLoggerImport + "\n" + logGlobalImport);
+    }
+
 
     public void replaceLogFactory(ParserRuleContext ctx) {
         String logFieldDeclaration = ANTLRRunner.getCurrentFile().getNamespaceClass() +
-                " LOG = LoggerFactory.getLogger(" + ANTLRRunner.getCurrentFile().getNamespaceClass() + ".class);";
+                " LOG = LoggerFactory.getLogger(" + ANTLRRunner.getCurrentFile().getNamespaceClass() + ".class, , new SimpleLogger());";
 //            System.out.println("replacing " + ctx.getStart() + ctx.getText() + " with " + logFieldDeclaration);
         rewriter.replace(ctx.getStart(), ctx.getStop(), logFieldDeclaration);
     }
