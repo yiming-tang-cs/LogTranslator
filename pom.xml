@@ -76,7 +76,7 @@
                         <argument>-Djava.library.path=${project.build.directory}/lib</argument>
                         <argument>-classpath</argument>
                         <classpath/>
-                        <argument>cz.muni.fi.ngmon.logtranslator.common.TranslatorStarter</argument>
+                        <argument>org.ngmon.logger.logtranslator.common.TranslatorStarter</argument>
 
                     </arguments>
                     <!--<arguments>-->
@@ -90,7 +90,7 @@
                 <!--<artifactId>exec-maven-plugin</artifactId>-->
                 <!--<version>1.2.1</version>-->
                 <!--<configuration>-->
-                    <!--<mainClass>cz.muni.fi.ngmon.logtranslator.common.TranslatorStarter</mainClass>-->
+                    <!--<mainClass>org.ngmon.logger.logtranslator.common.TranslatorStarter</mainClass>-->
                     <!--&lt;!&ndash;<arguments>&ndash;&gt;-->
                     <!--&lt;!&ndash;<argument>argument1</argument>&ndash;&gt;-->
                     <!--&lt;!&ndash;</arguments>&ndash;&gt;-->

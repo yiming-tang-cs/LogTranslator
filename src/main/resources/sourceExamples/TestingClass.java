@@ -1,5 +1,5 @@
-import cz.muni.fi.ngmon.logtranslator.customlogger.LogFactory;
-import cz.muni.fi.ngmon.logtranslator.customlogger.Logger;
+import org.ngmon.logger.logtranslator.customlogger.LogFactory;
+import org.ngmon.logger.logtranslator.customlogger.Logger;
 import java.net.InetAddress;
 
 /**
@@ -36,7 +36,7 @@ public class TestingClass {
         Object client = null;
         if (LOG.isDebugEnabled()) {
             LOG.debug("MOUNT NULLOP : " + " client: " + client);
-            // --> LOG.MOUNT_NULLOP_CLIENT(client).tag("cz.muni.fi.ngmon.logchanger.examplesources").debug();
+            // --> LOG.MOUNT_NULLOP_CLIENT(client).tag("org.ngmon.logger.logchanger.examplesources").debug();
         }
         LOG.log(Level.INFO, "Substracting {0}", number);
         this.number -= number;
@@ -46,7 +46,7 @@ public class TestingClass {
         String path = xdr.toString();
         if (LOG.isWarnEnabled()) {
             LOG.debug("MOUNT MNT path: " + path + " client: " + client);
-//            LOG.MOUNT_MNT_PATH_CLIENT(path, client).tag("cz.muni.fi.ngmon.logchanger.examplesources").debug();
+//            LOG.MOUNT_MNT_PATH_CLIENT(path, client).tag("org.ngmon.logger.logchanger.examplesources").debug();
         }
 
         String host = client.getHostName();
