@@ -739,12 +739,11 @@ public class LogTranslator extends JavaBaseListener {
                 foundVar = returnLastValue(varName);
 
                 /** if X is instanceof Y,
-                 * create new boolean variable named as 'isInstanceOfY' */
+                 * create a new boolean variable named as 'isInstanceOfY' */
             } else if (findMe.getText().contains("instanceof")) {
-                // TODO Done? #1 Rename variables and set them before ngmon Log itself.  bc instance ofXYZ... => boolean isInstanceOfY = bc;
+                // Rename variables and set them before ngmon Log itself.  bc instance ofXYZ... => boolean isInstanceOfY = bc;
                 // add new parameter to logFile.storeVariable() - newVariableName
-//                System.out.println("instanceof=" + findMe.getText());
-                varName = findMe.primary().expression().expression(0).primary().getText();//.expression(0).type().getText();
+                varName = findMe.primary().expression().expression(0).primary().getText();
                 varType = "boolean";
                 ngmonNewName = "isInstanceOf" + findMe.primary().expression().type().getText();
 //                System.out.printf("var=%s newName=%s, original=%s", varName, newNgmonName, findMe.getText());
