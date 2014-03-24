@@ -1,5 +1,9 @@
 package cz.muni.fi.ngmon.logtranslator.common;
 
+import cz.muni.fi.ngmon.logtranslator.ngmonLogging.LogTranslatorNamespace;
+import cz.muni.fi.ngmon.logtranslator.ngmonLogging.SimpleLogger;
+import org.ngmon.logger.core.LoggerFactory;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,6 +12,8 @@ import java.util.List;
 import java.util.Properties;
 
 public class Utils {
+
+    private static final LogTranslatorNamespace NgmonLogger = LoggerFactory.getLogger(LogTranslatorNamespace.class, new SimpleLogger());
 
     public final static List<String> MATH_OPERATORS = Arrays.asList("+", "-", "*", "/");
     public final static List<String> BOOLEAN_OPERATORS = Arrays.asList("&&", "||");
@@ -59,6 +65,10 @@ public class Utils {
         }
     }
 
+
+    public static LogTranslatorNamespace getLogger() {
+        return NgmonLogger;
+    }
 
     // TODO Decide which methods are necessary to be abstract?
     public static String getApplicationHome() {

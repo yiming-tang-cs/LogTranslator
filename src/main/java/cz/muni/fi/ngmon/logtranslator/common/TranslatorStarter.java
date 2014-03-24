@@ -3,6 +3,7 @@ package cz.muni.fi.ngmon.logtranslator.common;
 import cz.muni.fi.ngmon.logtranslator.generator.FileCreator;
 import cz.muni.fi.ngmon.logtranslator.generator.HelperGenerator;
 import cz.muni.fi.ngmon.logtranslator.generator.NgmonNamespaceFactory;
+import cz.muni.fi.ngmon.logtranslator.ngmonLogging.LogTranslatorNamespace;
 import cz.muni.fi.ngmon.logtranslator.translator.ANTLRRunner;
 
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ public class TranslatorStarter {
     private static Set<LogFile> nonLogLogFiles = new HashSet<>();
     private static List<LogFile> tempList = new ArrayList<>();
     private static int counter = 0;
+    private static LogTranslatorNamespace LOG = Utils.getLogger();
 
     public static void main(String[] args) {
 //        0) Initialize property file
@@ -38,6 +40,7 @@ public class TranslatorStarter {
 //        3) Visit logFile
             if (!logFile.isFinishedParsing()) {
                 // TODO both - info()
+                LOG.startingParseFile(logFile.getFilepath());
                 System.out.println("Starting " + logFile.getFilepath());
                 ANTLRRunner.run(logFile, false, false);
                 System.out.printf("Processed %d of %d files. Extra files parsed by extending %d.%n", counter - nonLogLogFiles.size(), logFiles.size(), nonLogLogFiles.size());

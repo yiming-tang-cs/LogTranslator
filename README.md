@@ -6,4 +6,4 @@ Project for changing classic log statements from Log4j, Slf4j, Commons Logging f
 
 2) mvn install
 
-3) mvn exec:java
+3) mvn exec:exec

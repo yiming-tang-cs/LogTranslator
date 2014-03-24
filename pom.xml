@@ -8,6 +8,11 @@
     <artifactId>LogTranslator</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>1.7</java.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.antlr</groupId>
@@ -26,7 +31,27 @@
             <artifactId>antlr4-runtime</artifactId>
             <version>4.2</version>
         </dependency>
+
+        <!-- ngmon logging -->
+        <dependency>
+            <groupId>org.ngmon</groupId>
+            <artifactId>ngmon-logger-java</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.0-rc1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.0-rc1</version>
+        </dependency>
+        <!-- end ngmon logging -->
     </dependencies>
+
 
     <build>
         <plugins>
@@ -35,8 +60,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.1</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                 </configuration>
             </plugin>
 
@@ -45,12 +70,57 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.2.1</version>
                 <configuration>
-                    <mainClass>cz.muni.fi.ngmon.logtranslator.common.TranslatorStarter</mainClass>
+                    <executable>java</executable>
+                    <arguments>
+                        <argument>-XX:-UseSplitVerifier</argument>
+                        <argument>-Djava.library.path=${project.build.directory}/lib</argument>
+                        <argument>-classpath</argument>
+                        <classpath/>
+                        <argument>cz.muni.fi.ngmon.logtranslator.common.TranslatorStarter</argument>
+
+                    </arguments>
                     <!--<arguments>-->
-                        <!--<argument>argument1</argument>-->
+                    <!--<argument>argument1</argument>-->
                     <!--</arguments>-->
                 </configuration>
             </plugin>
+
+            <!--<plugin>-->
+                <!--<groupId>org.codehaus.mojo</groupId>-->
+                <!--<artifactId>exec-maven-plugin</artifactId>-->
+                <!--<version>1.2.1</version>-->
+                <!--<configuration>-->
+                    <!--<mainClass>cz.muni.fi.ngmon.logtranslator.common.TranslatorStarter</mainClass>-->
+                    <!--&lt;!&ndash;<arguments>&ndash;&gt;-->
+                    <!--&lt;!&ndash;<argument>argument1</argument>&ndash;&gt;-->
+                    <!--&lt;!&ndash;</arguments>&ndash;&gt;-->
+                <!--</configuration>-->
+            <!--</plugin>-->
+
+
+            <!-- ngmon logger -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>aspectj-maven-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <source>${java.version}</source>
+                    <aspectLibraries>
+                        <aspectLibrary>
+                            <groupId>org.ngmon</groupId>
+                            <artifactId>ngmon-logger-java</artifactId>
+                        </aspectLibrary>
+                    </aspectLibraries>
+                </configuration>
+            </plugin>
+            <!-- end of ngmon logger -->
         </plugins>
     </build>
 
