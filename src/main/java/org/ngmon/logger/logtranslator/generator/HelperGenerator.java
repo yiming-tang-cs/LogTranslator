@@ -77,10 +77,16 @@ public class HelperGenerator {
             // TODO - maybe use some quick dirty hack (impossible imo)
             StringBuilder tempName = new StringBuilder();
             for (LogFile.Variable var : log.getVariables()) {
-                tempName.append(var.getNgmonName());
-            }
+                if (var.getNgmonName() != null) {
+                    tempName.append(var.getNgmonName());
+                } else {
+                    tempName.append(var.getName());
+                }
 
-            log.setMethodName(tempName.substring(0, Utils.getNgmonEmptyLogStatementMethodNameLength()) + Utils.getNgmonEmptyLogStatement());
+            }
+            int maxLengthUtils = Utils.getNgmonEmptyLogStatementMethodNameLength();
+            int maxLength = (tempName.length() < maxLengthUtils) ? tempName.length() : maxLengthUtils;
+            log.setMethodName(tempName.substring(0, maxLength) + Utils.getNgmonEmptyLogStatement());
         } else {
             StringBuilder logName = new StringBuilder();
             int counter = 0;

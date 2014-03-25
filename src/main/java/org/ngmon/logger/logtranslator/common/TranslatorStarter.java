@@ -27,7 +27,7 @@ public class TranslatorStarter {
 
 // START OF DEBUGGING PURPOSES ONLY!
         for (LogFile lf : logFiles) {
-            if (lf.getFilepath().equals("/home/mtoth/example-app-all/hadoop-common-project/hadoop-auth-examples/src/main/java/org/apache/hadoop/security/authentication/examples/RequestLoggerFilter.java")) {
+            if (lf.getFilepath().equals("/home/mtoth/example-app-all/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/blockmanagement/BlockManager.java")) {
                 tempList.add(lf);
         }}
 // END OF DEBUGGING PURPOSES ONLY!
@@ -49,9 +49,11 @@ public class TranslatorStarter {
             if (logFile.isFinishedParsing()) {
                 // a) generate namespace if not already generated
                 // b) fill with new log methods
-                NgmonNamespaceFactory.addLogToNgmonNamespace(logFile);
+                NgmonNamespaceFactory.addToNamespaceCreationMap(logFile);
             }
         }
+
+        NgmonNamespaceFactory.prepareNamespaces();
 
         FileCreator.flush();
     }

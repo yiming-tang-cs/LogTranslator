@@ -50,7 +50,6 @@
 grammar Java;
 
 @header {package org.ngmon.logger.logtranslator.antlr;}
-// @lexer::header {package org.ngmon.logger.logtranslator.translator;}
 @lexer::members {
     public static final int WHITESPACE = 1;
     public static final int COMMENTS = 2;

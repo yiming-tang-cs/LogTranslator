@@ -3,39 +3,47 @@ package org.ngmon.logger.logtranslator.generator;
 import org.ngmon.logger.logtranslator.common.LogFile;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 public class NgmonNamespaceFactory {
 
     private static Set<NamespaceFileCreator> namespaceFileCreatorSet = new HashSet<>();
-
+    private static Map<String, Set<LogFile>> namespaceCreationMap = new TreeMap<>();
 
     public static Set<NamespaceFileCreator> getNamespaceFileCreatorSet() {
         return namespaceFileCreatorSet;
     }
 
     /**
-     * Decide whether to create new ngmon namespace or just add only methods from
-     * this logFile to already created NgmonNamespace file.
+     * Add LogFile object to namespaceCreationMap. When all files are parsed, use this map
+     * to create new files.
      *
-     * @param logFile to create ngmon namespace file from or append new methods
+     * @param logFile to add to namespaceCreationMap
      */
-
-    // TODO fix this
-    public static void addLogToNgmonNamespace(LogFile logFile) {
+    public static void addToNamespaceCreationMap(LogFile logFile) {
         if (logFile == null) {
             throw new IllegalArgumentException("logFile is null!");
         }
-
-        boolean added = false;
-        for (NamespaceFileCreator nfc : namespaceFileCreatorSet) {
-            if (nfc.getLogFileList().contains(logFile)) {
-                nfc.addMethodsToNamespace(logFile);
-                added = true;
-            }
+//        System.out.println(logFile.getNamespace() + "." + logFile.getNamespaceClass());
+        Set<LogFile> logFiles;
+        if (namespaceCreationMap.containsKey(logFile.getNamespace()))  {
+            logFiles = namespaceCreationMap.get(logFile.getNamespace());
+        } else {
+            logFiles = new TreeSet<>();
         }
-        if (!added) {
-            createNewNamespace(logFile);
+        logFiles.add(logFile);
+        namespaceCreationMap.put(logFile.getNamespace(), logFiles);
+    }
+
+    public static void prepareNamespaces() {
+        for (String key : namespaceCreationMap.keySet()) {
+            for (LogFile lf : namespaceCreationMap.get(key)) {
+
+                System.out.println(key + ":\t" + lf.getFilepath());
+            }
         }
 
     }
@@ -51,5 +59,6 @@ public class NgmonNamespaceFactory {
         // create new java file from file path/namespace/package
         FileCreator.prepareNamespace(logFile, nfc);
     }
+
 
 }

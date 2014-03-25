@@ -17,7 +17,7 @@ import java.util.Set;
  * LogFile is used for incorporating Log instances belonging to same
  * the namespace.
  */
-public class LogFile {
+public class LogFile implements Comparable {
 
     // Mapping of variableName : <variableProperties>
     private Map<String, List<Variable>> variableList = new LinkedHashMap<>();
@@ -204,6 +204,23 @@ public class LogFile {
 //        p.setFileStopPosition(stopPosition);
         p.setField(isField);
         this.putVariableList(variableName, p);
+    }
+
+    /**
+     * 0 = equal, -1 otherwise
+     * @param other
+     * @return
+     */
+    @Override
+    public int compareTo(Object other) {
+        // TODO make sure it works correctly
+        if (other instanceof LogFile) {
+            LogFile otherLf = (LogFile) other;
+            if (otherLf.getFilepath().equals(this.getFilepath())) {
+                return 0;
+            }
+        }
+        return -1;
     }
 
     public class Variable {
