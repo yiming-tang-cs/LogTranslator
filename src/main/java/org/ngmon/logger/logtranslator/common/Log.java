@@ -1,6 +1,7 @@
 package org.ngmon.logger.logtranslator.common;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -16,6 +17,7 @@ public class Log {
     private String methodName;
     private String generatedNgmonLog;
     private String generatedReplacementLog;
+    private String originalLog;
 
     public Log() {
         comments = new ArrayList<>();
@@ -30,8 +32,26 @@ public class Log {
         return comments;
     }
 
+    public void cleanUpCommentList() {
+        List<String> temp = new ArrayList<>(comments);
+        Collections.copy(temp, comments);
+        for (String s : temp) {
+            if (s.equals("")) {
+                comments.remove(s);
+            }
+        }
+    }
+
     public void addComment(String comment) {
-        this.comments.add(comment);
+        this.comments.add(0, comment);
+    }
+
+    public String getOriginalLog() {
+        return originalLog;
+    }
+
+    public void setOriginalLog(String originalLog) {
+        this.originalLog = originalLog;
     }
 
     public List<LogFile.Variable> getVariables() {
@@ -39,7 +59,7 @@ public class Log {
     }
 
     public void addVariable(LogFile.Variable variable) {
-        this.variables.add(variable);
+        this.variables.add(0, variable);
     }
 
     public String getLevel() {

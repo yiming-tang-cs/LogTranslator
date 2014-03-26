@@ -91,18 +91,20 @@ public class HelperGenerator {
             StringBuilder logName = new StringBuilder();
             int counter = 0;
             int logNameLength = Utils.getNgmonLogLength();
-
             for (String comment : log.getComments()) {
                 for (String str : comment.split(" ")) {
-                    if (counter != 0) {
-                        logName.append("_");
+                    if (!Utils.BANNED_LIST.contains(str)) {
+                        if (counter != 0) {
+                            logName.append("_");
+                        }
+                        logName.append(str);
+                        counter++;
                     }
-                    if (!Utils.BANNED_LIST.contains(str)) logName.append(str);
-                    counter++;
                     if (counter >= logNameLength) break;
                 }
             }
             log.setMethodName(logName.toString());
+//            System.out.println("\told=" + log.getComments().toString() + "\n\tnew=" + logName.toString());
         }
     }
 
@@ -120,6 +122,7 @@ public class HelperGenerator {
             // generate variables
             StringBuilder vars = new StringBuilder();
             StringBuilder tags = new StringBuilder();
+            System.out.println("\t" + log.getVariables() + "\n\t" + log.getOriginalLog() );
             for (LogFile.Variable var : log.getVariables()) {
                 vars.append(var.getName());
                 if (!var.equals(log.getVariables().get(log.getVariables().size() - 1))) {

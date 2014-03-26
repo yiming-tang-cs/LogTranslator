@@ -7,11 +7,7 @@ import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.ngmon.logger.logtranslator.antlr.JavaBaseListener;
 import org.ngmon.logger.logtranslator.antlr.JavaParser;
-import org.ngmon.logger.logtranslator.common.Log;
-import org.ngmon.logger.logtranslator.common.LogFile;
-import org.ngmon.logger.logtranslator.common.LogFilesFinder;
-import org.ngmon.logger.logtranslator.common.TranslatorStarter;
-import org.ngmon.logger.logtranslator.common.Utils;
+import org.ngmon.logger.logtranslator.common.*;
 import org.ngmon.logger.logtranslator.generator.HelperGenerator;
 
 import java.io.File;
@@ -503,6 +499,7 @@ public class LogTranslator extends JavaBaseListener {
                     if (loggerLoader.getTranslateLogMethods().contains(methodCall.getText())) {
 //                    System.out.println("yes, '" + methodCall +"' is in current logger method list.");
                         Log log = transformMethodStatement(ctx.expression().expressionList());
+                        log.setOriginalLog(ctx.getText());
                         HelperGenerator.generateMethodName(log);
                         log.setLevel(methodCall.getText());
                         logFile.addLog(log);
@@ -556,6 +553,7 @@ public class LogTranslator extends JavaBaseListener {
             log.setTag("EMPTY_STATEMENT");
             // TODO
         }
+        log.cleanUpCommentList();
         return log;
     }
 
@@ -660,7 +658,7 @@ public class LogTranslator extends JavaBaseListener {
      *               which holds variable to find
      */
     private LogFile.Variable findVariable(Log log, JavaParser.ExpressionContext findMe) {
-//        System.out.println("findMe " + findMe.getText() + "  " + findMe.start.getLine() + ":" + logFile.getFilepath());
+        System.out.println("findMe " + findMe.getText() + "  " + findMe.start.getLine() + ":" + logFile.getFilepath());
         LogFile.Variable foundVar = findVariableInLogFile(logFile, findMe);
         String ngmonNewName = null;
         String findMeText = findMe.getText();
@@ -757,7 +755,7 @@ public class LogTranslator extends JavaBaseListener {
                 ngmonNewName = "isInstanceOf" + findMe.primary().expression().type().getText();
 //                System.out.printf("var=%s newName=%s, original=%s", varName, newNgmonName, findMeText);
                 logFile.storeVariable(findMe, varName, varType, false, ngmonNewName);
-
+                foundVar = returnLastValue(varName);
 
                 /**
                  * Handle call of another method in class.
@@ -796,14 +794,6 @@ public class LogTranslator extends JavaBaseListener {
                 }
                 foundVar = returnLastValue(findMeText);
 
-                /** Mathematical expression - use double as type */
-            } else if (Utils.listContainsItem(Utils.MATH_OPERATORS, findMeText)) {
-//                containsMathOperator(findMeText))
-                varName = findMeText;
-                varType = "double";
-                logFile.storeVariable(findMe, varName, varType, false, null);
-                foundVar = returnLastValue(varName);
-
                 /** If variable begins with NEGATION '!' */
             } else if (findMeText.startsWith("!")) {
                 varName = findMeText.substring(1);
@@ -819,15 +809,24 @@ public class LogTranslator extends JavaBaseListener {
                 varName = findMe.primary().expression().expression(0).getText();
                 ngmonNewName = "is" + varName.replace(varName.charAt(0), (Character.toUpperCase(varName.charAt(0)))); // isVarName
                 varType = "boolean";
+//                varType = findVariableInLogFile(logFile, findMe);
                 logFile.storeVariable(findMe, varName, varType, false, ngmonNewName);
-                log.setTag("boolean");
+                log.setTag("ternary-operator");
                 foundVar = returnLastValue(varName);
 
+                /** Mathematical expression - use double as type */
+            } else if (Utils.listContainsItem(Utils.MATH_OPERATORS, findMeText)) {
+//                containsMathOperator(findMeText))
+                varName = findMeText;
+                varType = "double";
+                logFile.storeVariable(findMe, varName, varType, false, null);
+                foundVar = returnLastValue(varName);
                 /** if whole text is uppercase & we have static imports, assume this is static variable
                  * and store it */
             } else if (logFile.isContainsStaticImport() && findMeText.equals(findMeText.toUpperCase())) {
                 System.err.println("Assuming external variable from static import " + findMeText);
                 logFile.storeVariable(findMe, findMeText, "String", false, null);
+                foundVar = returnLastValue(findMeText);
 
                 /** Last chance - look into extending class and their variables */
             } else if (logFile.getConnectedLogFilesList() != null) {
@@ -925,9 +924,9 @@ public class LogTranslator extends JavaBaseListener {
      */
     private String cultivate(String str) {
 //        System.out.print("cultivating  " + str);
-        str = str.substring(1, str.length() - 1).trim();
-        str = str.replaceAll("\\d+", "");   // remove all digits as well?
-        str = str.replaceAll("%\\w", " "); // remove all single chars
+        str = str.substring(1, str.length() - 1).trim(); // remove leading and trailing " "
+        str = str.replaceAll("\\d+", "");   // remove all digits as well
+        str = str.replaceAll("%\\w", ""); // remove all single chars
         str = str.replaceAll("\\W", " ").replaceAll("\\s+", " ").trim();
 //        System.out.print("  -->" + str + "\n");
         return str;

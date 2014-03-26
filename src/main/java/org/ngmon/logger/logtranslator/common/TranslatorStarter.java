@@ -27,7 +27,7 @@ public class TranslatorStarter {
 
 // START OF DEBUGGING PURPOSES ONLY!
         for (LogFile lf : logFiles) {
-            if (lf.getFilepath().equals("/home/mtoth/example-app-all/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/blockmanagement/BlockManager.java")) {
+            if (lf.getFilepath().equals("/home/mtoth/example-app-all/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/NameNode.java")) {
                 tempList.add(lf);
         }}
 // END OF DEBUGGING PURPOSES ONLY!
