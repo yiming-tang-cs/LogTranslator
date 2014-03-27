@@ -38,7 +38,7 @@ public class ANTLRRunner {
             LogTranslator listener = new LogTranslator(tokens, logFile, ignoreLogStatements, isExtendingClass);
             walker.walk(listener, tree);
 
-            System.out.println("modified=\n" + listener.getRewriter().getText());
+//            System.out.println("modified=\n" + listener.getRewriter().getText());
 
 
         } catch (IOException e){

@@ -27,7 +27,7 @@ public class TranslatorStarter {
 
 // START OF DEBUGGING PURPOSES ONLY!
         for (LogFile lf : logFiles) {
-            if (lf.getFilepath().equals("/home/mtoth/example-app-all/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/NameNode.java")) {
+            if (lf.getFilepath().equals("/home/mtoth/example-app-all/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/conf/Configuration.java")) {
                 tempList.add(lf);
         }}
 // END OF DEBUGGING PURPOSES ONLY!
@@ -35,8 +35,8 @@ public class TranslatorStarter {
 //        2) Find & set namespace. If new namespace, flush/write actual data into logFile
         HelperGenerator.generateNamespaces(logFiles);
 
-        for (LogFile logFile : tempList) { // REMOVE DEBUGGING LINE ONLY!!
-//        for (LogFile logFile : logFiles) {
+//        for (LogFile logFile : tempList) { // REMOVE DEBUGGING LINE ONLY!!
+        for (LogFile logFile : logFiles) {
 //        3) Visit logFile
             if (!logFile.isFinishedParsing()) {
                 // TODO both - info()

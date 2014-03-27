@@ -113,6 +113,7 @@ public class HelperGenerator {
      * Generate new log method call which will be replaced by 'original' log method call.
      * This new log method will use NGMON logger. Which is goal of this mini-application.
      *
+     * @param logName name of current logger variable (mostly "LOG")
      * @param log current log to get information from
      * @return log method calling in NGMON's syntax form
      */

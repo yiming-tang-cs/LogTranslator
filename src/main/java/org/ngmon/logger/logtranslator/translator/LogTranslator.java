@@ -828,6 +828,23 @@ public class LogTranslator extends JavaBaseListener {
                 logFile.storeVariable(findMe, findMeText, "String", false, null);
                 foundVar = returnLastValue(findMeText);
 
+                /** variable might be null */
+            } else if (findMeText.equals("null")) {
+                logFile.storeVariable(findMe, "null", "String", false, "null");
+                foundVar = returnLastValue(findMeText);
+
+                /** 'variable' is true|false statement */
+            } else if (findMeText.equals("true") || findMeText.equals("false")) {
+                logFile.storeVariable(findMe, findMeText, "boolean", false, "booleanValue");
+                foundVar = returnLastValue(findMeText);
+
+                /** type casting (String) var -> var*/
+            } else if (findMeText.startsWith("(") && (findMeText.indexOf(")") != findMeText.length())) {
+                varName = findMeText.substring(findMeText.indexOf(")")).trim();
+                varType = findMeText.substring(1, findMeText.indexOf(")")).trim();
+                logFile.storeVariable(findMe, varName, varType, false, null);
+                foundVar = returnLastValue(varName);
+
                 /** Last chance - look into extending class and their variables */
             } else if (logFile.getConnectedLogFilesList() != null) {
                 for (LogFile lf : logFile.getConnectedLogFilesList()) {
@@ -839,7 +856,7 @@ public class LogTranslator extends JavaBaseListener {
 
                 /** We have ran out of luck. Have not found given variable in my known parsing list. */
             } else {
-                System.out.println("Unable to find variable " + findMeText + " in file " +
+                System.err.println("Unable to find variable " + findMeText + " in file " +
                         findMe.start.getLine() + " :" + logFile.getFilepath() + "\n" + logFile.getVariableList().keySet());
                 if (Utils.ignoreParsingErrors) {
                     return null;
