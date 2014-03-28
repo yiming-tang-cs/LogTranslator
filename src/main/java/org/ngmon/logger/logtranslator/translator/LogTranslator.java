@@ -24,14 +24,12 @@ public class LogTranslator extends JavaBaseListener {
     private int currentLine = 0;
     private String logName = null; // reference to original LOG variable name
     private String logType = null; // reference to original LOG variable type
-    private boolean isExtending;
     private boolean ignoreLogs = false;
     private String classname;
 //    private JavaParser.QualifiedNameContext importContext;  // position for final adding of correct "import log_events.<app-namespace>.CURRENT_NS;"
 
     public LogTranslator(BufferedTokenStream tokens, LogFile logfile, boolean ignoreLogStatements, boolean isExtending) {
         this.ignoreLogs = ignoreLogStatements;
-        this.isExtending = isExtending;
         rewriter = new TokenStreamRewriter(tokens);
         this.logFile = logfile;
         if (isExtending && !ignoreLogStatements) {
@@ -176,7 +174,8 @@ public class LogTranslator extends JavaBaseListener {
             for (String javaFile : LogFilesFinder.getAllJavaFiles()) {
 //                System.out.println(javaFile + " x " + fileNameFromImport );
                 if (javaFile.contains(fileNameFromImport)) {
-                    System.out.println("\tFound=" + javaFile);
+                    // TODO log debug()
+//                    System.out.println("\tFound=" + javaFile);
                     // if this file is not the same file, go into it, else exit method
                     if (!logFile.getFilepath().equals(javaFile)) {
                         LogFile nonLogLogFile = new LogFile(javaFile);
@@ -214,7 +213,8 @@ public class LogTranslator extends JavaBaseListener {
                 int star = ctx.getText().length() - 3;
                 int lastDot = ctx.getText().substring(0, ctx.getText().length() - 4).lastIndexOf(".") + 1;
                 String staticImport = ctx.getText().substring(lastDot, star);
-                System.out.println("staticImport = " + staticImport);
+// todo log debug()
+// System.out.println("staticImport = " + staticImport);
                 logFile.addStaticImports(staticImport);
             }
         }
@@ -263,8 +263,7 @@ public class LogTranslator extends JavaBaseListener {
 
                         replaceLogImports(ctx);
 
-                        ANTLRRunner.getCurrentFile().setNamespaceClass(
-                                ANTLRRunner.getCurrentFile().getNamespaceEnd() + "Namespace");
+                        ANTLRRunner.getCurrentFile().setNamespaceClass();
                         // TODO add "import log_events.Utils.getApplicationNamespace();" + currentNamespace logfileNS
                     }
                 }
@@ -354,8 +353,9 @@ public class LogTranslator extends JavaBaseListener {
     public void exitConstDeclaration(@NotNull JavaParser.ConstDeclarationContext ctx) {
 //        System.out.println("constDec=" + ctx.getText() + "\t\t" + logFile.getFilepath());
         if (loggerLoader != null && loggerLoader.containsLogFactory(ctx.getText())) {
-            System.out.println("constDeclLoggerloader=" + ctx.getText() + " " + ctx.constantDeclarator(0).Identifier().getText() +
-                    " " + ctx.type().getText() + "\n" + logFile.getFilepath());
+//              todo log.debug()
+//            System.out.println("constDeclLoggerloader=" + ctx.getText() + " " + ctx.constantDeclarator(0).Identifier().getText() +
+//                    " " + ctx.type().getText() + "\n" + logFile.getFilepath());
             if (this.logName == null) this.logName = ctx.constantDeclarator(0).Identifier().getText();
             replaceLogFactory(ctx);
 
@@ -507,7 +507,7 @@ public class LogTranslator extends JavaBaseListener {
                         // rewrite this log
                         String ngmonLogReplacement = HelperGenerator.generateLogMethod(logName, log);
                         // TODO debug()
-                        System.out.println("logReplacements=" + ngmonLogReplacement);
+//                        System.out.println("logReplacements=" + ngmonLogReplacement);
 //                        rewriter.replace(null, null, null);
                     }
                     // else throw new exception or add it to methodList?
@@ -572,10 +572,10 @@ public class LogTranslator extends JavaBaseListener {
             return;
         }
 
-        if (isSpecial) {
-            System.out.println("MAGIC BEGINS here! " + expression.getText());
+//        if (isSpecial) {
+//            System.out.println("MAGIC BEGINS here! " + expression.getText());
             // TODO - purpose?
-        }
+//        }
 
         int childCount = expression.getChildCount();
 
@@ -584,7 +584,8 @@ public class LogTranslator extends JavaBaseListener {
         } else if (childCount == 2) {
             // TODO - LOG.fatal("Error reported on file " + f + "... exiting", new Exception()); done?
             // 'new Exception()' found only
-            System.out.println("2Exception=" + expression.getText() + " " + expression.getChild(0).getText() + " " + expression.creator().getText());
+            // TODO log trace()
+//            System.out.println("2Exception=" + expression.getText() + " " + expression.getChild(0).getText() + " " + expression.creator().getText());
             // new is followed by 'creator context'
             if (expression.getChild(0).getText().equals("new")) {
                 determineLogTypeAndStore(log, expression);
@@ -658,7 +659,7 @@ public class LogTranslator extends JavaBaseListener {
      *               which holds variable to find
      */
     private LogFile.Variable findVariable(Log log, JavaParser.ExpressionContext findMe) {
-        System.out.println("findMe " + findMe.getText() + "  " + findMe.start.getLine() + ":" + logFile.getFilepath());
+//        System.out.println("findMe " + findMe.getText() + "  " + findMe.start.getLine() + ":" + logFile.getFilepath());
         LogFile.Variable foundVar = findVariableInLogFile(logFile, findMe);
         String ngmonNewName = null;
         String findMeText = findMe.getText();
@@ -784,7 +785,8 @@ public class LogTranslator extends JavaBaseListener {
                     methodArgumentsTypeList = null;
                 }
                 /** Look into extending class for this method call */
-                System.out.println("looking for=" + findMeText + " " + findMe.start.getLine() + " " + logFile.getFilepath());
+//            TODO log trace()
+//                System.out.println("looking for=" + findMeText + " " + findMe.start.getLine() + " " + logFile.getFilepath());
                 if (!HelperLogTranslator.findMethod(logFile, findMeText, methodArgumentsTypeList)) {
                     /** Method has not been found in class. Store it anyway.
                      * Exactly same situation as variable containing "." */
@@ -824,7 +826,8 @@ public class LogTranslator extends JavaBaseListener {
                 /** if whole text is uppercase & we have static imports, assume this is static variable
                  * and store it */
             } else if (logFile.isContainsStaticImport() && findMeText.equals(findMeText.toUpperCase())) {
-                System.err.println("Assuming external variable from static import " + findMeText);
+//               TODO Log.warn()
+//                System.err.println("Assuming external variable from static import " + findMeText);
                 logFile.storeVariable(findMe, findMeText, "String", false, null);
                 foundVar = returnLastValue(findMeText);
 

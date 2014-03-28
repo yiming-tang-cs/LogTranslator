@@ -29,7 +29,8 @@ public class TranslatorStarter {
         for (LogFile lf : logFiles) {
             if (lf.getFilepath().equals("/home/mtoth/example-app-all/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/conf/Configuration.java")) {
                 tempList.add(lf);
-        }}
+            }
+        }
 // END OF DEBUGGING PURPOSES ONLY!
 
 //        2) Find & set namespace. If new namespace, flush/write actual data into logFile
@@ -39,11 +40,11 @@ public class TranslatorStarter {
         for (LogFile logFile : logFiles) {
 //        3) Visit logFile
             if (!logFile.isFinishedParsing()) {
-                // TODO both - info()
+                // TODO both - log.info()
                 LOG.startingParseFile(logFile.getFilepath());
-                System.out.println("Starting " + logFile.getFilepath());
+//                System.out.println("Starting " + logFile.getFilepath());
                 ANTLRRunner.run(logFile, false, false);
-                System.out.printf("Processed %d of %d files. Extra files parsed by extending %d.%n", counter - nonLogLogFiles.size(), logFiles.size(), nonLogLogFiles.size());
+//                System.out.printf("Processed %d of %d files. Extra files parsed by extending %d.%n", counter - nonLogLogFiles.size(), logFiles.size(), nonLogLogFiles.size());
             }
 
             if (logFile.isFinishedParsing()) {
@@ -52,10 +53,10 @@ public class TranslatorStarter {
                 NgmonNamespaceFactory.addToNamespaceCreationMap(logFile);
             }
         }
+        System.out.printf("\nProcessed %d of %d files. Extra files parsed by extending %d.%n%n", counter - nonLogLogFiles.size(), logFiles.size(), nonLogLogFiles.size());
 
-        NgmonNamespaceFactory.prepareNamespaces();
-
-        FileCreator.flush();
+        NgmonNamespaceFactory.createNamespaces();
+        FileCreator.flushNamespaces();
     }
 
     public static List<LogFile> getLogFiles() {

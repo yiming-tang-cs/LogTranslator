@@ -2,11 +2,7 @@ package org.ngmon.logger.logtranslator.generator;
 
 import org.ngmon.logger.logtranslator.common.LogFile;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
 public class NgmonNamespaceFactory {
 
@@ -38,27 +34,14 @@ public class NgmonNamespaceFactory {
         namespaceCreationMap.put(logFile.getNamespace(), logFiles);
     }
 
-    public static void prepareNamespaces() {
-        for (String key : namespaceCreationMap.keySet()) {
-            for (LogFile lf : namespaceCreationMap.get(key)) {
-
-                System.out.println(key + ":\t" + lf.getFilepath());
-            }
-        }
-
-    }
-
     /**
      * Create new NgmonNamespace using templates and create it on appropriate location.
-     *
-     * @param logFile to be created new NgmonNamespace
      */
-    private static void createNewNamespace(LogFile logFile) {
-        NamespaceFileCreator nfc = new NamespaceFileCreator(logFile);
-        namespaceFileCreatorSet.add(nfc);
-        // create new java file from file path/namespace/package
-        FileCreator.prepareNamespace(logFile, nfc);
+    public static void createNamespaces() {
+        for (String namespace : namespaceCreationMap.keySet()) {
+            NamespaceFileCreator nfc = new NamespaceFileCreator(namespace, (TreeSet<LogFile>) namespaceCreationMap.get(namespace));
+            namespaceFileCreatorSet.add(nfc);
+        }
     }
-
 
 }

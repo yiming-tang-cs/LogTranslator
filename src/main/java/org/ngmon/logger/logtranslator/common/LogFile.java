@@ -2,12 +2,7 @@ package org.ngmon.logger.logtranslator.common;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This object represents .java file with all variables found.
@@ -30,8 +25,6 @@ public class LogFile implements Comparable {
     private boolean containsStaticImport;
     private List<String> staticImports;
     private List<String> imports;
-//    private boolean extendingClass;
-//    private String extendingClassFilepath;
     private boolean finishedParsing = false;
 
     public LogFile(String filename) {
@@ -73,6 +66,11 @@ public class LogFile implements Comparable {
         this.namespace = namespace;
     }
 
+    /**
+     * Create from current namespace name ClassName.
+     *
+     * @return Namespace end (mostly className from import)
+     */
     public String getNamespaceEnd() {
         if (namespace == null) {
             System.err.println("Error! Namespace is null! PackageName=" + packageName + " " + filepath);
@@ -87,8 +85,13 @@ public class LogFile implements Comparable {
         return namespaceClass;
     }
 
-    public void setNamespaceClass(String namespaceClass) {
-        this.namespaceClass = namespaceClass;
+    /**
+     * ClassName is create from end of namespace and appended 'Namespace' by default.
+     * Set namespaceClassName and drop last part of namespace.
+     */
+    public void setNamespaceClass() {
+        this.namespaceClass = getNamespaceEnd() + Utils.getNgmonDefaultNamespaceEnd();
+        this.namespace = namespace.substring(0, namespace.lastIndexOf("."));
     }
 
     public String getPackageName() {
@@ -110,10 +113,6 @@ public class LogFile implements Comparable {
     public void setContainsStaticImport(boolean containsStaticImport) {
         this.staticImports = new ArrayList<>();
         this.containsStaticImport = containsStaticImport;
-    }
-
-    public List<String> getStaticImports() {
-        return staticImports;
     }
 
     public void addStaticImports(String staticImport) {
@@ -208,11 +207,14 @@ public class LogFile implements Comparable {
 
     /**
      * 0 = equal, -1 otherwise
-     * @param other
-     * @return
+     * @param other LogFile object to compare
+     * @return 0 if LogFiles are same - have same FilePath, -1 otherwise
      */
     @Override
     public int compareTo(Object other) {
+        if (other == null) {
+            throw new NullPointerException("Other object is null!");
+        }
         // TODO make sure it works correctly
         if (other instanceof LogFile) {
             LogFile otherLf = (LogFile) other;

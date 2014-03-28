@@ -16,7 +16,14 @@ import java.util.List;
 
 public class HelperLogTranslator {
 
-
+    /**
+     * ANTLR parsing/walking of given file - LogFile object
+     *
+     * @param logFile to look up method
+     * @param lookFor this method in ANTLR's run
+     * @param methodArgumentTypes formal arguments of this methods
+     * @return true if all passed well
+     */
     public static boolean run(LogFile logFile, String lookFor, List<String> methodArgumentTypes) {
         InputStream antlrInputStream;
         MethodListener listener;
@@ -40,8 +47,17 @@ public class HelperLogTranslator {
         }
     }
 
+    /**
+     * Decide whether to look for method with or without arguments
+     *
+     * @param logFile to look for in
+     * @param methodName to look up in given logFile
+     * @param typeArguments method formal arguments
+     * @return true if method was found
+     */
     public static boolean findMethod(LogFile logFile, String methodName, List<String> typeArguments) {
-        System.out.println("Searching for method=" + methodName);
+        // TODO log debug()
+//        System.out.println("Searching for method=" + methodName);
         if (typeArguments == null) {
             return HelperLogTranslator.run(logFile, methodName, null);
         } else {

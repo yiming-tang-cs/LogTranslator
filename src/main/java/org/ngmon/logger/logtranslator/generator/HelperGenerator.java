@@ -123,7 +123,8 @@ public class HelperGenerator {
             // generate variables
             StringBuilder vars = new StringBuilder();
             StringBuilder tags = new StringBuilder();
-            System.out.println("\t" + log.getVariables() + "\n\t" + log.getOriginalLog() );
+            // TODO log trace()
+//            System.out.println("\t" + log.getVariables() + "\n\t" + log.getOriginalLog() );
             for (LogFile.Variable var : log.getVariables()) {
                 vars.append(var.getName());
                 if (!var.equals(log.getVariables().get(log.getVariables().size() - 1))) {

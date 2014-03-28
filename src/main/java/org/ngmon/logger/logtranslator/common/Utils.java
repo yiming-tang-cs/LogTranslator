@@ -34,6 +34,7 @@ public class Utils {
     private static String ngmongLogEventsImportPrefix;
     private static String ngmonSimpleLoggerImport;
     private static String ngmonJsonerImport;
+    private static String ngmonDefaultNamespaceEnd;
 
     public static void initialize() {
         String propertyFile = "src/main/resources/logtranslator.properties";
@@ -54,6 +55,7 @@ public class Utils {
             ngmonLogGlobal = properties.getProperty("ngmon_log_global");
             ngmonJsonerImport = properties.getProperty("ngmon_jsoner_import");
             ngmonLoggerAbstractNamespaceImport = properties.getProperty("ngmon_logger_abstract_ns_import");
+            ngmonDefaultNamespaceEnd = properties.getProperty("ngmon_default_namespace_end", "Namespace");
             ngmonEmptyLogStatement = properties.getProperty("ngmon_empty_log_statement");
             ngmonEmptyLogStatementMethodNameLength = Integer.valueOf(properties.getProperty("ngmon_empty_log_method_name_length", "8"));
             ngmonLogLength = properties.getProperty("ngmon_log_length", "7");
@@ -124,6 +126,9 @@ public class Utils {
         return str.substring(str.lastIndexOf(".") + 1);
     }
 
+    public static String getNgmonDefaultNamespaceEnd() {
+        return ngmonDefaultNamespaceEnd;
+    }
 
     public static boolean listContainsItem(List<String> list, String text) {
         for (String item : list) {

@@ -27,7 +27,12 @@ public class Log {
         level = null;
     }
 
-
+    /**
+     * Return all comments for this log.
+     * Comments are all strings found in given "original" log.
+     *
+     * @return list of comments
+     */
     public List<String> getComments() {
         return comments;
     }
@@ -58,6 +63,11 @@ public class Log {
         return variables;
     }
 
+    /**
+     * Add variable to this log.
+     *
+     * @param variable variable to be added to list of variables
+     */
     public void addVariable(LogFile.Variable variable) {
         this.variables.add(0, variable);
     }

@@ -5,11 +5,10 @@ import org.ngmon.logger.logtranslator.common.LogFile;
 import org.ngmon.logger.logtranslator.common.Utils;
 import org.stringtemplate.v4.ST;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
-/*
+/* OLD VERSION
  package log_events.org.apache.hadoop.hdfs.nfs;
 
  import cz.muni.fi.annotation.Namespace;
@@ -31,49 +30,49 @@ import java.util.TreeSet;
 // https://theantlrguy.atlassian.net/wiki/display/ST4/StringTemplate+4+Documentation
 public class NamespaceFileCreator {
 
-    private Set<LogFile> logFileList = new HashSet<>();
+
     private Set<String> methods = new TreeSet<>();
     private String namespaceClassName;
     private String namespace;
     private ST namespaceFileContent;
-    private String filePath;
+//    private String filePath;
 
-    public NamespaceFileCreator(LogFile logFile) {
-        namespaceClassName = logFile.getNamespaceClass();
-        namespace = Utils.getApplicationNamespace();
-        namespaceFileContent = prepareNewNamespace(logFile);
+    /**
+     * Create all log methods connected for this namespace from logically associated logFiles.
+     * These logs are in new NGMON namespace file.
+     *
+     * @param namespace current namespace to create file in
+     * @param logFiles set of LogFiles associated with this namespace
+     */
+    public NamespaceFileCreator(String namespace, TreeSet<LogFile> logFiles) {
+//        System.out.println("namespace=" + namespace);
 
-        System.out.println("namespace=" + logFile.getNamespace() + " nsClass=" + logFile.getNamespaceClass());
-        System.out.println(namespaceFileContent.render());
+        this.namespace = namespace;
+        // pick any element from set and set ClassName
+        this.namespaceClassName = logFiles.first().getNamespaceClass();
+        this.namespaceFileContent = prepareNewNamespace(namespace);
+        addMethodsToNamespaceFileContent(logFiles);
     }
 
     public ST getNamespaceFileContent() {
         return namespaceFileContent;
     }
 
-    public Set<LogFile> getLogFileList() {
-        return logFileList;
+    public String getNamespace() {
+        return namespace;
     }
 
-    public void addLogFileList(LogFile logFile) {
-        this.logFileList.add(logFile);
-    }
-
-    public String getFilePath() {
-        return filePath;
-    }
-
-    public void setFilePath(String filePath) {
-        this.filePath = filePath;
+    public String getNamespaceClassName() {
+        return namespaceClassName;
     }
 
     /**
      * Create NGMON namespace with proper imports, class declaration and log methods.
      *
-     * @param logFile namespace is create from this logFile.
+     * @param namespace package name for log_events declaration
      * @return StringTemplate with ready-to-create file
      */
-    private ST prepareNewNamespace(LogFile logFile) {
+    private ST prepareNewNamespace(String namespace) {
         String NAMESPACE_JAVA_CLASS_STRING_TEMPLATE =
                 "package log_events.<applicationNamespace>;\n\n"
 //                        + "import <namespaceImport>;\n"
@@ -89,14 +88,25 @@ public class NamespaceFileCreator {
 //        template.add("namespaceAnnotation", Utils.ngmonAnnotationNamespace());
         template.add("namespaceClassName", namespaceClassName);
 
-        // generate methods from this logFile
-        for (Log log : logFile.getLogs()) {
-            String newNgmonLog = prettyPrintMethod(log);
-            methods.add(newNgmonLog);
-            log.setGeneratedNgmonLog(newNgmonLog);
-        }
-        template.add("methods", methods);
         return template;
+    }
+
+    /**
+     * Append methods from LogFile objects to methods in namespaceFileContent.
+     *
+     * @param logFiles set containing all LogFiles Logs with possible new methods.
+     */
+    protected void addMethodsToNamespaceFileContent(Set<LogFile> logFiles) {
+        for (LogFile logFile : logFiles) {
+
+            for (Log log : logFile.getLogs()) {
+                String newMethod = prettyPrintMethod(log);
+                if (!methods.contains(newMethod)) {
+                    methods.add(newMethod);
+                }
+            }
+        }
+        namespaceFileContent.add("methods", methods);
     }
 
     /**
@@ -106,6 +116,7 @@ public class NamespaceFileCreator {
      * @return method suitable for
      */
     private String prettyPrintMethod(Log log) {
+        // TODO 80 characters limitation (?)
         ST methodTemplate = new ST(
                 "public AbstractNamespace <methodName>(<formalParameters>) {\n" +
 //                        "    return log(<parameterNames>);\n" +
@@ -137,29 +148,6 @@ public class NamespaceFileCreator {
         methodTemplate.add("formalParameters", formalParameters);
 //        methodTemplate.add("parameterNames", parameterNames);
         return methodTemplate.render();
-    }
-
-    /**
-     * Append new methods from LogFile object to current methods in namespaceFileContent.
-     *
-     * @param logFile contains Logs with possible new methods.
-     */
-    protected void addMethodsToNamespace(LogFile logFile) {
-        // TODO append to methodList and regenerate whole file content, instead of looking up particular
-        // method and inserting it in to appropriate position (?)  TreeSet
-//        methods.add()
-        if (this.getLogFileList().contains(logFile)) {
-            System.err.println("Nothing new should be added to this namespace Log");
-            System.exit(100);
-        }
-        for (Log log : logFile.getLogs()) {
-            String newMethod = prettyPrintMethod(log);
-            if (!methods.contains(newMethod)) {
-                methods.add(newMethod);
-            }
-        }
-        namespaceFileContent.remove("methods");
-        namespaceFileContent.add("methods", methods);
     }
 
 }
