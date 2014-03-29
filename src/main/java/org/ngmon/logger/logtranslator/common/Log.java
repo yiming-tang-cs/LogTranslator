@@ -96,15 +96,12 @@ public class Log {
     }
 
     public void setMethodName(String methodName) {
-        this.methodName = methodName;
+        Character firstLetter = Character.toLowerCase(methodName.charAt(0));
+        this.methodName = firstLetter + methodName.substring(1);
     }
 
     public String getGeneratedNgmonLog() {
         return generatedNgmonLog;
-    }
-
-    public void setGeneratedNgmonLog(String generatedNgmonLog) {
-        this.generatedNgmonLog = generatedNgmonLog;
     }
 
     public String getGeneratedReplacementLog() {

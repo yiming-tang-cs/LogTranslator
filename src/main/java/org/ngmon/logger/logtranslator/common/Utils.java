@@ -14,7 +14,7 @@ import java.util.Properties;
 public class Utils {
 
     private static final LogTranslatorNamespace NgmonLogger = LoggerFactory.getLogger(LogTranslatorNamespace.class, new SimpleLogger());
-
+    public final static List<String> NGMON_ALLOWED_TYPES = Arrays.asList("String", "boolean", "byte", "int", "long", "double", "float", "char");
     public final static List<String> MATH_OPERATORS = Arrays.asList("+", "-", "*", "/");
     public final static List<String> BOOLEAN_OPERATORS = Arrays.asList("&&", "||");
     public final static List<String> PRIMITIVE_TYPES = Arrays.asList("boolean", "byte", "int", "long", "double", "float", "char");
@@ -35,6 +35,10 @@ public class Utils {
     private static String ngmonSimpleLoggerImport;
     private static String ngmonJsonerImport;
     private static String ngmonDefaultNamespaceEnd;
+    private static boolean ngmonPrimitiveTypesOnly;
+
+    private static StringBuilder oldNewLogList = new StringBuilder();
+
 
     public static void initialize() {
         String propertyFile = "src/main/resources/logtranslator.properties";
@@ -60,6 +64,7 @@ public class Utils {
             ngmonEmptyLogStatementMethodNameLength = Integer.valueOf(properties.getProperty("ngmon_empty_log_method_name_length", "8"));
             ngmonLogLength = properties.getProperty("ngmon_log_length", "7");
             ignoreParsingErrors = Boolean.parseBoolean(properties.getProperty("ignoreParsingErrors"));
+            ngmonPrimitiveTypesOnly = Boolean.parseBoolean(properties.getProperty("generate_primitive_types_only"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -130,6 +135,10 @@ public class Utils {
         return ngmonDefaultNamespaceEnd;
     }
 
+    public static boolean isNgmonPrimitiveTypesOnly() {
+        return ngmonPrimitiveTypesOnly;
+    }
+
     public static boolean listContainsItem(List<String> list, String text) {
         for (String item : list) {
             if (text.contains(item)) {
@@ -152,4 +161,11 @@ public class Utils {
         return text.length() - text.replace(".", "").length();
     }
 
+    public static String getOldNewLogList() {
+        return oldNewLogList.toString();
+    }
+
+    public static void addOldNewLogList(String oldNewLog) {
+        oldNewLogList.append(oldNewLog).append("\n\n\n");
+    }
 }

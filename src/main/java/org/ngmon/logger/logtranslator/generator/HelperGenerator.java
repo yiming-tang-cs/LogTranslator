@@ -5,8 +5,6 @@ import org.ngmon.logger.logtranslator.common.LogFile;
 import org.ngmon.logger.logtranslator.common.Utils;
 
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 public class HelperGenerator {
 
@@ -19,7 +17,7 @@ public class HelperGenerator {
      * @return same list of logFiles, but each of them has filled appropriate namespace.
      */
     public static List<LogFile> generateNamespaces(List<LogFile> logFileList) {
-        Set<String> namespaceSet = new TreeSet<>();
+//        Set<String> namespaceSet = new TreeSet<>();
 //      TODO trace()  System.out.println("appnamespaceLength=" + Utils.getApplicationNamespaceLength());
         for (LogFile lf : logFileList) {
 //            System.out.println("packageName=" + lf.getPackageName());
@@ -27,15 +25,10 @@ public class HelperGenerator {
                 System.err.println("null packageName in file " + lf.getFilepath());
             }
             String namespace = createNamespace(lf.getPackageName());
-            namespaceSet.add(namespace);
+//            namespaceSet.add(namespace);
             lf.setNamespace(namespace);
         }
 
-        StringBuilder sb = new StringBuilder();
-        for (String s : namespaceSet) {
-            sb.append(s).append("\n");
-        }
-//        System.out.println("namespaceSet=" + sb.toString());
         return logFileList;
     }
 
@@ -127,6 +120,11 @@ public class HelperGenerator {
 //            System.out.println("\t" + log.getVariables() + "\n\t" + log.getOriginalLog() );
             for (LogFile.Variable var : log.getVariables()) {
                 vars.append(var.getName());
+                // Append .toString() if variable is of any other type then NGMON allowed data types
+                if (!Utils.listContainsItem(Utils.NGMON_ALLOWED_TYPES, var.getType())) {
+                    vars.append(".toString()");
+                }
+
                 if (!var.equals(log.getVariables().get(log.getVariables().size() - 1))) {
                     vars.append(", ");
                 }
@@ -144,11 +142,20 @@ public class HelperGenerator {
                 }
             }
 //            System.out.printf("generating=%s.%s(%s)%s%s;", "LOG", log.getMethodName(), vars, tags, log.getLevel());
-            String replacementLog = String.format("%s.%s(%s)%s.%s();", logName, log.getMethodName(), vars, tags, log.getLevel());
+            String replacementLog = String.format("%s.%s(%s)%s.%s()", logName, log.getMethodName(), vars, tags, log.getLevel());
             log.setGeneratedReplacementLog(replacementLog);
             return replacementLog;
         } else {
             return null;
         }
+    }
+
+    public static String generateEmptySpaces(int numberOfSpaces) {
+        StringBuilder spaces = new StringBuilder();
+        while (numberOfSpaces > 0) {
+            spaces.append(" ");
+            numberOfSpaces--;
+        }
+        return spaces.toString();
     }
 }

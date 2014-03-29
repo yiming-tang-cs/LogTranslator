@@ -2,6 +2,7 @@ package org.ngmon.logger.logtranslator.common;
 
 import org.ngmon.logger.logtranslator.generator.FileCreator;
 import org.ngmon.logger.logtranslator.generator.HelperGenerator;
+import org.ngmon.logger.logtranslator.generator.LogGlobalGenerator;
 import org.ngmon.logger.logtranslator.generator.NgmonNamespaceFactory;
 import org.ngmon.logger.logtranslator.ngmonLogging.LogTranslatorNamespace;
 import org.ngmon.logger.logtranslator.translator.ANTLRRunner;
@@ -20,9 +21,11 @@ public class TranslatorStarter {
     private static LogTranslatorNamespace LOG = Utils.getLogger();
 
     public static void main(String[] args) {
-//        0) Initialize property file
+        long start = System.currentTimeMillis();
+        /** 0) Initialize property file */
         Utils.initialize();
-//        1) Search through all ".java" files in given directory. Look for "log.{debug,warn,error,fatal}
+
+        /** 1) Search through all ".java" files in given directory. Look for "log.{debug,warn,error,fatal} */
         logFiles = LogFilesFinder.commenceSearch(Utils.getApplicationHome());
 
 // START OF DEBUGGING PURPOSES ONLY!
@@ -33,30 +36,47 @@ public class TranslatorStarter {
         }
 // END OF DEBUGGING PURPOSES ONLY!
 
-//        2) Find & set namespace. If new namespace, flush/write actual data into logFile
+        /** 2) Find & set namespaces. */
         HelperGenerator.generateNamespaces(logFiles);
 
+        /** 3) Visit each logFile and parse variables, imports, log definitions, methods
+             Main part of this program */
 //        for (LogFile logFile : tempList) { // REMOVE DEBUGGING LINE ONLY!!
         for (LogFile logFile : logFiles) {
-//        3) Visit logFile
             if (!logFile.isFinishedParsing()) {
-                // TODO both - log.info()
+                // TODO log.info()
                 LOG.startingParseFile(logFile.getFilepath());
-//                System.out.println("Starting " + logFile.getFilepath());
                 ANTLRRunner.run(logFile, false, false);
-//                System.out.printf("Processed %d of %d files. Extra files parsed by extending %d.%n", counter - nonLogLogFiles.size(), logFiles.size(), nonLogLogFiles.size());
             }
 
             if (logFile.isFinishedParsing()) {
-                // a) generate namespace if not already generated
-                // b) fill with new log methods
+                // Add this file to namespaces map
                 NgmonNamespaceFactory.addToNamespaceCreationMap(logFile);
             }
         }
         System.out.printf("\nProcessed %d of %d files. Extra files parsed by extending %d.%n%n", counter - nonLogLogFiles.size(), logFiles.size(), nonLogLogFiles.size());
 
+        /** 4) Rewrite files from logFiles - logs/imports by ANTLR */
+        for (LogFile logFile : logFiles) {
+            FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()),
+                    logFile.getRewrittenJavaContent());
+            System.out.println("R=" + logFile.getFilepath());
+        }
+
+        /** 5) Create NGMON namespaces from associated parsed logFiles */
         NgmonNamespaceFactory.createNamespaces();
+
+        /** 6) Write NGMON namespaces on filesystem */
         FileCreator.flushNamespaces();
+
+        /** 7) Add "dummy" LogGlobal logger, which handles isXEnabled() -> true */
+        LogGlobalGenerator.create();
+        System.out.println("LogGlobal=" + LogGlobalGenerator.path);
+
+        /** 8) Just put all logs to one "random" file */
+        FileCreator.createFile(FileCreator.createPathFromString("/tmp/ngmonold-newfiles"), Utils.getOldNewLogList());
+        long stop = System.currentTimeMillis();
+        System.out.println("Finished in " + ((double) (stop - start) / 1000) + " seconds.");
     }
 
     public static List<LogFile> getLogFiles() {

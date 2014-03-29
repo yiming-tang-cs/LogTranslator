@@ -4,6 +4,7 @@ import org.ngmon.logger.logtranslator.common.LogFile;
 
 import java.util.*;
 
+
 public class NgmonNamespaceFactory {
 
     private static Set<NamespaceFileCreator> namespaceFileCreatorSet = new HashSet<>();

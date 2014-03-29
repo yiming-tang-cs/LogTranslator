@@ -2,7 +2,6 @@ package org.ngmon.logger.logtranslator.generator;
 
 
 import org.ngmon.logger.logtranslator.common.Utils;
-import org.stringtemplate.v4.ST;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,8 +12,9 @@ import java.nio.file.Path;
 
 public class FileCreator {
 
-    static String ngmonLogsDir;
     static final String sep = File.separator;
+    static String ngmonLogsDir;
+
     /**
      * Create directory for all NGMON's log events for this particular application.
      * By default it is in <applicationHome>/src/main/java/log_events/<app-namespace>
@@ -24,14 +24,9 @@ public class FileCreator {
         StringBuilder newNgmonPath = new StringBuilder(sep + "src" + sep + "main" + sep + "java" + sep + "log_events" + sep);
         String appHome = Utils.getApplicationHome();
         if (appHome.endsWith("\\") || appHome.endsWith("/")) {
-            appHome = appHome.substring(0, appHome.length()-1);
+            appHome = appHome.substring(0, appHome.length() - 1);
         }
         ngmonLogsDir = appHome + newNgmonPath;
-    }
-
-    // TODO
-    public static void addLogGlobalLogger() {
-
     }
 
     /**
@@ -46,14 +41,12 @@ public class FileCreator {
             String dir = ngmonLogsDir + nfc.getNamespace().replace(".", File.separator);
             String filepath = dir + sep + nfc.getNamespaceClassName() + ".java";
 
-            System.out.println("Path=" + dir);
+//            System.out.println("Path=" + dir);
             createDirectory(createPathFromString(dir));
-
             System.out.println("File=" + filepath);
             createFile(createPathFromString(filepath), nfc.getNamespaceFileContent());
         }
     }
-
 
     /**
      * Create directory on filesystem.
@@ -77,12 +70,17 @@ public class FileCreator {
         return dirPath;
     }
 
-    public static Path createFile(Path file, ST template) {
-        Path filepath = null;
+    /**
+     * Create NGMON log_events file - filled with all LogFiles associated methods.
+     *
+     * @param file        to create
+     * @param fileContent NamespaceFileCreator filled template
+     */
+    public static void createFile(Path file, String fileContent) {
         try {
             if (!Files.exists(file)) {
                 // create new file
-                filepath = Files.createFile(file);
+                Files.createFile(file);
             } else if (Files.exists(file) && Files.isRegularFile(file)) {
                 // replace old file by new one
                 Files.delete(file);
@@ -90,12 +88,11 @@ public class FileCreator {
             } else {
                 throw new FileAlreadyExistsException("Unable to crate file, already exists. " + file.toString());
             }
-            Files.write(file, template.render().getBytes());
+            Files.write(file, fileContent.getBytes());
         } catch (IOException e) {
             System.err.println("Unable to create NGMON directory " + file.toString());
             e.printStackTrace();
         }
-        return filepath;
     }
 
     public static Path createPathFromString(String path) {

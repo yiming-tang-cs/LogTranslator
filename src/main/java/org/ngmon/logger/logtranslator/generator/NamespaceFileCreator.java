@@ -42,7 +42,7 @@ public class NamespaceFileCreator {
      * These logs are in new NGMON namespace file.
      *
      * @param namespace current namespace to create file in
-     * @param logFiles set of LogFiles associated with this namespace
+     * @param logFiles  set of LogFiles associated with this namespace
      */
     public NamespaceFileCreator(String namespace, TreeSet<LogFile> logFiles) {
 //        System.out.println("namespace=" + namespace);
@@ -54,8 +54,8 @@ public class NamespaceFileCreator {
         addMethodsToNamespaceFileContent(logFiles);
     }
 
-    public ST getNamespaceFileContent() {
-        return namespaceFileContent;
+    public String getNamespaceFileContent() {
+        return this.namespaceFileContent.render();
     }
 
     public String getNamespace() {
@@ -125,16 +125,25 @@ public class NamespaceFileCreator {
 
         methodTemplate.add("methodName", log.getMethodName());
         StringBuilder formalParameters = new StringBuilder();
-        StringBuilder parameterNames = new StringBuilder();
+//        StringBuilder parameterNames = new StringBuilder();
 
         int i = 0;
         for (LogFile.Variable var : log.getVariables()) {
             if (i != 0) {
                 formalParameters.append(", ");
-                parameterNames.append(", ");
+//                parameterNames.append(", ");
             }
 
-            formalParameters.append(var.getType()).append(" ");
+
+            /** Use String data type if variable is of any other data type then NGMON allowed data types */
+            String type = var.getType();
+            if (Utils.isNgmonPrimitiveTypesOnly()) {
+                if (!Utils.listContainsItem(Utils.NGMON_ALLOWED_TYPES, type)) {
+                    type = "String";
+                }
+            }
+
+            formalParameters.append(type).append(" ");
             if (var.getNgmonName() != null) {
                 formalParameters.append(var.getNgmonName());
 //                parameterNames.append(var.getNgmonName());

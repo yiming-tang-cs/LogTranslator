@@ -26,6 +26,7 @@ public class LogFile implements Comparable {
     private List<String> staticImports;
     private List<String> imports;
     private boolean finishedParsing = false;
+    private String rewrittenJavaContent;
 
     public LogFile(String filename) {
         filepath = filename;
@@ -166,10 +167,10 @@ public class LogFile implements Comparable {
      */
 
     public void storeVariable(ParserRuleContext ctx, String variableName, String variableTypeName, boolean isField, String newNgmonName) {
-//        System.out.println("Storing var=" + variableName + " " + variableTypeName);
-        checkAndStoreVariable(variableName, variableTypeName, newNgmonName, ctx.start.getLine(),
-                ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
-                ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex(), isField);
+//        checkAndStoreVariable(variableName, variableTypeName, newNgmonName, ctx.start.getLine(),
+//                ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
+//                ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex(), isField);
+        checkAndStoreVariable(variableName, variableTypeName, newNgmonName, ctx.start.getLine(), isField);
     }
 
     /**
@@ -178,14 +179,9 @@ public class LogFile implements Comparable {
      * @param variableName variable name
      * @param variableType variable type as string
      * @param lineNumber variable line number occurrence
-     * @param lineStartPosition variable occurrence start line position
-     * @param lineStopPosition variable occurrence stop line position
-     * @param startPosition variable occurrence start position
-     * @param stopPosition variable occurrence stop position
      * @param isField false if variable is declared in method, true otherwise
      */
-    private void checkAndStoreVariable(String variableName, String variableType, String newNgmonName, int lineNumber,
-                                       int lineStartPosition, int lineStopPosition, int startPosition, int stopPosition, boolean isField) {
+    private void checkAndStoreVariable(String variableName, String variableType, String newNgmonName, int lineNumber, boolean isField) {
         LogFile.Variable p = this.new Variable();
 
         if (variableName == null || variableType == null) {
@@ -197,10 +193,6 @@ public class LogFile implements Comparable {
         if (newNgmonName != null) p.setNgmonName(newNgmonName);
 
         p.setLineNumber(lineNumber);
-//        p.setStartPosition(lineStartPosition);
-//        p.setStopPosition(lineStopPosition);
-//        p.setFileStartPosition(startPosition);
-//        p.setFileStopPosition(stopPosition);
         p.setField(isField);
         this.putVariableList(variableName, p);
     }
@@ -225,15 +217,19 @@ public class LogFile implements Comparable {
         return -1;
     }
 
+    public void setRewrittenJavaContent(String rewrittenJavaContent) {
+        this.rewrittenJavaContent = rewrittenJavaContent;
+    }
+
+    public String getRewrittenJavaContent() {
+        return rewrittenJavaContent;
+    }
+
     public class Variable {
         private String name; // ?
         private String type;
         private String ngmonName;
         private int lineNumber;
-//        private int startPosition;
-//        private int stopPosition;
-//        private int fileStartPosition;
-//        private int fileStopPosition;
         private boolean isField; // true if variable is declared in class, not in method body
 
 
@@ -269,22 +265,6 @@ public class LogFile implements Comparable {
             this.lineNumber = lineNumber;
         }
 
-//        public void setStartPosition(int startPosition) {
-//            this.startPosition = startPosition;
-//        }
-//
-//        public void setStopPosition(int stopPosition) {
-//            this.stopPosition = stopPosition;
-//        }
-//
-//        public void setFileStartPosition(int fileStartPosition) {
-//            this.fileStartPosition = fileStartPosition;
-//        }
-//
-//        public void setFileStopPosition(int fileStopPosition) {
-//            this.fileStopPosition = fileStopPosition;
-//        }
-
         public boolean isField() {
             return isField;
         }
@@ -300,11 +280,6 @@ public class LogFile implements Comparable {
                     ", type='" + type + '\'' +
                     ", lineNumber=" + lineNumber +
                     ", field=" + isField +
-
-                    /* ", startPosition=" + startPosition +
-                    ", stopPosition=" + stopPosition +
-                    ", fileStartPosition=" + fileStartPosition +
-                    ", fileStopPosition=" + fileStopPosition + */
                     '}';
         }
     }

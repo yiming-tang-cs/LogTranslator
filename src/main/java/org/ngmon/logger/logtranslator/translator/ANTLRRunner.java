@@ -39,7 +39,7 @@ public class ANTLRRunner {
             walker.walk(listener, tree);
 
 //            System.out.println("modified=\n" + listener.getRewriter().getText());
-
+            logFile.setRewrittenJavaContent(listener.getRewriter().getText());
 
         } catch (IOException e){
             System.err.println("Unable to handle file=" + e.toString());
