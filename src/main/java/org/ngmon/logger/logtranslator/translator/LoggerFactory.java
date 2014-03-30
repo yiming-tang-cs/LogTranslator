@@ -96,7 +96,7 @@ public class LoggerFactory {
             }
         }
         if (loader != null) {
-            Statistics.reportLoaderType(loader);
+            Statistics.addLoggerTypeCount(actualLoggingFramework);
         }
         return loader;
     }

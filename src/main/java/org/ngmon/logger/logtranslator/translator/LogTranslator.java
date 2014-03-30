@@ -503,17 +503,9 @@ public class LogTranslator extends JavaBaseListener {
                         log.setLevel(methodCall.getText());
                         logFile.addLog(log);
                          /* TODO - ADD GOMATCH support here */
-                        // rewrite this log
-                        String ngmonLogReplacement = HelperGenerator.generateLogMethod(logName, log);
-                        // TODO debug()
-//                        System.out.println(log.getOriginalLog());
-//                        System.out.println(ngmonLogReplacement + "\n");
 
-                        Utils.addOldNewLogList(log.getOriginalLog() + "\n" + ngmonLogReplacement);
+                        replaceLogMethod(ctx, log);
 
-                        String commentedOriginalLog = "/* " + log.getOriginalLog() + " */";
-                        String spaces = HelperGenerator.generateEmptySpaces(ctx.start.getCharPositionInLine());
-                        rewriter.replace(ctx.start, ctx.stop, commentedOriginalLog + "\n" + spaces +  ngmonLogReplacement);
                     }
                     // else throw new exception or add it to methodList?
                 }
@@ -1013,7 +1005,7 @@ public class LogTranslator extends JavaBaseListener {
      *
      * @param context ANTLR's QualifiedNameContext - imports part
      */
-    public void replaceLogImports(JavaParser.QualifiedNameContext context) {
+    private void replaceLogImports(JavaParser.QualifiedNameContext context) {
         String namespaceImport = Utils.getNgmongLogEventsImportPrefix() + "." +
                 ANTLRRunner.getCurrentFile().getNamespace() + "." +
                 ANTLRRunner.getCurrentFile().getNamespaceClass() + ";";
@@ -1029,11 +1021,31 @@ public class LogTranslator extends JavaBaseListener {
      *
      * @param ctx ANTLR's current rule context
      */
-    public void replaceLogFactory(ParserRuleContext ctx) {
+    private void replaceLogFactory(ParserRuleContext ctx) {
         String logFieldDeclaration = ANTLRRunner.getCurrentFile().getNamespaceClass() +
                 " LOG = LoggerFactory.getLogger(" + ANTLRRunner.getCurrentFile().getNamespaceClass() + ".class, new SimpleLogger());";
 //            System.out.println("replacing " + ctx.getStart() + ctx.getText() + " with " + logFieldDeclaration);
         rewriter.replace(ctx.getStart(), ctx.getStop(), logFieldDeclaration);
+    }
+
+    /**
+     * Method rewrites current log method with all parsed variables into NGMON
+     * syntax. Method is generated in Log object as 'generatedReplacementLog'.
+     *
+     * @param ctx ANTLR's JavaParser.StatementExpressionContext context
+     * @param log current log instance with generated replacement log method
+     */
+    private void replaceLogMethod(JavaParser.StatementExpressionContext ctx, Log log) {
+        String ngmonLogReplacement = HelperGenerator.generateLogMethod(logName, log);
+        // TODO debug()
+//        System.out.println(log.getOriginalLog());
+//        System.out.println(ngmonLogReplacement + "\n");
+        Utils.addOldNewLogList(log.getOriginalLog() + "\n" + ngmonLogReplacement);
+
+        String commentedOriginalLog = "/* " + log.getOriginalLog() + " */";
+        String spaces = HelperGenerator.generateEmptySpaces(ctx.start.getCharPositionInLine());
+        rewriter.replace(ctx.start, ctx.stop, commentedOriginalLog + "\n" + spaces +  ngmonLogReplacement);
+        Statistics.addChangedLogMethodsCount();
     }
 
 }
