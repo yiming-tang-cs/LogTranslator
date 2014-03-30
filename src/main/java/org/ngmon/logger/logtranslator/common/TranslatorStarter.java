@@ -1,9 +1,6 @@
 package org.ngmon.logger.logtranslator.common;
 
-import org.ngmon.logger.logtranslator.generator.FileCreator;
-import org.ngmon.logger.logtranslator.generator.HelperGenerator;
-import org.ngmon.logger.logtranslator.generator.LogGlobalGenerator;
-import org.ngmon.logger.logtranslator.generator.NgmonNamespaceFactory;
+import org.ngmon.logger.logtranslator.generator.*;
 import org.ngmon.logger.logtranslator.ngmonLogging.LogTranslatorNamespace;
 import org.ngmon.logger.logtranslator.translator.ANTLRRunner;
 
@@ -60,7 +57,8 @@ public class TranslatorStarter {
         for (LogFile logFile : logFiles) {
             FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()),
                     logFile.getRewrittenJavaContent());
-            System.out.println("R=" + logFile.getFilepath());
+            // TODO log.info() created files
+            System.out.println(logFile.getFilepath());
         }
 
         /** 5) Create NGMON namespaces from associated parsed logFiles */
@@ -73,7 +71,11 @@ public class TranslatorStarter {
         LogGlobalGenerator.create();
         System.out.println("LogGlobal=" + LogGlobalGenerator.path);
 
-        /** 8) Just put all logs to one "random" file */
+        /** 8) Create SimpleLogger file - a bridge between NGMON logging and Log4j logging implementation */
+        SimpleLoggerGenerator.create();
+        System.out.println("SimpleLogger=" + LogGlobalGenerator.path);
+
+        /** 9) Just put all logs to one "random" file */
         FileCreator.createFile(FileCreator.createPathFromString("/tmp/ngmonold-newfiles"), Utils.getOldNewLogList());
         long stop = System.currentTimeMillis();
         System.out.println("Finished in " + ((double) (stop - start) / 1000) + " seconds.");

@@ -41,9 +41,9 @@ public class FileCreator {
             String dir = ngmonLogsDir + nfc.getNamespace().replace(".", File.separator);
             String filepath = dir + sep + nfc.getNamespaceClassName() + ".java";
 
-//            System.out.println("Path=" + dir);
             createDirectory(createPathFromString(dir));
-            System.out.println("File=" + filepath);
+            // TODO log.info()
+//            System.out.println("NS=" + filepath);
             createFile(createPathFromString(filepath), nfc.getNamespaceFileContent());
         }
     }

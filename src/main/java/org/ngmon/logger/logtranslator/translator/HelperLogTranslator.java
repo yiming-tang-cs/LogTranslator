@@ -112,7 +112,6 @@ class MethodListener extends JavaBaseListener {
                 }
             }
         } else {
-//            System.out.println("finding " + findMethod + " " + ctx.getText());
             if (ctx.Identifier().getText().equals(findMethod.substring(0, findMethod.indexOf('(')))) {
 //                System.out.println("storing " + ctx.Identifier().getText() + ctx.formalParameters().getText());
                 store(ctx);
@@ -120,9 +119,14 @@ class MethodListener extends JavaBaseListener {
         }
     }
 
+    /**
+     * Determine method's return type and store method as variable.
+     *
+     * @param ctx ANTLR's method declaration context
+     */
     public void store(JavaParser.MethodDeclarationContext ctx) {
         String varType = (ctx.type() == null) ? "void" : ctx.type().getText();
-        System.out.println("Storing " + findMethod + " " + varType);
+//        System.out.println("Storing " + findMethod + " " + varType);
         /** Store method as 'variable' and set its newNgmonName to variable - not method call) */
         logfile.storeVariable(ctx, findMethod, varType, false, ctx.Identifier().getText());
         found = true;

@@ -664,7 +664,8 @@ public class LogTranslator extends JavaBaseListener {
      *               which holds variable to find
      */
     private LogFile.Variable findVariable(Log log, JavaParser.ExpressionContext findMe) {
-        System.out.println("findMe " + findMe.getText() + "  " + findMe.start.getLine() + ":" + logFile.getFilepath());
+        // TODO Log.trace()
+//        System.out.println("findMe " + findMe.getText() + "  " + findMe.start.getLine() + ":" + logFile.getFilepath());
         LogFile.Variable foundVar = findVariableInLogFile(logFile, findMe);
         String ngmonNewName = null;
         String findMeText = findMe.getText();
@@ -695,11 +696,9 @@ public class LogTranslator extends JavaBaseListener {
                     newNgmonName.replace(0, newNgmonName.length(), removeDotsAndBracketsFromText(newNgmonName.toString()));
                 }
 //                System.out.println("2=" + findMeText);
-
                 logFile.storeVariable(findMe, findMeText, "String", false, newNgmonName.toString());
                 foundVar = returnLastValue(findMeText);
                 foundVar.setChangeOriginalName(HelperGenerator.addStringTypeCast(findMeText));
-
 
                 /** handle 'new String(data, UTF_8)' or 'new Exception()' */
             } else if (findMeText.contains("new")) {
@@ -725,7 +724,6 @@ public class LogTranslator extends JavaBaseListener {
                     }
                     logFile.storeVariable(findMe, varName, varType, false, ngmonNewName);
                     foundVar = returnLastValue(varName);
-
                 }
 
                 /** Handle 'this' call */
@@ -1009,18 +1007,28 @@ public class LogTranslator extends JavaBaseListener {
         }
     }
 
+    /**
+     * Method rewrites and adds custom imports in this LogFile ANTLR's run.
+     * Rewriting of imports starts from first qualified import name.
+     *
+     * @param context ANTLR's QualifiedNameContext - imports part
+     */
     public void replaceLogImports(JavaParser.QualifiedNameContext context) {
-        String namespaceImport = "import " + Utils.getNgmongLogEventsImportPrefix() + "." +
+        String namespaceImport = Utils.getNgmongLogEventsImportPrefix() + "." +
                 ANTLRRunner.getCurrentFile().getNamespace() + "." +
-                ANTLRRunner.getCurrentFile().getNamespaceClass();
+                ANTLRRunner.getCurrentFile().getNamespaceClass() + ";";
         String logGlobalImport = "import " + Utils.getNgmonLogGlobal();
         String simpleLoggerImport = "import " + Utils.getNgmonSimpleLoggerImport() + ";";
         // Change Log import with Ngmon Log, currentNameSpace and LogGlobal imports
-        rewriter.replace(context.start, context.stop, Utils.getNgmonLogImport() + ";\n"
-                + namespaceImport + "\n" + simpleLoggerImport + "\n" + logGlobalImport);
+        rewriter.replace(context.start, context.stop, namespaceImport + "\n" +
+            simpleLoggerImport + "\n" + logGlobalImport);
     }
 
-
+    /**
+     * Method rewrites LogFactory declaration of current Logging framework.
+     *
+     * @param ctx ANTLR's current rule context
+     */
     public void replaceLogFactory(ParserRuleContext ctx) {
         String logFieldDeclaration = ANTLRRunner.getCurrentFile().getNamespaceClass() +
                 " LOG = LoggerFactory.getLogger(" + ANTLRRunner.getCurrentFile().getNamespaceClass() + ".class, new SimpleLogger());";
