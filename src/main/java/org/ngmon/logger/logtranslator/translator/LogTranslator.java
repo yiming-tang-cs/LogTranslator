@@ -262,8 +262,7 @@ public class LogTranslator extends JavaBaseListener {
                         }
 
                         replaceLogImports(ctx);
-
-                        ANTLRRunner.getCurrentFile().setNamespaceClass();
+//                        ANTLRRunner.getCurrentFile().setNamespaceClass();
                         // TODO add "import log_events.Utils.getApplicationNamespace();" + currentNamespace logfileNS
                     }
                 }
@@ -665,7 +664,7 @@ public class LogTranslator extends JavaBaseListener {
      *               which holds variable to find
      */
     private LogFile.Variable findVariable(Log log, JavaParser.ExpressionContext findMe) {
-//        System.out.println("findMe " + findMe.getText() + "  " + findMe.start.getLine() + ":" + logFile.getFilepath());
+        System.out.println("findMe " + findMe.getText() + "  " + findMe.start.getLine() + ":" + logFile.getFilepath());
         LogFile.Variable foundVar = findVariableInLogFile(logFile, findMe);
         String ngmonNewName = null;
         String findMeText = findMe.getText();
@@ -696,8 +695,10 @@ public class LogTranslator extends JavaBaseListener {
                     newNgmonName.replace(0, newNgmonName.length(), removeDotsAndBracketsFromText(newNgmonName.toString()));
                 }
 //                System.out.println("2=" + findMeText);
+
                 logFile.storeVariable(findMe, findMeText, "String", false, newNgmonName.toString());
                 foundVar = returnLastValue(findMeText);
+                foundVar.setChangeOriginalName(HelperGenerator.addStringTypeCast(findMeText));
 
 
                 /** handle 'new String(data, UTF_8)' or 'new Exception()' */
@@ -803,6 +804,7 @@ public class LogTranslator extends JavaBaseListener {
                     log.setTag("methodCall");
                     logFile.storeVariable(findMe, findMeText, "String", false, ngmonNewName);
                 }
+                /** methodCall has been stored like any other 'variable' */
                 foundVar = returnLastValue(findMeText);
 
                 /** If variable begins with NEGATION '!' */
@@ -829,8 +831,8 @@ public class LogTranslator extends JavaBaseListener {
             } else if (Utils.listContainsItem(Utils.MATH_OPERATORS, findMeText)) {
 //                containsMathOperator(findMeText))
                 varName = findMeText;
-                varType = "double";
-                logFile.storeVariable(findMe, varName, varType, false, null);
+                varType = "long";
+                logFile.storeVariable(findMe, varName, varType, false, "mathExpression");
                 foundVar = returnLastValue(varName);
                 /** if whole text is uppercase & we have static imports, assume this is static variable
                  * and store it */
@@ -850,7 +852,7 @@ public class LogTranslator extends JavaBaseListener {
                 logFile.storeVariable(findMe, findMeText, "boolean", false, "booleanValue");
                 foundVar = returnLastValue(findMeText);
 
-                /** type casting (String) var -> var*/
+                /** type casting (String) var -> var */
             } else if (findMeText.startsWith("(") && (findMeText.indexOf(")") != findMeText.length())) {
                 varName = findMeText.substring(findMeText.indexOf(")")).trim();
                 varType = findMeText.substring(1, findMeText.indexOf(")")).trim();
@@ -1010,7 +1012,7 @@ public class LogTranslator extends JavaBaseListener {
     public void replaceLogImports(JavaParser.QualifiedNameContext context) {
         String namespaceImport = "import " + Utils.getNgmongLogEventsImportPrefix() + "." +
                 ANTLRRunner.getCurrentFile().getNamespace() + "." +
-                ANTLRRunner.getCurrentFile().getNamespaceEnd() + "Namespace;";
+                ANTLRRunner.getCurrentFile().getNamespaceClass();
         String logGlobalImport = "import " + Utils.getNgmonLogGlobal();
         String simpleLoggerImport = "import " + Utils.getNgmonSimpleLoggerImport() + ";";
         // Change Log import with Ngmon Log, currentNameSpace and LogGlobal imports
@@ -1021,8 +1023,9 @@ public class LogTranslator extends JavaBaseListener {
 
     public void replaceLogFactory(ParserRuleContext ctx) {
         String logFieldDeclaration = ANTLRRunner.getCurrentFile().getNamespaceClass() +
-                " LOG = LoggerFactory.getLogger(" + ANTLRRunner.getCurrentFile().getNamespaceClass() + ".class, , new SimpleLogger());";
+                " LOG = LoggerFactory.getLogger(" + ANTLRRunner.getCurrentFile().getNamespaceClass() + ".class, new SimpleLogger());";
 //            System.out.println("replacing " + ctx.getStart() + ctx.getText() + " with " + logFieldDeclaration);
         rewriter.replace(ctx.getStart(), ctx.getStop(), logFieldDeclaration);
     }
+
 }

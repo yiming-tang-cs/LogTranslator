@@ -17,7 +17,7 @@ public class LogGlobalGenerator {
 
 
     public static void create() {
-        String LOG_GLOBAL_TEMPLATE = "package <packageNamespace>\n\n" +
+        String LOG_GLOBAL_TEMPLATE = "package <packageNamespace>;\n\n" +
                 "public class LogGlobal {\n\n" +
                 "<methods>" +
                 "    public static boolean log() {\n" +
@@ -25,7 +25,9 @@ public class LogGlobalGenerator {
                 "    }\n" +
                 "}\n";
         ST logGlobalFile = new ST(LOG_GLOBAL_TEMPLATE);
-        logGlobalFile.add("packageNamespace", Utils.getNgmonLogGlobal());
+        String namespace = Utils.getNgmonLogGlobal();
+        namespace = namespace.substring(0, namespace.lastIndexOf("."));
+        logGlobalFile.add("packageNamespace", namespace);
 
         StringBuilder methods = new StringBuilder();
         for (String level : levels) {

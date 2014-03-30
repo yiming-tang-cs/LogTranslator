@@ -63,8 +63,15 @@ public class LogFile implements Comparable {
         return namespace;
     }
 
+    /**
+     * Set namespace and create namespaceClass. namespaceClass is created
+     * from end of namespace and appended 'Namespace' by default.
+     * Set namespaceClassName and drop last part of namespace.
+     */
     public void setNamespace(String namespace) {
         this.namespace = namespace;
+        this.namespaceClass = getNamespaceEnd() + Utils.getNgmonDefaultNamespaceEnd();
+        this.namespace = namespace.substring(0, namespace.lastIndexOf("."));
     }
 
     /**
@@ -86,14 +93,6 @@ public class LogFile implements Comparable {
         return namespaceClass;
     }
 
-    /**
-     * ClassName is create from end of namespace and appended 'Namespace' by default.
-     * Set namespaceClassName and drop last part of namespace.
-     */
-    public void setNamespaceClass() {
-        this.namespaceClass = getNamespaceEnd() + Utils.getNgmonDefaultNamespaceEnd();
-        this.namespace = namespace.substring(0, namespace.lastIndexOf("."));
-    }
 
     public String getPackageName() {
         return packageName;
@@ -231,6 +230,7 @@ public class LogFile implements Comparable {
         private String ngmonName;
         private int lineNumber;
         private boolean isField; // true if variable is declared in class, not in method body
+        private String changeOriginalName = null; // need if we want to use changed original variable in log - typecasting
 
 
         public String getNgmonName() {
@@ -271,6 +271,14 @@ public class LogFile implements Comparable {
 
         public void setField(boolean isField) {
             this.isField = isField;
+        }
+
+        public String getChangeOriginalName() {
+            return changeOriginalName;
+        }
+
+        public void setChangeOriginalName(String changeOriginalName) {
+            this.changeOriginalName = changeOriginalName;
         }
 
         @Override

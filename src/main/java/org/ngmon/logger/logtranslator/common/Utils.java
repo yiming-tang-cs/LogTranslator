@@ -37,6 +37,7 @@ public class Utils {
     private static String ngmonDefaultNamespaceEnd;
     private static boolean ngmonPrimitiveTypesOnly;
 
+    // list of old & new generated log
     private static StringBuilder oldNewLogList = new StringBuilder();
 
 

@@ -122,8 +122,9 @@ class MethodListener extends JavaBaseListener {
 
     public void store(JavaParser.MethodDeclarationContext ctx) {
         String varType = (ctx.type() == null) ? "void" : ctx.type().getText();
-//        System.out.println("Storing " + findMethod + " " + varType);
-        logfile.storeVariable(ctx, findMethod, varType, false, null);
+        System.out.println("Storing " + findMethod + " " + varType);
+        /** Store method as 'variable' and set its newNgmonName to variable - not method call) */
+        logfile.storeVariable(ctx, findMethod, varType, false, ctx.Identifier().getText());
         found = true;
     }
 }

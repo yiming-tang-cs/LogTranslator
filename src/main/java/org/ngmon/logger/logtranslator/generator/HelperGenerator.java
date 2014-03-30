@@ -119,7 +119,11 @@ public class HelperGenerator {
             // TODO log trace()
 //            System.out.println("\t" + log.getVariables() + "\n\t" + log.getOriginalLog() );
             for (LogFile.Variable var : log.getVariables()) {
-                vars.append(var.getName());
+                if (var.getChangeOriginalName() == null) {
+                    vars.append(var.getName());
+                } else {
+                    vars.append(var.getChangeOriginalName());
+                }
                 // Append .toString() if variable is of any other type then NGMON allowed data types
                 if (!Utils.listContainsItem(Utils.NGMON_ALLOWED_TYPES, var.getType())) {
                     vars.append(".toString()");
@@ -157,5 +161,9 @@ public class HelperGenerator {
             numberOfSpaces--;
         }
         return spaces.toString();
+    }
+
+    public static String addStringTypeCast(String typecastMe) {
+        return "String.valueOf(" + typecastMe + ")";
     }
 }
