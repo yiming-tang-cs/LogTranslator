@@ -19,6 +19,7 @@ public class TranslatorStarter {
 
     public static void main(String[] args) {
         long start = System.currentTimeMillis();
+        LOG.startingLogTranslation(start).debug();
         /** 0) Initialize property file */
         Utils.initialize();
 
@@ -37,12 +38,11 @@ public class TranslatorStarter {
         HelperGenerator.generateNamespaces(logFiles);
 
         /** 3) Visit each logFile and parse variables, imports, log definitions, methods
-             Main part of this program */
+         Main part of this program */
 //        for (LogFile logFile : tempList) { // REMOVE DEBUGGING LINE ONLY!!
         for (LogFile logFile : logFiles) {
             if (!logFile.isFinishedParsing()) {
-                // TODO log.info()
-                LOG.startingParseFile(logFile.getFilepath());
+                LOG.antlrParsingFile(logFile.getFilepath()).debug();
                 ANTLRRunner.run(logFile, false, false);
             }
 
@@ -52,13 +52,15 @@ public class TranslatorStarter {
             }
         }
         System.out.printf("\nProcessed %d of %d files. Extra files parsed by extending %d.%n%n", counter - nonLogLogFiles.size(), logFiles.size(), nonLogLogFiles.size());
+        LOG.processed_log_and_extra_files(counter - nonLogLogFiles.size(), nonLogLogFiles.size()).debug();
 
         /** 4) Rewrite files from logFiles - logs/imports by ANTLR */
         for (LogFile logFile : logFiles) {
             FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()),
-                    logFile.getRewrittenJavaContent());
-            // TODO log.info() created files
-            System.out.println(logFile.getFilepath());
+                logFile.getRewrittenJavaContent());
+
+            LOG.createdFile(logFile.getFilepath()).info();
+//            System.out.println(logFile.getFilepath());
         }
 
         /** 5) Create NGMON namespaces from associated parsed logFiles */
@@ -69,16 +71,20 @@ public class TranslatorStarter {
 
         /** 7) Add "dummy" LogGlobal logger, which handles isXEnabled() -> true */
         LogGlobalGenerator.create();
-        System.out.println("LogGlobal=" + LogGlobalGenerator.path);
+        LOG.createdFile(LogGlobalGenerator.path).info();
+//        System.out.println("LogGlobal=" + LogGlobalGenerator.path);
 
         /** 8) Create SimpleLogger file - a bridge between NGMON logging and Log4j logging implementation */
         SimpleLoggerGenerator.create();
-        System.out.println("SimpleLogger=" + LogGlobalGenerator.path);
+        LOG.createdFile(SimpleLoggerGenerator.path).info();
+//        System.out.println("SimpleLogger=" + SimpleLoggerGenerator.path);
 
         /** 9) Just put all logs to one "random" file */
         FileCreator.createFile(FileCreator.createPathFromString("/tmp/ngmonold-newfiles"), Utils.getOldNewLogList());
         long stop = System.currentTimeMillis();
-        System.out.println("Finished in " + ((double) (stop - start) / 1000) + " seconds.");
+        LOG.translationProcessFinishTime(((double) (stop - start) / 1000)).info();
+//        System.out.println("Finished in " + ((double) (stop - start) / 1000) + " seconds.");
+
     }
 
     public static List<LogFile> getLogFiles() {

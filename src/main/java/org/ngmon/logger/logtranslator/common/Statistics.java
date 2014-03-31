@@ -1,7 +1,5 @@
 package org.ngmon.logger.logtranslator.common;
 
-import org.ngmon.logger.logtranslator.translator.LoggerLoader;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,11 +13,16 @@ public class Statistics {
     }
 
     public static void addLoggerTypeCount(String loggerType) {
-        int actCount = loggerTypeCountMap.get(loggerType);
+        int actCount;
+        if (loggerTypeCountMap.get(loggerType) == null) {
+            actCount = 0;
+        } else {
+            actCount = loggerTypeCountMap.get(loggerType);
+        }
         loggerTypeCountMap.put(loggerType, actCount);
     }
 
-    public static void reportLoaderType(LoggerLoader loggerLoader) {
+    public static void reportLoaderType() {
         // add +1 to map of Stats<key, count>
     }
 }

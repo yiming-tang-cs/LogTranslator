@@ -11,6 +11,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+/**
+ * Class reads from logtranslator.properties file and sets accordingly all settings
+ * as specified in file.
+ * Class contains some useful methods as well.
+ */
 public class Utils {
 
     private static final LogTranslatorNamespace NgmonLogger = LoggerFactory.getLogger(LogTranslatorNamespace.class, new SimpleLogger());

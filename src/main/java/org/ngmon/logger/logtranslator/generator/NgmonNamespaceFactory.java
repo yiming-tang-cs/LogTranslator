@@ -1,14 +1,20 @@
 package org.ngmon.logger.logtranslator.generator;
 
 import org.ngmon.logger.logtranslator.common.LogFile;
+import org.ngmon.logger.logtranslator.common.Utils;
+import org.ngmon.logger.logtranslator.ngmonLogging.LogTranslatorNamespace;
 
 import java.util.*;
 
 
+/**
+ *  Factory for creation of NGMON's namespace files.
+ */
 public class NgmonNamespaceFactory {
 
     private static Set<NamespaceFileCreator> namespaceFileCreatorSet = new HashSet<>();
     private static Map<String, Set<LogFile>> namespaceCreationMap = new TreeMap<>();
+    private static LogTranslatorNamespace LOG = Utils.getLogger();
 
     public static Set<NamespaceFileCreator> getNamespaceFileCreatorSet() {
         return namespaceFileCreatorSet;
@@ -24,7 +30,8 @@ public class NgmonNamespaceFactory {
         if (logFile == null) {
             throw new IllegalArgumentException("logFile is null!");
         }
-//        System.out.println(logFile.getNamespace() + "." + logFile.getNamespaceClass());
+
+        LOG.namespaceNamespaceClass(logFile.getNamespace(), logFile.getNamespaceClass()).trace();
         Set<LogFile> logFiles;
         if (namespaceCreationMap.containsKey(logFile.getNamespace()))  {
             logFiles = namespaceCreationMap.get(logFile.getNamespace());
@@ -44,5 +51,4 @@ public class NgmonNamespaceFactory {
             namespaceFileCreatorSet.add(nfc);
         }
     }
-
 }

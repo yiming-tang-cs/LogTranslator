@@ -3,11 +3,13 @@ package org.ngmon.logger.logtranslator.generator;
 import org.ngmon.logger.logtranslator.common.Log;
 import org.ngmon.logger.logtranslator.common.LogFile;
 import org.ngmon.logger.logtranslator.common.Utils;
+import org.ngmon.logger.logtranslator.ngmonLogging.LogTranslatorNamespace;
 
 import java.util.List;
 
 public class HelperGenerator {
 
+    private static LogTranslatorNamespace LOG = Utils.getLogger();
 
     /**
      * Generate few namespaces for this logging application. Resolve number of namespaces
@@ -17,12 +19,12 @@ public class HelperGenerator {
      * @return same list of logFiles, but each of them has filled appropriate namespace.
      */
     public static List<LogFile> generateNamespaces(List<LogFile> logFileList) {
-//        Set<String> namespaceSet = new TreeSet<>();
-//      TODO trace()  System.out.println("appnamespaceLength=" + Utils.getApplicationNamespaceLength());
+        LOG.applicationNamespaceLength(Utils.getApplicationNamespaceLength()).trace();
         for (LogFile lf : logFileList) {
 //            System.out.println("packageName=" + lf.getPackageName());
             if (lf.getPackageName() == null) {
-                System.err.println("null packageName in file " + lf.getFilepath());
+                LOG.emptyPackageNameInFile(lf.getFilepath()).error();
+//                System.err.println("null packageName in file " + lf.getFilepath());
             }
             String namespace = createNamespace(lf.getPackageName());
 //            namespaceSet.add(namespace);
@@ -67,7 +69,6 @@ public class HelperGenerator {
      */
     public static void generateMethodName(Log log) {
         if (log.getComments().size() == 0) {
-            // TODO - maybe use some quick dirty hack (impossible imo)
             StringBuilder tempName = new StringBuilder();
             for (LogFile.Variable var : log.getVariables()) {
                 if (var.getNgmonName() != null) {
@@ -75,7 +76,6 @@ public class HelperGenerator {
                 } else {
                     tempName.append(var.getName());
                 }
-
             }
             int maxLengthUtils = Utils.getNgmonEmptyLogStatementMethodNameLength();
             int maxLength = (tempName.length() < maxLengthUtils) ? tempName.length() : maxLengthUtils;
@@ -116,7 +116,8 @@ public class HelperGenerator {
             // generate variables
             StringBuilder vars = new StringBuilder();
             StringBuilder tags = new StringBuilder();
-            // TODO log trace()
+
+            LOG.variablesInLog(log.getVariables().toString()).trace();
 //            System.out.println("\t" + log.getVariables() + "\n\t" + log.getOriginalLog() );
             for (LogFile.Variable var : log.getVariables()) {
                 if (var.getChangeOriginalName() == null) {
@@ -147,6 +148,7 @@ public class HelperGenerator {
             }
 //            System.out.printf("generating=%s.%s(%s)%s%s;", "LOG", log.getMethodName(), vars, tags, log.getLevel());
             String replacementLog = String.format("%s.%s(%s)%s.%s()", logName, log.getMethodName(), vars, tags, log.getLevel());
+            LOG.replacementLogOriginalLog(replacementLog, log.getOriginalLog()).trace();
             log.setGeneratedReplacementLog(replacementLog);
             return replacementLog;
         } else {

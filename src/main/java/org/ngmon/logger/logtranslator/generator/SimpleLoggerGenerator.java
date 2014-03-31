@@ -5,6 +5,11 @@ import org.stringtemplate.v4.ST;
 
 import java.io.File;
 
+/**
+ * Class generates SimpleLogger java file, which is used partly as bridging
+ * class between Log4j(2) and NGMON logging framework, and for logging
+ * NGMON's method calls.
+ */
 public class SimpleLoggerGenerator {
 
     private static final String sep = File.separator;

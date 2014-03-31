@@ -7,6 +7,14 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * This LogGlobalgenerator class creates new LogGlobal file from template,
+ * to handle all checking calls about enabled levels in current logging framework.
+ * These methods are for example used in following statemnts:
+ * if (log.isInfoEnabled()) {...}
+ *
+ * By default, all these checking methods return true;
+ */
 public class LogGlobalGenerator {
 
     private static final String sep = File.separator;

@@ -2,6 +2,7 @@ package org.ngmon.logger.logtranslator.generator;
 
 
 import org.ngmon.logger.logtranslator.common.Utils;
+import org.ngmon.logger.logtranslator.ngmonLogging.LogTranslatorNamespace;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +15,7 @@ public class FileCreator {
 
     static final String sep = File.separator;
     static String ngmonLogsDir;
+    private static LogTranslatorNamespace LOG = Utils.getLogger();
 
     /**
      * Create directory for all NGMON's log events for this particular application.
@@ -42,7 +44,7 @@ public class FileCreator {
             String filepath = dir + sep + nfc.getNamespaceClassName() + ".java";
 
             createDirectory(createPathFromString(dir));
-            // TODO log.info()
+            LOG.writingNamespace(filepath).debug();
 //            System.out.println("NS=" + filepath);
             createFile(createPathFromString(filepath), nfc.getNamespaceFileContent());
         }
@@ -64,7 +66,8 @@ public class FileCreator {
                 dirPath = dir;
             }
         } catch (IOException e) {
-            System.err.println("Unable to create NGMON directory " + dir.toString());
+            LOG.unableToCreateDirectory(dir.toString()).error();
+//            System.err.println("Unable to create NGMON directory " + dir.toString());
             e.printStackTrace();
         }
         return dirPath;
@@ -86,11 +89,12 @@ public class FileCreator {
                 Files.delete(file);
                 Files.createFile(file);
             } else {
-                throw new FileAlreadyExistsException("Unable to crate file, already exists. " + file.toString());
+                throw new FileAlreadyExistsException("Unable to create file, already exists. " + file.toString());
             }
             Files.write(file, fileContent.getBytes());
         } catch (IOException e) {
-            System.err.println("Unable to create NGMON directory " + file.toString());
+            LOG.unableToCreateDirectory(file.toString()).error();
+//            System.err.println("Unable to create NGMON directory " + file.toString());
             e.printStackTrace();
         }
     }

@@ -27,7 +27,16 @@ import java.util.TreeSet;
  }
 */
 
-// https://theantlrguy.atlassian.net/wiki/display/ST4/StringTemplate+4+Documentation
+/**
+ * Class creates NGMON's namespace class for each namespace with multiple LogFiles.
+ * LogFiles contain Log calls on rewritten log method calls.
+ * You can see example of such class in comment above.
+ *
+ * These files are generated into <application_home>/<ngmon_log_events_import_prefix>/<application-namespace>
+ * location.
+ *
+ * For example: hadoop/log_events/src/main/java/org/apache/hadoop/HdfsNamespace.java file.
+ */
 public class NamespaceFileCreator {
 
 
@@ -125,15 +134,12 @@ public class NamespaceFileCreator {
 
         methodTemplate.add("methodName", log.getMethodName());
         StringBuilder formalParameters = new StringBuilder();
-//        StringBuilder parameterNames = new StringBuilder();
 
         int i = 0;
         for (LogFile.Variable var : log.getVariables()) {
             if (i != 0) {
                 formalParameters.append(", ");
-//                parameterNames.append(", ");
             }
-
 
             /** Use String data type if variable is of any other data type then NGMON allowed data types */
             String type = var.getType();
@@ -146,16 +152,13 @@ public class NamespaceFileCreator {
             formalParameters.append(type).append(" ");
             if (var.getNgmonName() != null) {
                 formalParameters.append(var.getNgmonName());
-//                parameterNames.append(var.getNgmonName());
             } else {
                 formalParameters.append(var.getName());
-//                parameterNames.append(var.getName());
             }
             i++;
         }
-        //formalParameters.delete(formalParameters.length() - 2, formalParameters.length());
+
         methodTemplate.add("formalParameters", formalParameters);
-//        methodTemplate.add("parameterNames", parameterNames);
         return methodTemplate.render();
     }
 

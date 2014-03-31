@@ -1,24 +1,14 @@
 package org.ngmon.logger.logtranslator.common;
 
+import org.ngmon.logger.logtranslator.ngmonLogging.LogTranslatorNamespace;
 import org.ngmon.logger.logtranslator.translator.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Locate all files, where there is any log call.
@@ -28,6 +18,7 @@ public class LogFilesFinder {
     static List<LogFile> processFiles = new ArrayList<>();
     static List<LogFile> processFilesNoLogDeclaration = new ArrayList<>();
     static SortedSet<String> allJavaFiles = new TreeSet<>();
+    private static LogTranslatorNamespace LOG = Utils.getLogger();
 
     public static List<LogFile> commenceSearch(String loggingApplicationHome) {
         Path path = Paths.get(loggingApplicationHome);
@@ -37,7 +28,8 @@ public class LogFilesFinder {
                 Files.walkFileTree(path, new JavaLogFinder());
 //                System.out.println(processFileList.size());
             } else {
-                System.err.format("Location %s does not exist.%n", loggingApplicationHome);
+                LOG.locationDoesNotExists(loggingApplicationHome).error();
+//                System.err.format("Location %s does not exist.%n", loggingApplicationHome);
                 System.exit(15);
             }
         } catch (IOException e) {
@@ -59,6 +51,7 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
 
     private static List<String> importList;
     private static List<String> classStartList = Arrays.asList("class", "interface", "enum", "annotation");
+    private static LogTranslatorNamespace LOG = Utils.getLogger();
 
     static {
         Map<String, List<String>> logFws = LoggerFactory.getLoggingFrameworks();
@@ -94,6 +87,7 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
         // Skip this tree, it contains no directories or no java files
         if (count == 0) {
 //           TODO debug() System.out.println("skipping tree " + dir);
+            LOG.skippingDirectoryTree(dir.toString()).debug();
             return FileVisitResult.SKIP_SUBTREE;
         }
         return FileVisitResult.CONTINUE;
@@ -143,9 +137,10 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
                         /** There is high possibility that there is no logger.
                          *  Quick search only for 'log.method(*)' in file. */
                         foundLog = line.toLowerCase().matches(logSearch);
-//                        if (foundLog) {
+                        if (foundLog) {
                             // TODO debug() System.out.println("XXX found log call! " + line + " " + file);
-//                        }
+                            LOG.foundLogCall(line, file.toString()).trace();
+                        }
                     }
 
                     if (foundImport) {
@@ -164,7 +159,8 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
 
     @Override
     public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-        System.err.println("File error!");
+        LOG.fileError(exc.toString()).error();
+//        System.err.println("File error!");
         return FileVisitResult.CONTINUE;
     }
 }
