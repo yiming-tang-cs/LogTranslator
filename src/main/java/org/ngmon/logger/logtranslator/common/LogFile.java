@@ -169,6 +169,7 @@ public class LogFile implements Comparable {
 //        checkAndStoreVariable(variableName, variableTypeName, newNgmonName, ctx.start.getLine(),
 //                ctx.getStart().getCharPositionInLine(), ctx.getStop().getCharPositionInLine(),
 //                ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex(), isField);
+        // TODO add trace() log
         checkAndStoreVariable(variableName, variableTypeName, newNgmonName, ctx.start.getLine(), isField);
     }
 

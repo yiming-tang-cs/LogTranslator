@@ -16,7 +16,6 @@ public class Slf4jLoggerLoader extends LoggerLoader {
 
     private Collection translateLogMethods;
     private Collection checkerLogMethods;
-    private List<String> levels = Arrays.asList("trace", "debug", "info", "warn", "error");
 
     public Slf4jLoggerLoader() {
         super();
@@ -26,6 +25,7 @@ public class Slf4jLoggerLoader extends LoggerLoader {
         // Does slf4j has any custom methods? Add them into this list.
 //        List<String> slf4jCustomizedMethods = null;
 //        this.translateLogMethods = generateTranslateMethods(levels, slf4jCustomizedMethods);
+        List<String> levels = Arrays.asList("trace", "debug", "info", "warn", "error");
         this.translateLogMethods = generateTranslateMethods(levels, null);
         this.checkerLogMethods = generateCheckerMethods(levels);
     }

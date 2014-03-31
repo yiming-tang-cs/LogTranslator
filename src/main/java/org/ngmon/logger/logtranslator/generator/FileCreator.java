@@ -13,15 +13,15 @@ import java.nio.file.Path;
 
 public class FileCreator {
 
-    static final String sep = File.separator;
-    static String ngmonLogsDir;
+    private static final String sep = File.separator;
+    private static String ngmonLogsDir;
     private static LogTranslatorNamespace LOG = Utils.getLogger();
 
     /**
      * Create directory for all NGMON's log events for this particular application.
      * By default it is in <applicationHome>/src/main/java/log_events/<app-namespace>
      */
-    public static void createNGMONLogDirectoryPath() {
+    private static void createNGMONLogDirectoryPath() {
 
         StringBuilder newNgmonPath = new StringBuilder(sep + "src" + sep + "main" + sep + "java" + sep + "log_events" + sep);
         String appHome = Utils.getApplicationHome();

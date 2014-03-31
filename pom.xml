@@ -51,6 +51,14 @@
             <version>2.0-rc1</version>
         </dependency>
         <!-- end ngmon logging -->
+
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>6.2</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 

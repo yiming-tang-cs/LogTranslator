@@ -16,7 +16,6 @@ import java.io.InputStream;
 
 
 public class ANTLRRunner {
-    static CommonTokenStream tokens;
     private static LogFile currentFile;
     private static LogTranslatorNamespace LOG = Utils.getLogger();
 
@@ -31,7 +30,7 @@ public class ANTLRRunner {
             antlrInputStream = new FileInputStream(file);
             ANTLRInputStream ais = new ANTLRInputStream(antlrInputStream);
             JavaLexer lexer = new JavaLexer(ais);
-            tokens = new CommonTokenStream(lexer);
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
             JavaParser parser = new JavaParser(tokens);
             RuleContext tree = parser.compilationUnit();
             ParseTreeWalker walker = new ParseTreeWalker();

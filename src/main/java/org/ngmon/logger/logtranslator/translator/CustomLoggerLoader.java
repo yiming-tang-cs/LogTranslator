@@ -8,7 +8,6 @@ public class CustomLoggerLoader extends LoggerLoader {
 
     private Collection translateLogMethods;
     private Collection checkerLogMethods;
-    private List<String> levels = Arrays.asList("trace", "debug", "info", "warn", "error", "fatal");
 
     public CustomLoggerLoader() {
         super();
@@ -17,6 +16,7 @@ public class CustomLoggerLoader extends LoggerLoader {
         setLogFactory(imports.get(0));
 
         List<String> customCustomizedMethods = null; //Arrays.asList("asd");
+        List<String> levels = Arrays.asList("trace", "debug", "info", "warn", "error", "fatal");
         this.checkerLogMethods = generateCheckerMethods(levels);
         this.translateLogMethods = generateTranslateMethods(levels, customCustomizedMethods);
     }

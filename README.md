@@ -9,7 +9,7 @@ For now, it works only with maven projects.
 
 3) mvn exec:exec
 
-4) Add maven dependencies on NGMON. You can find them in Readme.txt file.
+4) Add maven dependencies on NGMON. You can find them [here][mvn-deps].
 
 #### Possible problems
  * Syntax errors complaining mainly about "diamonds" and their type mismatch.
@@ -23,7 +23,7 @@ For now, it works only with maven projects.
     This behaviour and workaround is tested with OpenJDK 1.7.51 and OracleJDK 1.7.17.
 
 #### Maven Dependencies
-
+[mvn-deps]:
  You also need to build ngmon-logger-java by yourself.
 
  Sources are available to download from https://github.com/ngmon/ngmon-logger-java/

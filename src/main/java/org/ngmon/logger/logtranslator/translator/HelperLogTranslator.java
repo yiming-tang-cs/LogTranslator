@@ -14,7 +14,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
 
-public class HelperLogTranslator {
+class HelperLogTranslator {
 
     /**
      * ANTLR parsing/walking of given file - LogFile object
@@ -24,7 +24,7 @@ public class HelperLogTranslator {
      * @param methodArgumentTypes formal arguments of this methods
      * @return true if all passed well
      */
-    public static boolean run(LogFile logFile, String lookFor, List<String> methodArgumentTypes) {
+    private static boolean run(LogFile logFile, String lookFor, List<String> methodArgumentTypes) {
         InputStream antlrInputStream;
         MethodListener listener;
         try {
@@ -124,9 +124,8 @@ class MethodListener extends JavaBaseListener {
      *
      * @param ctx ANTLR's method declaration context
      */
-    public void store(JavaParser.MethodDeclarationContext ctx) {
+    void store(JavaParser.MethodDeclarationContext ctx) {
         String varType = (ctx.type() == null) ? "void" : ctx.type().getText();
-//        System.out.println("Storing " + findMethod + " " + varType);
         /** Store method as 'variable' and set its newNgmonName to variable - not method call) */
         logfile.storeVariable(ctx, findMethod, varType, false, ctx.Identifier().getText());
         found = true;

@@ -12,7 +12,6 @@ import java.util.List;
 public class FailsafeLoggerLoader extends LoggerLoader {
     private Collection<String> translateLogMethods;
     private Collection checkerLogMethods;
-    private List<String> levels = Arrays.asList("trace", "debug", "info", "warn", "error", "fatal", "", "log");
 
     public FailsafeLoggerLoader() {
         super();
@@ -22,6 +21,7 @@ public class FailsafeLoggerLoader extends LoggerLoader {
 
         // Does log4j has any custom methods? Add them into this list.
         List<String> failsafeCustomizedMethods = Arrays.asList("log", "entry", "printf");
+        List<String> levels = Arrays.asList("trace", "debug", "info", "warn", "error", "fatal", "", "log");
         this.checkerLogMethods = generateCheckerMethods(levels);
         this.translateLogMethods = generateTranslateMethods(levels, failsafeCustomizedMethods);
     }
