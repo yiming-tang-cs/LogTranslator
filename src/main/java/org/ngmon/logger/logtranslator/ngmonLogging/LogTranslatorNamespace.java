@@ -76,8 +76,11 @@ public class LogTranslatorNamespace extends AbstractNamespace {
         return this;
     }
 
-    public AbstractNamespace namespaceNamespaceClass(String namespace, String namespaceClass) {
+    public AbstractNamespace namespaceNamespaceClass(String namespaceWhole) {
         return this;
     }
 
+    public AbstractNamespace deletedFile(String filepath) {
+        return this;
+    }
 }

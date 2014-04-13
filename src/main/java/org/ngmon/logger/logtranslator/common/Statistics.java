@@ -12,6 +12,10 @@ public class Statistics {
         changedLogMethodsCount++;
     }
 
+    public static int getChangedLogMethodsCount() {
+        return changedLogMethodsCount;
+    }
+
     public static void addLoggerTypeCount(String loggerType) {
         int actCount;
         if (loggerTypeCountMap.get(loggerType) == null) {
@@ -25,4 +29,5 @@ public class Statistics {
     public static void reportLoaderType() {
         // add +1 to map of Stats<key, count>
     }
+
 }

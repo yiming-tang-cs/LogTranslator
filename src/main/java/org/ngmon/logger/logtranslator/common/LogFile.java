@@ -39,7 +39,6 @@ public class LogFile implements Comparable {
         return variableList;
     }
 
-
     public void putVariableList(String variableName, Variable variable) {
         List<Variable> vars;
         if (getProperties(variableName) != null) {
@@ -61,6 +60,10 @@ public class LogFile implements Comparable {
 
     public String getNamespace() {
         return namespace;
+    }
+
+    public String getWholeNamespace() {
+        return namespace + "." + namespaceClass;
     }
 
     /**

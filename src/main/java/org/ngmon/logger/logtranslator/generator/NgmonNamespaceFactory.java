@@ -20,6 +20,57 @@ public class NgmonNamespaceFactory {
         return namespaceFileCreatorSet;
     }
 
+
+
+    /**
+     * Generate few namespaces for this logging application. Resolve number of namespaces
+     * for this app based on applicationNamespaceLength property and set them to LogFiles.
+     *
+     * @param logFileList input list of logFiles, which contain only filepath and package qualified name.
+     * @return same list of logFiles, but each of them has filled appropriate namespace.
+     */
+    public static List<LogFile> generateNamespaces(List<LogFile> logFileList) {
+        LOG.applicationNamespaceLength(Utils.getApplicationNamespaceLength()).trace();
+        for (LogFile lf : logFileList) {
+            if (lf.getPackageName() == null) {
+                LOG.emptyPackageNameInFile(lf.getFilepath()).error();
+//                System.err.println("null packageName in file " + lf.getFilepath());
+            }
+            String namespace = createNamespace(lf.getPackageName());
+//            System.out.println("NS=" + namespace);
+            lf.setNamespace(namespace);
+        }
+
+        return logFileList;
+    }
+
+    /**
+     * Create NGMON log namespace which will contain all calls for this logs.
+     * This method sets granularity level of NGMON log messages.
+     * If original packageName length is longer then applicationNamespaceLength
+     * property, make it shorter.
+     *
+     * @param packageName string to change
+     * @return shortened packageName from NGMON length rules
+     */
+    private static String createNamespace(String packageName) {
+        int numberOfDots = Utils.numberOfDotsInText(packageName);
+
+        if (numberOfDots < Utils.getApplicationNamespaceLength()) {
+            return packageName;
+        } else {
+            StringBuilder newPackageName = new StringBuilder();
+            String[] pckgs = packageName.split("\\.", Utils.getApplicationNamespaceLength() + 1);
+            pckgs[pckgs.length - 1] = "";
+            for (String p : pckgs) {
+                if (!p.equals("")) newPackageName.append(p).append(".");
+            }
+            // remove last extra dot
+            newPackageName.deleteCharAt(newPackageName.length() - 1);
+            return newPackageName.toString();
+        }
+    }
+
     /**
      * Add LogFile object to namespaceCreationMap. When all files are parsed, use this map
      * to create new files.
@@ -31,15 +82,15 @@ public class NgmonNamespaceFactory {
             throw new IllegalArgumentException("logFile is null!");
         }
 
-        LOG.namespaceNamespaceClass(logFile.getNamespace(), logFile.getNamespaceClass()).trace();
+        LOG.namespaceNamespaceClass(logFile.getWholeNamespace()).trace();
         Set<LogFile> logFiles;
-        if (namespaceCreationMap.containsKey(logFile.getNamespace()))  {
-            logFiles = namespaceCreationMap.get(logFile.getNamespace());
+        if (namespaceCreationMap.containsKey(logFile.getWholeNamespace()))  {
+            logFiles = namespaceCreationMap.get(logFile.getWholeNamespace());
         } else {
             logFiles = new TreeSet<>();
         }
         logFiles.add(logFile);
-        namespaceCreationMap.put(logFile.getNamespace(), logFiles);
+        namespaceCreationMap.put(logFile.getWholeNamespace(), logFiles);
     }
 
     /**

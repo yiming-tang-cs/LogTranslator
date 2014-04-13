@@ -45,7 +45,7 @@ public class FileCreator {
 
             createDirectory(createPathFromString(dir));
             LOG.writingNamespace(filepath).debug();
-//            System.out.println("NS=" + filepath);
+            System.out.println("NS=" + filepath);
             createFile(createPathFromString(filepath), nfc.getNamespaceFileContent());
         }
     }

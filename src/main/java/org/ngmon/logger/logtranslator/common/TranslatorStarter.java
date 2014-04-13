@@ -1,6 +1,9 @@
 package org.ngmon.logger.logtranslator.common;
 
-import org.ngmon.logger.logtranslator.generator.*;
+import org.ngmon.logger.logtranslator.generator.FileCreator;
+import org.ngmon.logger.logtranslator.generator.LogGlobalGenerator;
+import org.ngmon.logger.logtranslator.generator.NgmonNamespaceFactory;
+import org.ngmon.logger.logtranslator.generator.SimpleLoggerGenerator;
 import org.ngmon.logger.logtranslator.ngmonLogging.LogTranslatorNamespace;
 import org.ngmon.logger.logtranslator.translator.ANTLRRunner;
 
@@ -28,14 +31,14 @@ public class TranslatorStarter {
 
 // START OF DEBUGGING PURPOSES ONLY!
         for (LogFile lf : logFiles) {
-            if (lf.getFilepath().equals("/home/mtoth/example-app-all/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/conf/Configuration.java")) {
+            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common/hadoop-tools/hadoop-distcp/src/main/java/org/apache/hadoop/tools/mapred/RetriableFileCopyCommand.java")) {
                 tempList.add(lf);
             }
         }
 // END OF DEBUGGING PURPOSES ONLY!
 
         /** 2) Find & set namespaces. */
-        HelperGenerator.generateNamespaces(logFiles);
+        NgmonNamespaceFactory.generateNamespaces(logFiles);
 
         /** 3) Visit each logFile and parse variables, imports, log definitions, methods
          Main part of this program */
@@ -51,13 +54,16 @@ public class TranslatorStarter {
                 NgmonNamespaceFactory.addToNamespaceCreationMap(logFile);
             }
         }
+
+        System.out.printf("Changed %d log methods.%n", Statistics.getChangedLogMethodsCount());
         System.out.printf("\nProcessed %d of %d files. Extra files parsed by extending %d.%n%n", counter - nonLogLogFiles.size(), logFiles.size(), nonLogLogFiles.size());
         LOG.processed_log_and_extra_files(counter - nonLogLogFiles.size(), nonLogLogFiles.size()).debug();
 
         /** 4) Rewrite files from logFiles - logs/imports by ANTLR */
         for (LogFile logFile : logFiles) {
-            FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()),
-                logFile.getRewrittenJavaContent());
+            // TODO() -- uncomment to work again!
+//            FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()),
+//                logFile.getRewrittenJavaContent());
 
             LOG.createdFile(logFile.getFilepath()).info();
 //            System.out.println(logFile.getFilepath());

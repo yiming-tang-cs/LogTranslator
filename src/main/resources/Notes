@@ -1,3 +1,46 @@
+When translating hadoop-common project, file
+hadoop-common/hadoop-tools/hadoop-streaming/src/main/java/org/apache/hadoop/streaming/StreamJob.java
+contains variables at the end of the file! Move to the first class
+
+
+
+FIX:
+
+METHODS WITH SAME PARAMETER NAMES
+public AbstractNamespace failed_to_set_setxincludeaware_true_for(String Exception, String docBuilderFactory, String Exception)
+public AbstractNamespace getfilestatus_returning_directory_for_key_as_exists(String key, String key, String FOLDER_SUFFIX)
+public AbstractNamespace is_deprecated_filesystem_name_use_hdfs_instead(String name, String name)
+
+
+public AbstractNamespace ignoring_stale_result_from_old_client(String StringFormat_"0x%08x",ZooKeeper_ctx_GetSessionId_)
+
+public AbstractNamespace launched_fencing_command_with(String cmd, boolean is(pid!=null))
+
+public AbstractNamespace calls_recoverblock_targets_newgenerationstamp(String who, String block, String JoinerOn_", "_Join_targets_, String rbGetNewGenerationStamp)
+public AbstractNamespace data_dir_states_n(String JoinerOn_"\n  "_WithKeyValueSeparator_": "_Join_dataDirStates_)
+
+TERNARY OPERATOR
+public AbstractNamespace finalizing_upgrade_for_storage_directory(String sdGetRoot, String _storageGetLayoutVersion==0?"":"\n   cur LV = "+storageGetLayoutVersion+"; cur CTime = "+storageGetCTime_)
+
+public AbstractNamespace dataxceiver_error_processing_operation_src_dest(String Exception, String datanodeGetDisplayName, String op==null_?"unknown":opName_, String remoteAddress, String localAddress) {
+
+public AbstractNamespace entry(String Exception, Map.Entry<String,DatanodeDescriptor> entry)
+
+public AbstractNamespace error_failed_to_create_bookie_available(String KeeperExceptionCreate_code,path_GetMessage, String zkAvailablePath) {
+
+public AbstractNamespace checkpoint_period_secs_min(String checkpointConfGetPeriod, String checkpointConfGetPeriod/60)
+
+public AbstractNamespace failing_over_to_edit_log(String streams_curIdx+1_GetName)
+
+public AbstractNamespace http_ugi(String opGetValueGetType, String op, String path, String ugi, String ParamToSortedString_", ",parameters_)
+
+
+
+DO NOT GENERATE SAME METHOD TWICE (same types)
+public AbstractNamespace cancelling(String DelegationTokenIdentifierStringifyToken_delToken_)
+public AbstractNamespace cancelling(String DelegationTokenIdentifierStringifyToken_token_)
+
+
 variable declaration related rules:
 
 x memberDeclaration
