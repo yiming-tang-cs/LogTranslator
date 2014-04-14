@@ -20,11 +20,24 @@ public class Utils {
 
     private static final LogTranslatorNamespace NgmonLogger = LoggerFactory.getLogger(LogTranslatorNamespace.class, new SimpleLogger());
     public final static List<String> NGMON_ALLOWED_TYPES = Arrays.asList("String", "boolean", "byte", "int", "long", "double", "float", "char");
+//    public static List<String> NGMON_ALLOWED_OBJECT_TYPES = Arrays.asList("String", "Boolean", "Byte", "Integer", "Long", "Double", "Float", "Character");
     public final static List<String> MATH_OPERATORS = Arrays.asList("+", "-", "*", "/");
-    public final static List<String> BOOLEAN_OPERATORS = Arrays.asList("&&", "||");
+    public final static List<String> BOOLEAN_OPERATORS = Arrays.asList("&&", "||", "==", "!=", "<", ">");
     public final static List<String> PRIMITIVE_TYPES = Arrays.asList("boolean", "byte", "int", "long", "double", "float", "char");
     public static final String NEGATION = "!";
     public static final List<String> BANNED_LIST = Arrays.asList("a", "an", "the");
+    public static final List<String> COLLECTION_LIST = Arrays.asList("Collection", "List", "Map", "Set", "SortedSet", "Queue");
+    public static final List<String> JAVA_KEYWORDS = Arrays.asList(
+        "abstract", "continue", "for", "new", "switch",
+        "assert", "default", "goto", "package", "synchronized",
+        "boolean", "do", "if", "private", "this",
+        "break", "double", "implements", "protected", "throw",
+        "byte", "else", "import", "public", "throws",
+        "case", "enum", "instanceof", "return", "transient",
+        "catch", "extends", "int", "short", "try",
+        "char", "final", "interface", "static", "void",
+        "class", "finally", "long", "strictfp", "volatile",
+        "const", "float", "native", "super", "while");
     public static boolean ignoreParsingErrors;
     static String applicationHome;
     static String applicationNamespace;
@@ -44,7 +57,6 @@ public class Utils {
 
     // list of old & new generated log
     private static StringBuilder oldNewLogList = new StringBuilder();
-
 
     public static void initialize() {
         String propertyFile = "src/main/resources/logtranslator.properties";
@@ -145,13 +157,20 @@ public class Utils {
         return ngmonPrimitiveTypesOnly;
     }
 
-    public static boolean listContainsItem(List<String> list, String text) {
+    /**
+     * Look for an existence of item from list in given text.
+     *
+     * @param list get various options from this list
+     * @param text test for existence of item from list in this text
+     * @return if item is found, return item, else return null
+     */
+    public static String listContainsItem(List<String> list, String text) {
         for (String item : list) {
             if (text.contains(item)) {
-                return true;
+                return item;
             }
         }
-        return false;
+        return null;
     }
 
     public static boolean itemInList(List<String> list, String text) {

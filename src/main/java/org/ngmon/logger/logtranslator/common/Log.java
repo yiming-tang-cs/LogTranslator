@@ -48,7 +48,9 @@ public class Log {
     }
 
     public void addComment(String comment) {
-        this.comments.add(0, comment);
+        if (comment.length() > 1) {
+            this.comments.add(0, comment);
+        }
     }
 
     public String getOriginalLog() {
@@ -115,11 +117,11 @@ public class Log {
     @Override
     public String toString() {
         return "Log{" +
-                "comments=" + comments +
-                ", variables=" + variables +
-                ", level='" + level + '\'' +
-                ", tag='" + tag + '\'' +
-                ", methodName='" + methodName + '\'' +
-                '}';
+            "comments=" + comments +
+            ", variables=" + variables +
+            ", level='" + level + '\'' +
+            ", tag='" + tag + '\'' +
+            ", methodName='" + methodName + '\'' +
+            '}';
     }
 }

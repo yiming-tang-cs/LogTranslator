@@ -31,7 +31,7 @@ public class TranslatorStarter {
 
 // START OF DEBUGGING PURPOSES ONLY!
         for (LogFile lf : logFiles) {
-            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common/hadoop-tools/hadoop-distcp/src/main/java/org/apache/hadoop/tools/mapred/RetriableFileCopyCommand.java")) {
+            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/ha/ActiveStandbyElector.java")) {
                 tempList.add(lf);
             }
         }
@@ -62,8 +62,8 @@ public class TranslatorStarter {
         /** 4) Rewrite files from logFiles - logs/imports by ANTLR */
         for (LogFile logFile : logFiles) {
             // TODO() -- uncomment to work again!
-//            FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()),
-//                logFile.getRewrittenJavaContent());
+            FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()),
+                logFile.getRewrittenJavaContent());
 
             LOG.createdFile(logFile.getFilepath()).info();
 //            System.out.println(logFile.getFilepath());

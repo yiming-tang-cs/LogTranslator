@@ -5,10 +5,7 @@ import org.ngmon.logger.logtranslator.common.LogFile;
 import org.ngmon.logger.logtranslator.common.Utils;
 import org.stringtemplate.v4.ST;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 /*
  package log_events.org.apache.hadoop.hdfs.nfs;
@@ -45,6 +42,8 @@ public class NamespaceFileCreator {
     private String namespaceClassName;
     private String namespace;
     private ST namespaceFileContent;
+    private List<String> importList = new ArrayList<>();
+    private Set<String> tempImportSet = new HashSet<>();
 //    private String filePath;
 
     /**
@@ -62,6 +61,7 @@ public class NamespaceFileCreator {
         this.namespaceClassName = logFiles.first().getNamespaceClass();
         this.namespaceFileContent = prepareNewNamespace(namespace);
         addMethodsToNamespaceFileContent(logFiles);
+        addImportsToFileContent();
     }
 
     public String getNamespaceFileContent() {
@@ -86,15 +86,14 @@ public class NamespaceFileCreator {
         String NAMESPACE_JAVA_CLASS_STRING_TEMPLATE =
             "package log_events.<applicationNamespace>;\n\n"
 //                        + "import <namespaceImport>;\n"
-                + "import <abstractNamespaceImport>;\n\n"
+                + "<imports>\n\n"
 //                        + "<namespaceAnnotation>\n"
                 + "public class <namespaceClassName> extends AbstractNamespace {\n\n"
                 + "    <methods>"
                 + "}\n";
         ST template = new ST(NAMESPACE_JAVA_CLASS_STRING_TEMPLATE);
         template.add("applicationNamespace", namespace);
-//        template.add("namespaceImport", Utils.getNgmonAnnotationNamespaceImport());
-        template.add("abstractNamespaceImport", Utils.getNgmonLoggerAbstractNamespaceImport());
+//        template.add("imports", importList);
 //        template.add("namespaceAnnotation", Utils.ngmonAnnotationNamespace());
         template.add("namespaceClassName", namespaceClassName);
 
@@ -121,6 +120,17 @@ public class NamespaceFileCreator {
             methodsString.append(prettyPrintMethod(method));
         }
         namespaceFileContent.add("methods", methodsString.toString());
+    }
+
+    /**
+     *
+     */
+    private void addImportsToFileContent() {
+        importList.add("import " + Utils.getNgmonLoggerAbstractNamespaceImport() + ";\n");
+        for (String col : tempImportSet) {
+            importList.add("import java.util." + col + ";\n");
+        }
+        this.namespaceFileContent.add("imports", importList);
     }
 
     /**
@@ -168,7 +178,7 @@ public class NamespaceFileCreator {
             /** Use String data type if variable is of any other data type then NGMON allowed data types */
             String varType = variable.getType();
             if (Utils.isNgmonPrimitiveTypesOnly()) {
-                if (!Utils.listContainsItem(Utils.NGMON_ALLOWED_TYPES, varType)) {
+                if (Utils.listContainsItem(Utils.NGMON_ALLOWED_TYPES, varType) == null) {
                     varType = "String";
                 }
             }
@@ -187,7 +197,7 @@ public class NamespaceFileCreator {
                 int occurrence = 0;
                 for (String keyName : parametersMap.keySet()) {
                     if (keyName.contains(varName) && (keyName.length() > varName.length())) {
-                        int tmp = Integer.parseInt(keyName);
+                        int tmp = Integer.parseInt(keyName.substring(varName.length()));
                         if (tmp > occurrence) {
                             occurrence = tmp;
                         }
@@ -195,6 +205,33 @@ public class NamespaceFileCreator {
                 }
                 varName = varName + (occurrence + 1);
             }
+
+
+            /** If variable is any Collection, add import to namespace */
+
+            if (varType.contains("<")) {
+
+                String generics = varType.substring(varType.indexOf("<"), varType.indexOf(">"));
+                if (generics.contains(",")) {
+                    String[] genericTypes = generics.split(",");
+                    for (int i = 0; i < genericTypes.length; i++) {
+                        if (Utils.itemInList(Utils.COLLECTION_LIST, genericTypes[i])) {
+                            tempImportSet.add(genericTypes[i]);
+                        }
+                    }
+                }
+
+
+
+                String collectionVarType = varType.substring(0, varType.indexOf("<"));
+                if (collectionVarType.contains(".")) {
+                    collectionVarType = collectionVarType.substring(0, collectionVarType.indexOf("."));
+                }
+                if (Utils.itemInList(Utils.COLLECTION_LIST, collectionVarType)) {
+                    tempImportSet.add(collectionVarType);
+                }
+            }
+
             parametersMap.put(varName, varType);
         }
         return parametersMap;
