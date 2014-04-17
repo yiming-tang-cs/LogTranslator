@@ -206,9 +206,7 @@ public class NamespaceFileCreator {
                 varName = varName + (occurrence + 1);
             }
 
-
             /** If variable is any Collection, add import to namespace */
-
             if (varType.contains("<")) {
 
                 String generics = varType.substring(varType.indexOf("<"), varType.indexOf(">"));
@@ -220,8 +218,6 @@ public class NamespaceFileCreator {
                         }
                     }
                 }
-
-
 
                 String collectionVarType = varType.substring(0, varType.indexOf("<"));
                 if (collectionVarType.contains(".")) {

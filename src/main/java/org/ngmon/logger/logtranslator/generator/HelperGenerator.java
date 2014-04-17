@@ -72,6 +72,7 @@ public class HelperGenerator {
 
             LOG.variablesInLog(log.getVariables().toString()).trace();
 //            System.out.println("\t" + log.getVariables() + "\n\t" + log.getOriginalLog() );
+            int j = 0;
             for (LogFile.Variable var : log.getVariables()) {
                 if (var == null) {
                     System.out.println("dsao");
@@ -86,9 +87,10 @@ public class HelperGenerator {
                     vars.append(".toString()");
                 }
 
-                if (!var.equals(log.getVariables().get(log.getVariables().size() - 1))) {
+                if (j != log.getVariables().size() - 1) {
                     vars.append(", ");
                 }
+                j++;
             }
 
             // generate tags
@@ -103,10 +105,10 @@ public class HelperGenerator {
                 }
             }
 //            System.out.printf("generating=%s.%s(%s)%s%s;", "LOG", log.getMethodName(), vars, tags, log.getLevel());
-            // TODO NGMON does not know fatal() level! use error() instead!
-            if (log.getLevel().contains("fatal")) {
-                log.setLevel("error");
-            }
+//            // TODO NGMON does not know fatal() level! use error() instead! -- should be fixed - check it
+//            if (log.getLevel().contains("fatal")) {
+//                log.setLevel("error");
+//            }
             String replacementLog = String.format("%s.%s(%s)%s.%s()", logName, log.getMethodName(), vars, tags, log.getLevel());
             LOG.replacementLogOriginalLog(replacementLog, log.getOriginalLog()).trace();
             log.setGeneratedReplacementLog(replacementLog);

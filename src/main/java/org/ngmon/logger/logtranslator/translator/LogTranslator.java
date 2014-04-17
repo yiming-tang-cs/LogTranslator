@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.ngmon.logger.logtranslator.antlr.JavaBaseListener;
 import org.ngmon.logger.logtranslator.antlr.JavaParser;
 import org.ngmon.logger.logtranslator.common.*;
+import org.ngmon.logger.logtranslator.generator.GoMatchGenerator;
 import org.ngmon.logger.logtranslator.generator.HelperGenerator;
 
 import java.io.File;
@@ -183,7 +184,7 @@ public class LogTranslator extends JavaBaseListener {
                         ANTLRRunner.run(nonLogLogFile, true, true);
                         parsedExtendingClass = true;
                         logFile.addConnectedLogFilesList(nonLogLogFile);
-//                        TODO  ? finish parsing of variables from java files without
+//                        TODO  ? finish parsing of variables from java files without?
                     }
                 }
             }
@@ -516,6 +517,7 @@ public class LogTranslator extends JavaBaseListener {
                         log.setLevel(methodCall.getText());
                         logFile.addLog(log);
                          /* TODO - ADD GOMATCH support here */
+                        GoMatchGenerator.createGoMatch(log);
 
                         replaceLogMethod(ctx, log);
 
@@ -752,11 +754,14 @@ public class LogTranslator extends JavaBaseListener {
                 } else {
                     varType = "String";
                 }
-                varName = varName.substring(0, varName.indexOf("[")) + varName.substring(varName.indexOf("]"));
+                varName = varName.substring(0, varName.indexOf("[")) + varName.substring(varName.indexOf("]") + 1);
                 ngmonNewName = removeSpecialCharsFromText(varName);
 //                System.out.println("array=" + varName + " " + findMe.expression(0).getText());
-                logFile.storeVariable(findMe, varName, varType, false, ngmonNewName);
-                foundVar = returnLastValue(varName);
+//                logFile.storeVariable(findMe, varName, varType, false, ngmonNewName);
+                logFile.storeVariable(findMe, findMeText, varType, false, ngmonNewName);
+                foundVar = returnLastValue(findMeText);
+                foundVar.setChangeOriginalName(HelperGenerator.addStringTypeCast(findMeText));
+
 
                 /** if X is instanceof Y,
                  * create a new boolean variable named as 'isInstanceOfY' */
@@ -941,7 +946,7 @@ public class LogTranslator extends JavaBaseListener {
                 varType = findMeText.substring(1, findMeText.indexOf(")")).trim();
                 logFile.storeVariable(findMe, varName, varType, false, null);
                 foundVar = returnLastValue(varName);
-//                foundVar.setChangeOriginalName(HelperGenerator.addStringTypeCast(findMeText));
+                foundVar.setChangeOriginalName(HelperGenerator.addStringTypeCast(varName));
 
                 /** Last chance - look into extending class and their variables */
             } else if (logFile.getConnectedLogFilesList() != null) {

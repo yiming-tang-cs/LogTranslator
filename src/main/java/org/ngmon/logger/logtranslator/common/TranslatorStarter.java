@@ -1,9 +1,6 @@
 package org.ngmon.logger.logtranslator.common;
 
-import org.ngmon.logger.logtranslator.generator.FileCreator;
-import org.ngmon.logger.logtranslator.generator.LogGlobalGenerator;
-import org.ngmon.logger.logtranslator.generator.NgmonNamespaceFactory;
-import org.ngmon.logger.logtranslator.generator.SimpleLoggerGenerator;
+import org.ngmon.logger.logtranslator.generator.*;
 import org.ngmon.logger.logtranslator.ngmonLogging.LogTranslatorNamespace;
 import org.ngmon.logger.logtranslator.translator.ANTLRRunner;
 
@@ -31,7 +28,7 @@ public class TranslatorStarter {
 
 // START OF DEBUGGING PURPOSES ONLY!
         for (LogFile lf : logFiles) {
-            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/ha/ActiveStandbyElector.java")) {
+            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/conf/Configuration.java")) {
                 tempList.add(lf);
             }
         }
@@ -42,8 +39,8 @@ public class TranslatorStarter {
 
         /** 3) Visit each logFile and parse variables, imports, log definitions, methods
          Main part of this program */
-//        for (LogFile logFile : tempList) { // REMOVE DEBUGGING LINE ONLY!!
-        for (LogFile logFile : logFiles) {
+        for (LogFile logFile : tempList) { // REMOVE DEBUGGING LINE ONLY!!
+//        for (LogFile logFile : logFiles) {
             if (!logFile.isFinishedParsing()) {
                 LOG.antlrParsingFile(logFile.getFilepath()).debug();
                 ANTLRRunner.run(logFile, false, false);
@@ -62,8 +59,8 @@ public class TranslatorStarter {
         /** 4) Rewrite files from logFiles - logs/imports by ANTLR */
         for (LogFile logFile : logFiles) {
             // TODO() -- uncomment to work again!
-            FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()),
-                logFile.getRewrittenJavaContent());
+//            FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()),
+//                logFile.getRewrittenJavaContent());
 
             LOG.createdFile(logFile.getFilepath()).info();
 //            System.out.println(logFile.getFilepath());
@@ -91,6 +88,8 @@ public class TranslatorStarter {
         LOG.translationProcessFinishTime(((double) (stop - start) / 1000)).info();
 //        System.out.println("Finished in " + ((double) (stop - start) / 1000) + " seconds.");
 
+        /** 10) Put GoMatch patterns into one file */
+        FileCreator.createFile(FileCreator.createPathFromString("logs/go-match.patterns"), GoMatchGenerator.getGoMatchPatternListToString());
     }
 
     public static List<LogFile> getLogFiles() {

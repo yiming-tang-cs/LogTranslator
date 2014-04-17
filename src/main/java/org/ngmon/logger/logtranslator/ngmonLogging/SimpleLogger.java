@@ -17,6 +17,11 @@ public class SimpleLogger implements Logger {
 
     private org.apache.logging.log4j.Logger LOG4J_LOGGER = LogManager.getLogger(this);
 
+    @Override
+    public void log() {
+
+    }
+
     public void log(String fqnNS, String methodName, List<String> tags, String[] paramNames, Object[] paramValues, int level) {
         LOG4J_LOGGER.debug(JSONer.getEventJson(fqnNS, methodName, tags, paramNames, paramValues, level));
     }
