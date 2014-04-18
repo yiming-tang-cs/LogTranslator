@@ -37,14 +37,12 @@ import java.util.*;
  */
 public class NamespaceFileCreator {
 
-
     private Set<NGMONMethod> methods = new TreeSet<>();
     private String namespaceClassName;
     private String namespace;
     private ST namespaceFileContent;
     private List<String> importList = new ArrayList<>();
     private Set<String> tempImportSet = new HashSet<>();
-//    private String filePath;
 
     /**
      * Create all log methods connected for this namespace from logically associated logFiles.
@@ -54,8 +52,6 @@ public class NamespaceFileCreator {
      * @param logFiles  set of LogFiles associated with this namespace
      */
     public NamespaceFileCreator(String namespace, TreeSet<LogFile> logFiles) {
-//        System.out.println("namespace=" + namespace);
-
         this.namespace = namespace = namespace.substring(0, namespace.lastIndexOf("."));
         // pick any element from set and set ClassName
         this.namespaceClassName = logFiles.first().getNamespaceClass();
@@ -69,7 +65,7 @@ public class NamespaceFileCreator {
     }
 
     public String getNamespace() {
-        return namespace;//.substring(0, namespace.lastIndexOf("."));
+        return namespace;
     }
 
     public String getNamespaceClassName() {
@@ -93,8 +89,6 @@ public class NamespaceFileCreator {
                 + "}\n";
         ST template = new ST(NAMESPACE_JAVA_CLASS_STRING_TEMPLATE);
         template.add("applicationNamespace", namespace);
-//        template.add("imports", importList);
-//        template.add("namespaceAnnotation", Utils.ngmonAnnotationNamespace());
         template.add("namespaceClassName", namespaceClassName);
 
         return template;
@@ -106,19 +100,37 @@ public class NamespaceFileCreator {
      *
      * @param logFiles set containing all LogFiles Logs with possible new methods.
      */
+//    protected void addMethodsToNamespaceFileContent(Set<LogFile> logFiles) {
+//        for (LogFile logFile : logFiles) {
+//            for (Log log : logFile.getLogs()) {
+//                NGMONMethod ngmonMethod = new NGMONMethod(log.getMethodName(), prepareFormalArguments(log));
+//                if (!methods.contains(ngmonMethod)) {
+//                    methods.add(ngmonMethod);
+//                    log.setGeneratedNgmonLog(ngmonMethod.toString());
+//                }
+//            }
+//        }
+//        StringBuilder methodsString = new StringBuilder();
+//        for (NGMONMethod method : methods) {
+//            methodsString.append(prettyPrintMethod(method));
+//        }
+//        namespaceFileContent.add("methods", methodsString.toString());
+//    }
+
+
     protected void addMethodsToNamespaceFileContent(Set<LogFile> logFiles) {
+        StringBuilder methodsString = new StringBuilder();
         for (LogFile logFile : logFiles) {
             for (Log log : logFile.getLogs()) {
                 NGMONMethod ngmonMethod = new NGMONMethod(log.getMethodName(), prepareFormalArguments(log));
                 if (!methods.contains(ngmonMethod)) {
-                    methods.add(ngmonMethod);
+                    String prettyNgmonMethod = prettyPrintMethod(ngmonMethod);
+                    methodsString.append(prettyNgmonMethod);
+                    log.setGeneratedNgmonLog(prettyNgmonMethod);
                 }
             }
         }
-        StringBuilder methodsString = new StringBuilder();
-        for (NGMONMethod method : methods) {
-            methodsString.append(prettyPrintMethod(method));
-        }
+
         namespaceFileContent.add("methods", methodsString.toString());
     }
 
@@ -171,14 +183,14 @@ public class NamespaceFileCreator {
      * @param log to create method from
      * @return returns mapping of variableName - variableType
      */
-    private LinkedHashMap<String, String> prepareFormalArguments(Log log) {
+    public LinkedHashMap<String, String> prepareFormalArguments(Log log) {
         LinkedHashMap<String, String> parametersMap = new LinkedHashMap<>();
         for (LogFile.Variable variable : log.getVariables()) {
 
             /** Use String data type if variable is of any other data type then NGMON allowed data types */
             String varType = variable.getType();
             if (Utils.isNgmonPrimitiveTypesOnly()) {
-                if (Utils.listContainsItem(Utils.NGMON_ALLOWED_TYPES, varType) == null) {
+                if (Utils.listContainsItem(Utils.NGMON_ALLOWED_TYPES, varType.toLowerCase()) == null) {
                     varType = "String";
                 }
             }

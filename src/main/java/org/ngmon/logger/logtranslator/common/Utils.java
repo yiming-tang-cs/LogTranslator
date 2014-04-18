@@ -18,9 +18,8 @@ import java.util.Properties;
  */
 public class Utils {
 
-    private static final LogTranslatorNamespace NgmonLogger = LoggerFactory.getLogger(LogTranslatorNamespace.class, new SimpleLogger());
-    public final static List<String> NGMON_ALLOWED_TYPES = Arrays.asList("String", "boolean", "byte", "int", "long", "double", "float", "char");
-//    public static List<String> NGMON_ALLOWED_OBJECT_TYPES = Arrays.asList("String", "Boolean", "Byte", "Integer", "Long", "Double", "Float", "Character");
+    public final static List<String> NGMON_ALLOWED_TYPES = Arrays.asList("string", "boolean", "byte", "int", "long", "double", "float", "char");
+    //    public static List<String> NGMON_ALLOWED_OBJECT_TYPES = Arrays.asList("String", "Boolean", "Byte", "Integer", "Long", "Double", "Float", "Character");
     public final static List<String> MATH_OPERATORS = Arrays.asList("+", "-", "*", "/");
     public final static List<String> BOOLEAN_OPERATORS = Arrays.asList("&&", "||", "==", "!=", "<", ">");
     public final static List<String> PRIMITIVE_TYPES = Arrays.asList("boolean", "byte", "int", "long", "double", "float", "char");
@@ -38,6 +37,7 @@ public class Utils {
         "char", "final", "interface", "static", "void",
         "class", "finally", "long", "strictfp", "volatile",
         "const", "float", "native", "super", "while");
+    private static final LogTranslatorNamespace NgmonLogger = LoggerFactory.getLogger(LogTranslatorNamespace.class, new SimpleLogger());
     public static boolean ignoreParsingErrors;
     static String applicationHome;
     static String applicationNamespace;
@@ -186,11 +186,18 @@ public class Utils {
         return text.length() - text.replace(".", "").length();
     }
 
-    public static String getOldNewLogList() {
-        return oldNewLogList.toString();
-    }
+    public static String getOldNewLogList(List<LogFile> logFiles) {
+        for (LogFile logfs : logFiles) {
+            for (Log log : logfs.getLogs()) {
+                // TODO DEBUG()!
+                String logs = log.getOriginalLog() + "\n"
+                    + log.getGeneratedReplacementLog() + "\n"
+                    + log.getGeneratedNgmonLog().substring(0, log.getGeneratedNgmonLog().indexOf("{") - 1) + "\n"
+                    + log.getGoMatchLog() + "\n\n";
+                oldNewLogList.append(logs);
+            }
+        }
 
-    public static void addOldNewLogList(String oldNewLog) {
-        oldNewLogList.append(oldNewLog).append("\n\n\n");
+        return oldNewLogList.toString();
     }
 }

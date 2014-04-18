@@ -28,7 +28,7 @@ public class TranslatorStarter {
 
 // START OF DEBUGGING PURPOSES ONLY!
         for (LogFile lf : logFiles) {
-            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/conf/Configuration.java")) {
+            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-nodemanager/src/main/java/org/apache/hadoop/yarn/server/nodemanager/NMAuditLogger.java")) {
                 tempList.add(lf);
             }
         }
@@ -39,8 +39,8 @@ public class TranslatorStarter {
 
         /** 3) Visit each logFile and parse variables, imports, log definitions, methods
          Main part of this program */
-        for (LogFile logFile : tempList) { // REMOVE DEBUGGING LINE ONLY!!
-//        for (LogFile logFile : logFiles) {
+//        for (LogFile logFile : tempList) { // REMOVE DEBUGGING LINE ONLY!!
+        for (LogFile logFile : logFiles) {
             if (!logFile.isFinishedParsing()) {
                 LOG.antlrParsingFile(logFile.getFilepath()).debug();
                 ANTLRRunner.run(logFile, false, false);
@@ -83,7 +83,7 @@ public class TranslatorStarter {
 //        System.out.println("SimpleLogger=" + SimpleLoggerGenerator.path);
 
         /** 9) Just put all logs to one "random" file */
-        FileCreator.createFile(FileCreator.createPathFromString("/tmp/ngmonold-newfiles"), Utils.getOldNewLogList());
+        FileCreator.createFile(FileCreator.createPathFromString("logs/ngmonold-newfiles"), Utils.getOldNewLogList(logFiles));
         long stop = System.currentTimeMillis();
         LOG.translationProcessFinishTime(((double) (stop - start) / 1000)).info();
 //        System.out.println("Finished in " + ((double) (stop - start) / 1000) + " seconds.");

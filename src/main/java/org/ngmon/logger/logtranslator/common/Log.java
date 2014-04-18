@@ -18,6 +18,7 @@ public class Log {
     private String generatedNgmonLog;
     private String generatedReplacementLog;
     private String originalLog;
+    private String goMatchLog;
 
     public Log() {
         comments = new ArrayList<>();
@@ -102,6 +103,10 @@ public class Log {
         this.methodName = firstLetter + methodName.substring(1);
     }
 
+    public void setGeneratedNgmonLog(String generatedNgmonLog) {
+        this.generatedNgmonLog = generatedNgmonLog;
+    }
+
     public String getGeneratedNgmonLog() {
         return generatedNgmonLog;
     }
@@ -123,5 +128,13 @@ public class Log {
             ", tag='" + tag + '\'' +
             ", methodName='" + methodName + '\'' +
             '}';
+    }
+
+    public void setGoMatchLog(String goMatchLog) {
+        this.goMatchLog = goMatchLog;
+    }
+
+    public String getGoMatchLog() {
+        return goMatchLog;
     }
 }

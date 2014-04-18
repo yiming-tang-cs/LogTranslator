@@ -12,6 +12,7 @@ import org.ngmon.logger.logtranslator.common.LogFile;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 class HelperLogTranslator {
@@ -72,6 +73,7 @@ class MethodListener extends JavaBaseListener {
     private LogFile logfile;
     private String findMethod;
     private boolean found;
+    private List<String> foundMethodTypes = new ArrayList<>();
 
     MethodListener(LogFile logFile, String findMethod, List<String> argumentTypes) {
         this.argumentTypes = argumentTypes;
@@ -81,6 +83,8 @@ class MethodListener extends JavaBaseListener {
     }
 
     public boolean isFound() {
+
+
         return found;
     }
 
@@ -100,8 +104,14 @@ class MethodListener extends JavaBaseListener {
                     int i = 0;
                     int correct = 0;
                     for (JavaParser.FormalParameterContext fpc : ctx.formalParameters().formalParameterList().formalParameter()) {
-                        if (argumentTypes.get(i).equals(fpc.type().getText())) {
+                        String type = argumentTypes.get(i);
+                        if (type.equals("Object")) {
+                            // consider this type to be the same. skip iteration
                             correct++;
+                            foundMethodTypes.add(fpc.type().getText());
+                        } else if (type.equals(fpc.type().getText())) {
+                            correct++;
+                            foundMethodTypes.add(fpc.type().getText());
                         }
                         i++;
                     }

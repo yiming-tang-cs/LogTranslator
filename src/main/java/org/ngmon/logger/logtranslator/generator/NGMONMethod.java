@@ -15,8 +15,6 @@ public class NGMONMethod implements Comparable {
 
     public NGMONMethod(String methodName, LinkedHashMap<String, String> formalParameters) {
         this.methodName = methodName;
-
-
         this.formalParameters = formalParameters;
     }
 
@@ -80,6 +78,11 @@ public class NGMONMethod implements Comparable {
             }
         }
         return this.getMethodName().compareTo(other.getMethodName());
+    }
+
+    @Override
+    public String toString() {
+        return "LOG." + methodName + "(" + formalParameters +")";
 
     }
 }
