@@ -79,7 +79,7 @@ public class HelperGenerator {
             int j = 0;
             for (LogFile.Variable var : log.getVariables()) {
                 if (var == null) {
-                    System.out.println("dsao");
+                    System.out.println("NULL VAR in" + log.getOriginalLog());
                 }
                 if (var.getChangeOriginalName() == null) {
                     vars.append(var.getName());

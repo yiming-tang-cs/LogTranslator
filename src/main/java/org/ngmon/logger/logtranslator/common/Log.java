@@ -19,6 +19,9 @@ public class Log {
     private String generatedReplacementLog;
     private String originalLog;
     private String goMatchLog;
+    private boolean isSpecialLog; // special means formatted - having '{}'
+    private List<LogFile.Variable> formattedVariables; // variables in slf4j formatter's standard, declared after first comma
+    private String formattingSymbol;
 
     public Log() {
         comments = new ArrayList<>();
@@ -52,6 +55,33 @@ public class Log {
         if (comment.length() > 1) {
             this.comments.add(0, comment);
         }
+    }
+
+    public String getFormattingSymbol() {
+        return formattingSymbol;
+    }
+
+    public void setFormattingSymbol(String formattingSymbol) {
+        this.formattingSymbol = formattingSymbol;
+    }
+
+    public List<LogFile.Variable> getFormattedVariables() {
+        return formattedVariables;
+    }
+
+    public void addFormattedVariables(LogFile.Variable variable) {
+        if (this.formattedVariables == null) {
+            this.formattedVariables = new ArrayList<>();
+        }
+        this.formattedVariables.add(0, variable);
+    }
+
+    public boolean isSpecialLog() {
+        return isSpecialLog;
+    }
+
+    public void setSpecialLog(boolean isSpecialLog) {
+        this.isSpecialLog = isSpecialLog;
     }
 
     public String getOriginalLog() {
@@ -103,12 +133,12 @@ public class Log {
         this.methodName = firstLetter + methodName.substring(1);
     }
 
-    public void setGeneratedNgmonLog(String generatedNgmonLog) {
-        this.generatedNgmonLog = generatedNgmonLog;
-    }
-
     public String getGeneratedNgmonLog() {
         return generatedNgmonLog;
+    }
+
+    public void setGeneratedNgmonLog(String generatedNgmonLog) {
+        this.generatedNgmonLog = generatedNgmonLog;
     }
 
     public String getGeneratedReplacementLog() {
@@ -130,11 +160,11 @@ public class Log {
             '}';
     }
 
-    public void setGoMatchLog(String goMatchLog) {
-        this.goMatchLog = goMatchLog;
-    }
-
     public String getGoMatchLog() {
         return goMatchLog;
+    }
+
+    public void setGoMatchLog(String goMatchLog) {
+        this.goMatchLog = goMatchLog;
     }
 }

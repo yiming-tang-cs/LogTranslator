@@ -98,6 +98,9 @@ public class LoggerFactory {
         if (loader != null) {
             Statistics.addLoggerTypeCount(actualLoggingFramework);
         }
+        if (loader != null) {
+            loader.setLogType(actualLoggingFramework);
+        }
         return loader;
     }
 

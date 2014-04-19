@@ -22,7 +22,7 @@ public class GoMatchGenerator {
     public static String getGoMatchPatternListToString() {
         StringBuilder output = new StringBuilder();
         for (String pattern : goMatchPatternList) {
-            output.append(pattern);
+            output.append(pattern).append("\n\n");
         }
         return output.toString();
     }
@@ -40,7 +40,7 @@ public class GoMatchGenerator {
 
         String originalLog = log.getOriginalLog();
         originalLog = originalLog.substring(originalLog.indexOf("("), originalLog.lastIndexOf(")"));
-        originalLog = extractVars(originalLog);
+        originalLog = extractVars(originalLog, log.getFormattedVariables(), log.getFormattingSymbol());
 
         List<String> variableNames = new ArrayList<>();
         for (LogFile.Variable var : log.getVariables()) {
@@ -78,29 +78,65 @@ public class GoMatchGenerator {
             }
         }
 
-        pattern.append(originalLog).append("\n\n");
+        pattern.append(originalLog);
         return pattern.toString();
     }
 
     /**
      * Extract commentary text from log statement.
+     * Handle special case of formatted variables
      *
-     * @param text to extract variables from
+     * @param text               to extract variables from
+     * @param formattedVariables variables which will be formatted in {}.
      * @return altered text without variables
      */
-    private static String extractVars(String text) {
+    private static String extractVars(String text, List<LogFile.Variable> formattedVariables, String symbol) {
         StringBuilder cleanText = new StringBuilder();
-        boolean start = false;
+        /** If text contains slf4j's formatter brackets {}, don't extract variables
+         manually */
+        if (formattedVariables != null) {
+//            TODO
+//            if (symbol.equals("%")) {
+//                if (text.contains("%")) {
+//                    String tmp = text.substring(text.indexOf("%"), text.indexOf("%") + 1).toLowerCase();
+//
+//                }
+//
+//                Utils.listContainsItem(CommonsLoggerLoader.getFormattingSymbols(), text);
+//            }
+            if (formattedVariables.size() != 0 && text.contains(symbol)) {
+                int brackets = Utils.countOfSymbolInText(text, symbol);
+                StringBuilder pattern = new StringBuilder();
+                for (int i = 0; i < formattedVariables.size(); i++) {
+                    if (i == 0) {
+                        pattern.append("_");
+                    } else {
+                        pattern.append(" _");
+                    }
+                }
+                // find first comma, delimiting 1st and 2nd+ argument
+                text = text.substring(0, text.lastIndexOf(formattedVariables.get(0).getName()));
+                text = text.substring(0, text.lastIndexOf(","));
+                if (brackets > 1) {
+                    pattern.replace(0, pattern.length(), "_");
+                }
+                text = text.replaceAll("\\{\\}", pattern.toString());
+            }
+
+        }
+
+        /** If not, continue manually */
+        boolean parseComment = false;
         char c_prev = text.charAt(0);
         for (char c : text.substring(1).toCharArray()) {
             if (c == '\"' && c_prev != '\\') {
-                start = !start;
-                c_prev = c;
+                parseComment = !parseComment;
             }
-            if (start) {
+            if (parseComment) {
                 if (c != '"') {
                     cleanText.append(c);
                 }
+                // if we don't skip variables, change them to "_"
             } else {
                 if (c == ',') {
                     cleanText.append(", ");
@@ -112,9 +148,10 @@ public class GoMatchGenerator {
                     cleanText.append(" ");
                 }
             }
+            c_prev = c;
         }
         /** remove multiple empty spaces or underscore chars, remove all non alphanum */
-        String clean =  cleanText.toString().replaceAll("[^A-Za-z0-9 _]", "").replaceAll("  +", " ").replaceAll("_+", "_");;
+        String clean = cleanText.toString().replaceAll("[^A-Za-z0-9,': \\[\\]_]->#\\(\\)", "").replaceAll("  +", " ").replaceAll("_+", "_");
         return clean;
 
     }

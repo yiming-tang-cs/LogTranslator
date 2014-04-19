@@ -54,7 +54,7 @@ public class NgmonNamespaceFactory {
      * @return shortened packageName from NGMON length rules
      */
     private static String createNamespace(String packageName) {
-        int numberOfDots = Utils.numberOfDotsInText(packageName);
+        int numberOfDots = Utils.countOfSymbolInText(packageName, ".");
 
         if (numberOfDots < Utils.getApplicationNamespaceLength()) {
             return packageName;

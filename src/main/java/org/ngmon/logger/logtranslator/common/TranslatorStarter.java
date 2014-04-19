@@ -28,7 +28,7 @@ public class TranslatorStarter {
 
 // START OF DEBUGGING PURPOSES ONLY!
         for (LogFile lf : logFiles) {
-            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-nodemanager/src/main/java/org/apache/hadoop/yarn/server/nodemanager/NMAuditLogger.java")) {
+            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common/src/main/java/org/apache/hadoop/yarn/webapp/Dispatcher.java")) {
                 tempList.add(lf);
             }
         }

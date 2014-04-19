@@ -16,6 +16,8 @@ public class CommonsLoggerLoader extends LoggerLoader {
 
     private Collection translateLogMethods;
     private Collection checkerLogMethods;
+    private static List<String> formattingSymbols = Arrays.asList("%b", "%h", "%s",  "%c", "%d", "%o", "%x", "%e", "%f", "%g", "%a", "%t");
+
 
     public CommonsLoggerLoader() {
         super();
@@ -31,6 +33,9 @@ public class CommonsLoggerLoader extends LoggerLoader {
         this.translateLogMethods = generateTranslateMethods(levels, null);
     }
 
+    public static List<String> getFormattingSymbols() {
+        return formattingSymbols;
+    }
 
     @Override
     public Collection getTranslateLogMethods() {

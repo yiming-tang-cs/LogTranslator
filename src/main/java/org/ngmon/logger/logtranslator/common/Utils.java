@@ -182,8 +182,9 @@ public class Utils {
         return false;
     }
 
-    public static int numberOfDotsInText(String text) {
-        return text.length() - text.replace(".", "").length();
+    public static int countOfSymbolInText(String text, String symbol) {
+        text = text.replaceAll(" ", "");
+        return (text.length() - text.replace(symbol, "").length()) / symbol.length();
     }
 
     public static String getOldNewLogList(List<LogFile> logFiles) {
@@ -193,7 +194,7 @@ public class Utils {
                 String logs = log.getOriginalLog() + "\n"
                     + log.getGeneratedReplacementLog() + "\n"
                     + log.getGeneratedNgmonLog().substring(0, log.getGeneratedNgmonLog().indexOf("{") - 1) + "\n"
-                    + log.getGoMatchLog() + "\n\n";
+                    + log.getGoMatchLog() + "\n\n\n";
                 oldNewLogList.append(logs);
             }
         }

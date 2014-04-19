@@ -62,10 +62,6 @@ public class LogFile implements Comparable {
         return namespace;
     }
 
-    public String getWholeNamespace() {
-        return namespace + "." + namespaceClass;
-    }
-
     /**
      * Set namespace and create namespaceClass. namespaceClass is created
      * from end of namespace and appended 'Namespace' by default.
@@ -75,6 +71,10 @@ public class LogFile implements Comparable {
         this.namespace = namespace;
         this.namespaceClass = getNamespaceEnd() + Utils.getNgmonDefaultNamespaceEnd();
         this.namespace = namespace.substring(0, namespace.lastIndexOf("."));
+    }
+
+    public String getWholeNamespace() {
+        return namespace + "." + namespaceClass;
     }
 
     /**
@@ -153,19 +153,19 @@ public class LogFile implements Comparable {
     @Override
     public String toString() {
         return "LogFile{" +
-                "variableList=" + variableList +
-                ", filepath='" + filepath + '\'' +
-                '}';
+            "variableList=" + variableList +
+            ", filepath='" + filepath + '\'' +
+            '}';
     }
 
     /**
      * Simplified helper method for storing variables into variable list. More data based on context is passed to
      * checkAndStoreVariable() which actually stores variable and all related information into variable list.
      *
-     * @param ctx               superclass of given context, used for getting given context positions and tokens
-     * @param variableName      name of variable to be stored into variable list
-     * @param variableTypeName  type of variable to be stored into variable list
-     * @param isField           true if variable is declared in class, not in method body or as formal parameter in method
+     * @param ctx              superclass of given context, used for getting given context positions and tokens
+     * @param variableName     name of variable to be stored into variable list
+     * @param variableTypeName type of variable to be stored into variable list
+     * @param isField          true if variable is declared in class, not in method body or as formal parameter in method
      */
 
     public void storeVariable(ParserRuleContext ctx, String variableName, String variableTypeName, boolean isField, String newNgmonName) {
@@ -181,8 +181,8 @@ public class LogFile implements Comparable {
      *
      * @param variableName variable name
      * @param variableType variable type as string
-     * @param lineNumber variable line number occurrence
-     * @param isField false if variable is declared in method, true otherwise
+     * @param lineNumber   variable line number occurrence
+     * @param isField      false if variable is declared in method, true otherwise
      */
     private void checkAndStoreVariable(String variableName, String variableType, String newNgmonName, int lineNumber, boolean isField) {
         LogFile.Variable p = this.new Variable();
@@ -202,6 +202,7 @@ public class LogFile implements Comparable {
 
     /**
      * 0 = equal, -1 otherwise
+     *
      * @param other LogFile object to compare
      * @return 0 if LogFiles are same - have same FilePath, -1 otherwise
      */
@@ -220,12 +221,12 @@ public class LogFile implements Comparable {
         return -1;
     }
 
-    public void setRewrittenJavaContent(String rewrittenJavaContent) {
-        this.rewrittenJavaContent = rewrittenJavaContent;
-    }
-
     public String getRewrittenJavaContent() {
         return rewrittenJavaContent;
+    }
+
+    public void setRewrittenJavaContent(String rewrittenJavaContent) {
+        this.rewrittenJavaContent = rewrittenJavaContent;
     }
 
     public class Variable {
@@ -235,7 +236,6 @@ public class LogFile implements Comparable {
         private int lineNumber;
         private boolean isField; // true if variable is declared in class, not in method body
         private String changeOriginalName = null; // need if we want to use changed original variable in log - typecasting
-
 
         public String getNgmonName() {
             return ngmonName;
@@ -288,11 +288,11 @@ public class LogFile implements Comparable {
         @Override
         public String toString() {
             return "Variable{" +
-                    "name='" + name + '\'' +
-                    ", type='" + type + '\'' +
-                    ", lineNumber=" + lineNumber +
-                    ", field=" + isField +
-                    '}';
+                "name='" + name + '\'' +
+                ", type='" + type + '\'' +
+                ", lineNumber=" + lineNumber +
+                ", field=" + isField +
+                '}';
         }
     }
 }

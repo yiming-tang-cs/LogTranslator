@@ -9,7 +9,15 @@ public abstract class LoggerLoader {
 
     private List<String> logger;
     private String logFactory;
+    private String logType;
 
+    public String getLogType() {
+        return logType;
+    }
+
+    public void setLogType(String logType) {
+        this.logType = logType;
+    }
 
     public List<String> getLogger() {
         return logger;
