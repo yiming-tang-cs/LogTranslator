@@ -1,5 +1,9 @@
 package org.ngmon.logger.logtranslator.translator;
 
+import org.ngmon.logger.logtranslator.common.LogFile;
+import org.ngmon.logger.logtranslator.common.Utils;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -14,9 +18,10 @@ import java.util.List;
 
 public class CommonsLoggerLoader extends LoggerLoader {
 
+    //    private static List<String> formattingSymbols = Arrays.asList("%b", "%h", "%s",  "%c", "%d", "%o", "%x", "%e", "%f", "%g", "%a", "%t");
+    private static List<String> formattingSymbols = Arrays.asList("b", "h", "s", "c", "d", "o", "x", "e", "f", "g", "a", "t");
     private Collection translateLogMethods;
     private Collection checkerLogMethods;
-    private static List<String> formattingSymbols = Arrays.asList("%b", "%h", "%s",  "%c", "%d", "%o", "%x", "%e", "%f", "%g", "%a", "%t");
 
 
     public CommonsLoggerLoader() {
@@ -31,6 +36,94 @@ public class CommonsLoggerLoader extends LoggerLoader {
         List<String> levels = Arrays.asList("trace", "debug", "info", "warn", "error", "fatal");
         this.checkerLogMethods = generateCheckerMethods(levels);
         this.translateLogMethods = generateTranslateMethods(levels, null);
+    }
+
+    /**
+     * Method extracts %ds formatters and substitutes them with underscore symbol.
+     * Works for string formatter.
+     *
+     * @param methodText text to be formatted
+     * @return text with substituted formatters by underscores
+     */
+    public static String isolateFormatters(String methodText, List<LogFile.Variable> formattedVariables) {
+        List<String> formatters = new ArrayList<>();
+        if (methodText.startsWith("(String.format")) {
+            methodText = methodText.substring("(String.format".length(), methodText.length() - 1);
+        }
+        String tempMethod = methodText;
+
+        while (tempMethod.contains("%")) {
+            StringBuilder formatter = new StringBuilder();
+            int percPos = tempMethod.indexOf("%");
+            Character c_prev = null;//tempMethod.charAt(percPos);
+            for (Character c : tempMethod.substring(percPos).toLowerCase().toCharArray()) {
+                // search for first character in Formatting symbols, followed by any non alphanum character
+                formatter.append(c);
+                if (Utils.listContainsItem(formattingSymbols, c.toString()) != null) {
+                    formatters.add(formatter.toString());
+                    tempMethod = tempMethod.substring(percPos + 2);
+                    break;
+                }
+
+                if (c == ' ' || c == ',' || c == '"') {
+                    tempMethod = tempMethod.substring(percPos + 1);
+                    break;
+                }
+
+                if (c_prev != null) {
+                    if (c == '%' && c_prev == '%') {
+                        // escaping of '%' per cent
+                        tempMethod = tempMethod.substring(percPos + 2);
+                        break;
+                    }
+                }
+                c_prev = c;
+            }
+        }
+        int i = 0;
+        for (String frmt : formatters) {
+            checkFormattedVarType(frmt, formattedVariables.get(i));
+            methodText = methodText.replaceFirst(frmt, "_");
+            i++;
+        }
+
+        methodText = methodText.substring(0, methodText.lastIndexOf(formattedVariables.get(0).getName()));
+        methodText = methodText.substring(0, methodText.lastIndexOf(","));
+        return methodText;
+    }
+
+    private static void checkFormattedVarType(String frmt, LogFile.Variable variable) {
+        if ((frmt.endsWith("d") || frmt.endsWith("o") || frmt.endsWith("x")) && !variable.getType().equals("int")) {
+            variable.setType("int");
+
+        } else if ((frmt.endsWith("e") || frmt.endsWith("f") || frmt.endsWith("g") || frmt.endsWith("a")) && !variable.getType().equals("float")) {
+            variable.setType("float");
+        }
+    }
+
+    public static boolean hasFormatters(String methodText) {
+        List<String> formatters = new ArrayList<>();
+        String tempMethod = methodText;
+
+        while (tempMethod.contains("%")) {
+            StringBuilder formatter = new StringBuilder();
+            int percPos = tempMethod.indexOf("%");
+            for (Character c : tempMethod.substring(percPos).toCharArray()) {
+                // search for first character in Formatting symbols, followed by any non alphanum character
+                formatter.append(c);
+                if (Utils.listContainsItem(formattingSymbols, c.toString()) != null) {
+                    formatters.add(formatter.toString());
+                    tempMethod = tempMethod.substring(percPos + 2);
+                    break;
+                }
+                if (c == ' ' || c == ',' || c == '"') {
+                    tempMethod = tempMethod.substring(percPos + 1);
+                    break;
+                }
+            }
+        }
+//        System.out.println("new=" + methodText);
+        return !formatters.isEmpty();
     }
 
     public static List<String> getFormattingSymbols() {
@@ -49,6 +142,6 @@ public class CommonsLoggerLoader extends LoggerLoader {
 
     @Override
     public String[] getFactoryInitializations() {
-        return new String[] {"LogFactory.getInstance", "LogFactory.getLog"};
+        return new String[]{"LogFactory.getInstance", "LogFactory.getLog"};
     }
 }

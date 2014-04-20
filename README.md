@@ -22,6 +22,8 @@ For now, it works only with maven projects.
  * [WARNING] antlr & ngmon logger are having some problems during compilation. We pass '-XX:-UseSplitVerifier' argument to JVM.
     This behaviour and workaround is tested with OpenJDK 1.7.51 and OracleJDK 1.7.17.
 
+ * All variables should be declared before usage. LogTranslator is not as powerful as compiler and makes only 1 pass over each java file.
+   (fix hadoop-common/hadoop-tools/hadoop-streaming/src/main/java/org/apache/hadoop/streaming/StreamJob.java )
 #### Maven Dependencies
 [mvn-deps]:
  You also need to build ngmon-logger-java by yourself.

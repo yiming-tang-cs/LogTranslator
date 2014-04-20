@@ -1,5 +1,8 @@
 package org.ngmon.logger.logtranslator.translator;
 
+import org.ngmon.logger.logtranslator.common.LogFile;
+import org.ngmon.logger.logtranslator.common.Utils;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -30,6 +33,27 @@ public class Slf4jLoggerLoader extends LoggerLoader {
         this.checkerLogMethods = generateCheckerMethods(levels);
     }
 
+    public static String isolateFormatters(String text, List<LogFile.Variable> formattedVariables) {
+        if (formattedVariables.size() != 0 && text.contains("{}")) {
+            int brackets = Utils.countOfSymbolInText(text, "{}");
+            StringBuilder pattern = new StringBuilder();
+            for (int i = 0; i < formattedVariables.size(); i++) {
+                if (i == 0) {
+                    pattern.append("_");
+                } else {
+                    pattern.append(" _");
+                }
+            }
+            // find first comma, delimiting 1st and 2nd+ argument
+            text = text.substring(0, text.lastIndexOf(formattedVariables.get(0).getName()));
+            text = text.substring(0, text.lastIndexOf(","));
+            if (brackets > 1) {
+                pattern.replace(0, pattern.length(), "_");
+            }
+            text = text.replaceAll("\\{\\}", pattern.toString());
+        }
+        return text;
+    }
 
     @Override
     public Collection getTranslateLogMethods() {
@@ -43,8 +67,6 @@ public class Slf4jLoggerLoader extends LoggerLoader {
 
     @Override
     public String[] getFactoryInitializations() {
-        return new String[] {"LoggerFactory.getLogger"};
+        return new String[]{"LoggerFactory.getLogger"};
     }
-
-
 }

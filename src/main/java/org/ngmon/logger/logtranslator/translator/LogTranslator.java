@@ -540,18 +540,20 @@ public class LogTranslator extends JavaBaseListener {
         if (expressionList != null) {
             String methodText = expressionList.expression(0).getText();
             if (methodText.contains("{}")) {
-                if (loggerLoader.getLogType().equals("slf4j")) {
+                // TODO enable types!
+//                if (loggerLoader.getLogType().equals("slf4j")) {
                     formattedLog = true;
                     log.setFormattingSymbol("{}");
-                }
-            } else if (methodText.contains("%")) {
-                if (loggerLoader.getLogType().equals("commons")) {
+//                }
+            } else if (methodText.contains("%") && CommonsLoggerLoader.hasFormatters(methodText)) {
+//                if (loggerLoader.getLogType().equals("commons")) {
                     formattedLog = true;
                     log.setFormattingSymbol("%");
-                }
+//                }
             }
             if (expressionList.expression(0).getText().contains("{}") || expressionList.expression(0).getText().contains("%")) {
-//                System.out.println(expressionList.getText() + " is special case!");
+//                System.out.println(expressionList.getText() + " is special case!");                                  Log log = transformMethodStatement(ctx.expression().expressionList());
+
 //                formattedLog = true;
                 // if (currentFramework == slf4j) then handle 2 types of messages: '"msgs {}", logFile' and classic '"das" + das + "dsad"';
                 // handle {} and "" ?
@@ -562,7 +564,7 @@ public class LogTranslator extends JavaBaseListener {
             Collections.reverse(methodList);
             int counter = 0;
             for (JavaParser.ExpressionContext ec : methodList) {
-                if (formattedLog && counter != methodList.size() - 1) {
+                if ((formattedLog && counter != methodList.size() - 1) || (formattedLog && ec.getText().startsWith("String.format"))) {
                     fillCurrentLog(log, ec, true);
                 } else {
                     fillCurrentLog(log, ec, false);
@@ -630,7 +632,9 @@ public class LogTranslator extends JavaBaseListener {
             List<String> stringList = Arrays.asList("format", "print");
 //            System.out.println("asd" + expression.expression(0).getText());
             if (Utils.listContainsItem(stringList, expression.expression(0).getText()) != null) {
-                for (JavaParser.ExpressionContext ch : expression.expressionList().expression()) {
+                List<JavaParser.ExpressionContext> expList = expression.expressionList().expression();
+                Collections.reverse(expList);
+                for (JavaParser.ExpressionContext ch : expList) {
 //                    System.out.println("ch=" + ch.getText());
                     determineLogTypeAndStore(log, ch, formattedVar);
                 }
@@ -835,6 +839,14 @@ public class LogTranslator extends JavaBaseListener {
                 log.setTag("ternary-operator");
                 foundVar = returnLastValue(terVarName.toString());
                 foundVar.setChangeOriginalName(HelperGenerator.addStringTypeCast(findMeText));
+
+                /** parse String.format stuff and add varaibles to formattedList */
+            } else if (findMeText.startsWith("String.format")) {
+                if (formattedVar) {
+                    for (JavaParser.ExpressionContext ec : findMe.expression()) {
+                        System.out.println(ec.getText());
+                    }
+                }
 
                 /** Mathematical expression - use double as type */
             } else if (Utils.listContainsItem(Utils.MATH_OPERATORS, findMeText) != null) {
