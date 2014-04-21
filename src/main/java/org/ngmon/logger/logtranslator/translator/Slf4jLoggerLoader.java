@@ -39,16 +39,16 @@ public class Slf4jLoggerLoader extends LoggerLoader {
             StringBuilder pattern = new StringBuilder();
             for (int i = 0; i < formattedVariables.size(); i++) {
                 if (i == 0) {
-                    pattern.append("_");
+                    pattern.append("~");
                 } else {
-                    pattern.append(" _");
+                    pattern.append(" ~");
                 }
             }
             // find first comma, delimiting 1st and 2nd+ argument
             text = text.substring(0, text.lastIndexOf(formattedVariables.get(0).getName()));
             text = text.substring(0, text.lastIndexOf(","));
             if (brackets > 1) {
-                pattern.replace(0, pattern.length(), "_");
+                pattern.replace(0, pattern.length(), "~");
             }
             text = text.replaceAll("\\{\\}", pattern.toString());
         }

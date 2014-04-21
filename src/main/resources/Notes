@@ -20,12 +20,6 @@ GOMATCH
 org.hadooop.XYZ.replacementLog##Processing <INT:count> messages from DataNodes that were previously queued during standby state.")
 
 
-LOG.warn("!!! WARNING !!!"+"\n\tThe NameNode currently runs without persistent storage."+"\n\tAny changes to the file system meta-data may be lost."+"\n\tRecommended actions:"+"\n\t\t- shutdown and restart NameNode with configured \""+propertyName+"\" in hdfs-site.xml;"+"\n\t\t- use Backup Node as a persistent and up-to-date storage "+"of the file system meta-data.")
-LOG.warning_n_tthe_namenode_currently_runs_n_n_n_in_n_of(propertyName).warn()
-public AbstractNamespace warning_n_tthe_namenode_currently_runs_n_n_n_in_n_of(String propertyName)
-
-
-
 variable declaration related rules:
 
 x memberDeclaration

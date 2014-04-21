@@ -28,9 +28,12 @@ public class TranslatorStarter {
 
 // START OF DEBUGGING PURPOSES ONLY!
         for (LogFile lf : logFiles) {
-            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common/src/main/java/org/apache/hadoop/yarn/webapp/Dispatcher.java")) {
+            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/BlockPoolSliceScanner.java")) {
                 tempList.add(lf);
             }
+//            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common/hadoop-tools/hadoop-gridmix/src/main/java/org/apache/hadoop/mapred/gridmix/GridmixJob.java")) {
+//                tempList.add(lf);
+//            }
         }
 // END OF DEBUGGING PURPOSES ONLY!
 
@@ -68,6 +71,9 @@ public class TranslatorStarter {
 
         /** 5) Create NGMON namespaces from associated parsed logFiles */
         NgmonNamespaceFactory.createNamespaces();
+
+        /** 5,5) Create GoMatch patterns */
+        GoMatchGenerator.createGoMatch(logFiles);
 
         /** 6) Write NGMON namespaces on filesystem */
         FileCreator.flushNamespaces();

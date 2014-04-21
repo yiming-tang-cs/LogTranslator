@@ -50,7 +50,7 @@ public class HelperGenerator {
                 }
             }
             if (Utils.itemInList(Utils.JAVA_KEYWORDS, logName.toString())) {
-                System.out.println("logname=" + logName.toString());
+//                System.out.println("logname=" + logName.toString());
                 log.setMethodName(Utils.getNgmonEmptyLogStatement());
             } else {
                 log.setMethodName(logName.toString());

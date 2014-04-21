@@ -8,7 +8,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.ngmon.logger.logtranslator.antlr.JavaBaseListener;
 import org.ngmon.logger.logtranslator.antlr.JavaParser;
 import org.ngmon.logger.logtranslator.common.*;
-import org.ngmon.logger.logtranslator.generator.GoMatchGenerator;
 import org.ngmon.logger.logtranslator.generator.HelperGenerator;
 
 import java.io.File;
@@ -510,9 +509,8 @@ public class LogTranslator extends JavaBaseListener {
                         HelperGenerator.generateMethodName(log);
                         log.setLevel(methodCall.getText());
                         logFile.addLog(log);
-                         /* TODO - ADD GOMATCH support here */
                         replaceLogMethod(ctx, log);
-                        GoMatchGenerator.createGoMatch(log);
+
                     }
                     // else throw new exception or add it to methodList?
                 }
@@ -542,21 +540,14 @@ public class LogTranslator extends JavaBaseListener {
             if (methodText.contains("{}")) {
                 // TODO enable types!
 //                if (loggerLoader.getLogType().equals("slf4j")) {
-                    formattedLog = true;
-                    log.setFormattingSymbol("{}");
+                formattedLog = true;
+                log.setFormattingSymbol("{}");
 //                }
             } else if (methodText.contains("%") && CommonsLoggerLoader.hasFormatters(methodText)) {
 //                if (loggerLoader.getLogType().equals("commons")) {
-                    formattedLog = true;
-                    log.setFormattingSymbol("%");
+                formattedLog = true;
+                log.setFormattingSymbol("%");
 //                }
-            }
-            if (expressionList.expression(0).getText().contains("{}") || expressionList.expression(0).getText().contains("%")) {
-//                System.out.println(expressionList.getText() + " is special case!");                                  Log log = transformMethodStatement(ctx.expression().expressionList());
-
-//                formattedLog = true;
-                // if (currentFramework == slf4j) then handle 2 types of messages: '"msgs {}", logFile' and classic '"das" + das + "dsad"';
-                // handle {} and "" ?
             }
 
             /** start evaluating of parsed value from rightmost element, continuing with left sibling */
@@ -564,7 +555,7 @@ public class LogTranslator extends JavaBaseListener {
             Collections.reverse(methodList);
             int counter = 0;
             for (JavaParser.ExpressionContext ec : methodList) {
-                if ((formattedLog && counter != methodList.size() - 1) || (formattedLog && ec.getText().startsWith("String.format"))) {
+                if ((formattedLog && counter != methodList.size() - 1) || (formattedLog && ec.getText().contains("String.format"))) {
                     fillCurrentLog(log, ec, true);
                 } else {
                     fillCurrentLog(log, ec, false);
@@ -814,23 +805,29 @@ public class LogTranslator extends JavaBaseListener {
             } else if (findMeText.contains("?")) {
 //                System.out.println(findMe.getChildCount() + " " + findMeText);
                 String tmpVarName;
+                String expTrue;
+                String expFalse;
                 if (findMeText.startsWith("String.format")) {
                     // String.format() get log statement part after formatting string
                     tmpVarName = findMe.expressionList().expression(1).expression(0).expression(0).primary().getText();
+//                    expTrue = findMe.primary().expression().expression(1).getText();
+//                    expFalse = findMe.primary().expression().expression(2).getText();
+//                    log.setTernaryValues(tmpVarName, expTrue, expFalse);
                 } else {
                     /**
                      * Create it as "isX",  addComment to log as "isX", store
                      * this boolean variable add tag to this log as "ternary" */
                     tmpVarName = findMe.primary().expression().expression(0).getText();
+                    expTrue = findMe.primary().expression().expression(1).getText();
+                    expFalse = findMe.primary().expression().expression(2).getText();
+                    log.setTernaryValues(tmpVarName, expTrue, expFalse);
                 }
                 StringBuilder terVarName = new StringBuilder(removeSpecialCharsFromText(tmpVarName));
                 String operator = Utils.listContainsItem(Utils.BOOLEAN_OPERATORS, terVarName.toString());
                 if (operator != null) {
                     terVarName = terVarName.delete(terVarName.indexOf(operator), terVarName.length());
                 }
-                terVarName.setCharAt(0, Character.toUpperCase(terVarName.charAt(0)));
-                ngmonNewName = "is" + terVarName.toString();                                       // varName -> isVarName
-//                ngmonNewName = "is" + varName.replace(varName.charAt(0), (Character.toUpperCase(varName.charAt(0)))); // varName -> isVarName
+                ngmonNewName = "is" + Character.toUpperCase(terVarName.charAt(0)) + terVarName.substring(1); // varName -> isVarName
                 ngmonNewName = removeSpecialCharsFromText(ngmonNewName);
 
                 varType = "String";
@@ -843,8 +840,28 @@ public class LogTranslator extends JavaBaseListener {
                 /** parse String.format stuff and add varaibles to formattedList */
             } else if (findMeText.startsWith("String.format")) {
                 if (formattedVar) {
-                    for (JavaParser.ExpressionContext ec : findMe.expression()) {
-                        System.out.println(ec.getText());
+                    if (findMe.expression(0).getText().equals("String.format")) {
+                        List<JavaParser.ExpressionContext> sfContext = findMe.expressionList().expression();
+                        Collections.reverse(sfContext);
+                        int i = 0;
+                        for (JavaParser.ExpressionContext ec : sfContext) {
+                            if (!ec.getText().startsWith("\"")) {
+                                foundVar = findVariableInLogFile(logFile, ec);
+                                if (foundVar == null) {
+                                    varName = ec.getText();
+                                    varType = "String";
+                                    ngmonNewName = removeSpecialCharsFromText(varName);
+                                    logFile.storeVariable(ec, varName, varType, false, ngmonNewName);
+                                    foundVar = returnLastValue(varName);
+                                    foundVar.setChangeOriginalName(HelperGenerator.addStringTypeCast(findMeText));
+
+                                    if (sfContext.size() - 2 > i) {
+                                        log.addFormattedVariables(foundVar);
+                                    }
+                                    i++;
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -905,7 +922,7 @@ public class LogTranslator extends JavaBaseListener {
                         } else {
                             // handle "null" objects
                             methodArgumentsTypeList.add("Object");
-                        // Todo warn() unable to determine method's arguemnt type from ec.getText (null)
+                            // Todo warn() unable to determine method's arguemnt type from ec.getText (null)
 //                            System.err.println("not found " + ec.getText());
                         }
                     }

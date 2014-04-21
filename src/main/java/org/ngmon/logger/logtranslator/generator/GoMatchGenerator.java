@@ -20,6 +20,14 @@ public class GoMatchGenerator {
 
     private static Set<String> goMatchPatternList = new HashSet<>();
 
+    public static void createGoMatch(List<LogFile> logFiles) {
+        for (LogFile logFile : logFiles) {
+            for (Log log : logFile.getLogs()) {
+                createGoMatchFromLog(log);
+            }
+        }
+    }
+
     public static String getGoMatchPatternListToString() {
         StringBuilder output = new StringBuilder();
         for (String pattern : goMatchPatternList) {
@@ -28,7 +36,7 @@ public class GoMatchGenerator {
         return output.toString();
     }
 
-    public static void createGoMatch(Log log) {
+    public static void createGoMatchFromLog(Log log) {
         log.getComments();
         String goMatchPattern = createNewPattern(log);
         // prepend with comment and original log file
@@ -80,11 +88,11 @@ public class GoMatchGenerator {
             if (!Utils.itemInList(Utils.NGMON_ALLOWED_TYPES, type.toLowerCase())) {
                 type = "String";
             }
-            originalLog = originalLog.replaceFirst("_", "<" + type.toUpperCase() + ":" + varName + ">");
+            originalLog = originalLog.replaceFirst("~", "<" + type.toUpperCase() + ":" + varName + ">");
         }
         // TODO check slf4j and common on behaviour!
-        if (log.getGeneratedReplacementLog().contains("tag(\"methodCall\")") && originalLog.contains("_")) {
-            originalLog = originalLog.replaceAll("_", "");
+        if (log.getGeneratedReplacementLog().contains("tag(\"methodCall\")") && originalLog.contains("~")) {
+            originalLog = originalLog.replaceAll("~", "");
         }
 
         pattern.append(originalLog);
@@ -96,7 +104,7 @@ public class GoMatchGenerator {
      * Handle special case of formatted variables
      *
      * @param text to extract variables from
-     * @param log containing all information about this log
+     * @param log  containing all information about this log
      * @return altered text without variables
      */
     private static String extractVars(String text, Log log) {
@@ -105,16 +113,32 @@ public class GoMatchGenerator {
         String textNoFormatters = null;
 
         StringBuilder cleanText = new StringBuilder();
+
+        /** remove ternary operator */
+        if (log.getTag() != null) {
+            if (log.getTag().contains("ternary-operator")) {
+                System.out.println(log.getOriginalLog());
+                int questionMarkPos = text.indexOf("?");
+                int startPos = text.indexOf(log.getTernaryValues().get(0));
+                int endPos = text.indexOf(log.getTernaryValues().get(2));
+                if (startPos < questionMarkPos && endPos > questionMarkPos) {
+                    // replace ternary Bool variable by ~ and expTrue,False remove
+                    String tempText = text.substring(startPos, endPos);
+                    text = text.replace(tempText, " ~ ");
+                }
+            }
+        }
+
         /** If text contains slf4j's formatter brackets {}, don't extract variables
          manually */
         if (formattedVariables != null) {
             if (symbol.equals("%")) {
                 textNoFormatters = CommonsLoggerLoader.isolateFormatters(text, formattedVariables);
-
+                textNoFormatters = textNoFormatters.replace("%%", "%");
             } else if (symbol.equals("{}")) {
                 textNoFormatters = Slf4jLoggerLoader.isolateFormatters(text, formattedVariables);
             }
-            return textNoFormatters;
+            text = textNoFormatters;
         }
 
         /** If not, continue manually */
@@ -131,16 +155,16 @@ public class GoMatchGenerator {
                 // if we don't skip variables, change them to "_"
             } else {
                 if (c == ',') {
-                    cleanText.append(", ");
+                    cleanText.append(" ");
                 } else if (c == '\"') {
                     ;
                 } else if (c != '+') {
-                    cleanText.append("_");
+                    cleanText.append("~");
                 }
             }
             c_prev = c;
         }
         /** remove multiple empty spaces or underscore chars, remove all non alphanum */
-        return cleanText.toString().replaceAll("[^A-Za-z0-9,': \\[\\]_]->#\\(\\)", "").replaceAll("  +", " ").replaceAll("_+", "_");
+        return cleanText.toString().replaceAll("[^A-Za-z0-9,': \\[\\]_]->#\\(\\)", "").replaceAll("  +", " ").replaceAll("~+", "~");
     }
 }

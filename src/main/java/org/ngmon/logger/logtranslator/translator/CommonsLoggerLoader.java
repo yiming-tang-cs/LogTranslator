@@ -47,8 +47,14 @@ public class CommonsLoggerLoader extends LoggerLoader {
      */
     public static String isolateFormatters(String methodText, List<LogFile.Variable> formattedVariables) {
         List<String> formatters = new ArrayList<>();
-        if (methodText.startsWith("(String.format")) {
-            methodText = methodText.substring("(String.format".length(), methodText.length() - 1);
+        if (methodText.startsWith("String.format")) {
+            methodText = methodText.substring("String.format".length(), methodText.length() - 1);
+        } else if (methodText.contains("String.format")) {
+            int pos = methodText.indexOf("String.format");
+            methodText = methodText.substring(0, pos) + methodText.substring(pos + "String.format(".length(), methodText.length() - 1);
+//            if (methodText.startsWith("\"")) {
+//                methodText = methodText.substring(1);
+//            }
         }
         String tempMethod = methodText;
 
@@ -73,7 +79,7 @@ public class CommonsLoggerLoader extends LoggerLoader {
                 if (c_prev != null) {
                     if (c == '%' && c_prev == '%') {
                         // escaping of '%' per cent
-                        tempMethod = tempMethod.substring(percPos + 2);
+                        tempMethod = tempMethod.substring(percPos + 1);
                         break;
                     }
                 }
@@ -83,11 +89,15 @@ public class CommonsLoggerLoader extends LoggerLoader {
         int i = 0;
         for (String frmt : formatters) {
             checkFormattedVarType(frmt, formattedVariables.get(i));
-            methodText = methodText.replaceFirst(frmt, "_");
+            methodText = methodText.replaceFirst(frmt, "~");
             i++;
         }
 
-        methodText = methodText.substring(0, methodText.lastIndexOf(formattedVariables.get(0).getName()));
+        if (methodText.lastIndexOf(formattedVariables.get(0).getName()) == -1) {
+            System.out.println(methodText);
+        }
+        int pos = methodText.lastIndexOf(formattedVariables.get(0).getName());
+        methodText = methodText.substring(0, pos);
         methodText = methodText.substring(0, methodText.lastIndexOf(","));
         return methodText;
     }
@@ -95,7 +105,6 @@ public class CommonsLoggerLoader extends LoggerLoader {
     private static void checkFormattedVarType(String frmt, LogFile.Variable variable) {
         if ((frmt.endsWith("d") || frmt.endsWith("o") || frmt.endsWith("x")) && !variable.getType().equals("int")) {
             variable.setType("int");
-
         } else if ((frmt.endsWith("e") || frmt.endsWith("f") || frmt.endsWith("g") || frmt.endsWith("a")) && !variable.getType().equals("float")) {
             variable.setType("float");
         }

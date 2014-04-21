@@ -22,6 +22,7 @@ public class Log {
     private boolean isSpecialLog; // special means formatted - having '{}'
     private List<LogFile.Variable> formattedVariables; // variables in slf4j formatter's standard, declared after first comma
     private String formattingSymbol;
+    private List<String> ternaryValues;
 
     public Log() {
         comments = new ArrayList<>();
@@ -103,6 +104,17 @@ public class Log {
      */
     public void addVariable(LogFile.Variable variable) {
         this.variables.add(0, variable);
+    }
+
+    public void setTernaryValues(String expBool, String expTrue, String expFalse) {
+        this.ternaryValues = new ArrayList<>();
+        this.ternaryValues.add(expBool);
+        this.ternaryValues.add(expTrue);
+        this.ternaryValues.add(expFalse);
+    }
+
+    public List<String> getTernaryValues() {
+        return ternaryValues;
     }
 
     public String getLevel() {
