@@ -236,6 +236,7 @@ public class LogFile implements Comparable {
         private int lineNumber;
         private boolean isField; // true if variable is declared in class, not in method body
         private String changeOriginalName = null; // need if we want to use changed original variable in log - typecasting
+        private String tag;
 
         public String getNgmonName() {
             return ngmonName;
@@ -283,6 +284,14 @@ public class LogFile implements Comparable {
 
         public void setChangeOriginalName(String changeOriginalName) {
             this.changeOriginalName = changeOriginalName;
+        }
+
+        public String getTag() {
+            return tag;
+        }
+
+        public void setTag(String tag) {
+            this.tag = tag;
         }
 
         @Override

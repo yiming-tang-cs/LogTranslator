@@ -28,12 +28,9 @@ public class TranslatorStarter {
 
 // START OF DEBUGGING PURPOSES ONLY!
         for (LogFile lf : logFiles) {
-            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/BlockPoolSliceScanner.java")) {
+            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common/hadoop-tools/hadoop-gridmix/src/main/java/org/apache/hadoop/mapred/gridmix/JobMonitor.java")) {
                 tempList.add(lf);
             }
-//            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common/hadoop-tools/hadoop-gridmix/src/main/java/org/apache/hadoop/mapred/gridmix/GridmixJob.java")) {
-//                tempList.add(lf);
-//            }
         }
 // END OF DEBUGGING PURPOSES ONLY!
 

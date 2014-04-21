@@ -6,10 +6,7 @@ import org.ngmon.logger.logtranslator.common.Utils;
 import org.ngmon.logger.logtranslator.translator.CommonsLoggerLoader;
 import org.ngmon.logger.logtranslator.translator.Slf4jLoggerLoader;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * // comment
@@ -19,7 +16,7 @@ import java.util.Set;
 public class GoMatchGenerator {
 
     private static Set<String> goMatchPatternList = new HashSet<>();
-
+    private static int waveCounter = 0;
     public static void createGoMatch(List<LogFile> logFiles) {
         for (LogFile logFile : logFiles) {
             for (Log log : logFile.getLogs()) {
@@ -95,6 +92,10 @@ public class GoMatchGenerator {
             originalLog = originalLog.replaceAll("~", "");
         }
 
+        if (originalLog.contains("~")) {
+            waveCounter++;
+            System.out.println(waveCounter + "=" + originalLog + " \n" + log.getOriginalLog());
+        }
         pattern.append(originalLog);
         return pattern.toString();
     }
@@ -110,6 +111,10 @@ public class GoMatchGenerator {
     private static String extractVars(String text, Log log) {
         List<LogFile.Variable> formattedVariables = log.getFormattedVariables();
         String symbol = log.getFormattingSymbol();
+        /** THE WORST FIX POSSIBLE FOR DUMBEST LOG USAGE EVER -> LOG.info(s = "sigma=" + sigma") where s is String!! Used twice! */
+        if (text.startsWith("(s=")) {
+            text = text.replace("s=", "");
+        }
         String textNoFormatters = null;
 
         StringBuilder cleanText = new StringBuilder();
@@ -117,14 +122,15 @@ public class GoMatchGenerator {
         /** remove ternary operator */
         if (log.getTag() != null) {
             if (log.getTag().contains("ternary-operator")) {
-                System.out.println(log.getOriginalLog());
+                // TODO log.debug()
+//                System.out.println(log.getOriginalLog());
                 int questionMarkPos = text.indexOf("?");
                 int startPos = text.indexOf(log.getTernaryValues().get(0));
-                int endPos = text.indexOf(log.getTernaryValues().get(2));
+                int endPos = text.indexOf(":" + log.getTernaryValues().get(2)) + log.getTernaryValues().get(2).length();
                 if (startPos < questionMarkPos && endPos > questionMarkPos) {
                     // replace ternary Bool variable by ~ and expTrue,False remove
                     String tempText = text.substring(startPos, endPos);
-                    text = text.replace(tempText, " ~ ");
+                    text = text.replace(tempText, "~");
                 }
             }
         }
@@ -141,6 +147,24 @@ public class GoMatchGenerator {
             text = textNoFormatters;
         }
 
+        Set<String> tags = log.getTag();
+        if (tags != null) {
+            if (tags.contains("methodCall") || tags.contains("mathExp")) {
+                List<String> sortedVars = new ArrayList<>();
+                for (LogFile.Variable unsortedVar : log.getVariables()) {
+                    if (unsortedVar.getNgmonName() != null) {
+                        sortedVars.add(unsortedVar.getName());
+                    }
+                }
+                Collections.sort(sortedVars, new StringLengthComparator());
+                for (String var : sortedVars) {
+                    if (var.contains("("))
+                        text = text.replace(var, "~");
+                }
+            }
+        }
+
+
         /** If not, continue manually */
         boolean parseComment = false;
         char c_prev = text.charAt(0);
@@ -149,6 +173,16 @@ public class GoMatchGenerator {
                 parseComment = !parseComment;
             }
             if (parseComment) {
+                if (cleanText.length() != 0) {
+                    // add empty space between variable and string
+                    if (c_prev == '\"' && cleanText.charAt(cleanText.length() - 1) != ' ' && textNoFormatters != null) {
+                        cleanText.append(" ");
+                    }
+                }
+                if (c_prev == '\\' && c == '\"') {
+                    cleanText.delete(cleanText.length() - 1, cleanText.length());
+                    cleanText.append('\"');
+                }
                 if (c != '"') {
                     cleanText.append(c);
                 }
@@ -158,13 +192,19 @@ public class GoMatchGenerator {
                     cleanText.append(" ");
                 } else if (c == '\"') {
                     ;
+//                } else if (c == '~') {
+//                    cleanText.append("@~@");
                 } else if (c != '+') {
                     cleanText.append("~");
                 }
             }
             c_prev = c;
         }
+
         /** remove multiple empty spaces or underscore chars, remove all non alphanum */
-        return cleanText.toString().replaceAll("[^A-Za-z0-9,': \\[\\]_]->#\\(\\)", "").replaceAll("  +", " ").replaceAll("~+", "~");
+        String clean = cleanText.toString().replaceAll("[^A-Za-z0-9,': \\[\\]_]->#\\(\\)", "").replaceAll("  +", " ").replaceAll("~+", "~");
+        return clean;
     }
+
+
 }

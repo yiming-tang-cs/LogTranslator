@@ -1,8 +1,6 @@
 package org.ngmon.logger.logtranslator.common;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Log class is a representation of one log call method with all
@@ -13,7 +11,7 @@ public class Log {
     private List<String> comments;
     private List<LogFile.Variable> variables;
     private String level;
-    private List<String> tag;
+    private Set<String> tags;
     private String methodName;
     private String generatedNgmonLog;
     private String generatedReplacementLog;
@@ -28,7 +26,7 @@ public class Log {
         comments = new ArrayList<>();
         variables = new ArrayList<>();
         methodName = null;
-        tag = null;
+        tags = null;
         level = null;
     }
 
@@ -106,11 +104,14 @@ public class Log {
         this.variables.add(0, variable);
     }
 
-    public void setTernaryValues(String expBool, String expTrue, String expFalse) {
+    public void setTernaryValues(String expBool, String expTrue, String expFalse, String expBoolRight) {
         this.ternaryValues = new ArrayList<>();
         this.ternaryValues.add(expBool);
         this.ternaryValues.add(expTrue);
         this.ternaryValues.add(expFalse);
+        if (expBoolRight != null) {
+            this.ternaryValues.add(expBoolRight);
+        }
     }
 
     public List<String> getTernaryValues() {
@@ -125,15 +126,23 @@ public class Log {
         this.level = level;
     }
 
-    public List<String> getTag() {
-        return tag;
+    public Set<String> getTag() {
+        if (this.tags == null) {
+            this.tags = new TreeSet<>();
+            for (LogFile.Variable v : variables) {
+                if (v.getTag() != null) {
+                    this.tags.add(v.getTag());
+                }
+            }
+        }
+        return tags;
     }
 
     public void setTag(String tag) {
-        if (this.tag == null) {
-            this.tag = new ArrayList<>();
+        if (this.tags == null) {
+            this.tags = new TreeSet<>();
         }
-        this.tag.add(tag);
+        tags.add(tag);
     }
 
     public String getMethodName() {
@@ -167,7 +176,7 @@ public class Log {
             "comments=" + comments +
             ", variables=" + variables +
             ", level='" + level + '\'' +
-            ", tag='" + tag + '\'' +
+            ", tags='" + tags + '\'' +
             ", methodName='" + methodName + '\'' +
             '}';
     }

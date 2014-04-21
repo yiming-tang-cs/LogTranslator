@@ -103,8 +103,8 @@ public class HelperGenerator {
                 if (tagSize == 0) {
                     tags = null;
                 } else {
-                    for (int i = 0; i < tagSize; i++) {
-                        tags.append(".tag(\"").append(log.getTag().get(0)).append("\")");
+                    for (String tag : log.getTag()) {
+                        tags.append(".tag(\"").append(tag).append("\")");
                     }
                 }
             }

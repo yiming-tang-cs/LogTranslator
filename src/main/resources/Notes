@@ -4,20 +4,9 @@ RUN hadoop exmaple job and look for log statements
 
 -- Qpid application instead of hadoop --
 
-When translating hadoop-common project, file
+When translating hadoop-common project, file contains variables at the end of the file! Move to the first class:
+/home/mtoth/tmp/rewritting/hadoop-common/hadoop-tools/hadoop-streaming/src/main/java/org/apache/hadoop/streaming/StreamJob.java
 hadoop-common/hadoop-tools/hadoop-streaming/src/main/java/org/apache/hadoop/streaming/StreamJob.java
-contains variables at the end of the file! Move to the first class
-
-
-GOMATCH
-
-2014-04-14 12:38:21,556 DEBUG org.ngmon.logger.logtranslator.ngmonLogging.SimpleLogger - {"Event":{"tags":[],"type":
-"replacementLogOriginalLog","level":5000,"_":{"schema":"org.ngmon.logger.logtranslator.ngmonLogging.LogTranslatorNamespace",
-"replacementLog":"LOG.processing_messages_from_datanodes_that_were(count).info()",
-
-"originalLog":"LOG.info(\"Processing \"+count+\" messages from DataNodes \"+\"that were previously queued during standby state\")"}}}
---->
-org.hadooop.XYZ.replacementLog##Processing <INT:count> messages from DataNodes that were previously queued during standby state.")
 
 
 variable declaration related rules:

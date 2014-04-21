@@ -37,6 +37,7 @@ public class Utils {
         "char", "final", "interface", "static", "void",
         "class", "finally", "long", "strictfp", "volatile",
         "const", "float", "native", "super", "while");
+    public static final List<String> JAVA_ESCAPE_CHARS =  Arrays.asList("\\b", "\\t", "\\n", "\\f",  "\\r", "\\\"",  "\\\'",  "\\\\");
     private static final LogTranslatorNamespace NgmonLogger = LoggerFactory.getLogger(LogTranslatorNamespace.class, new SimpleLogger());
     public static boolean ignoreParsingErrors;
     static String applicationHome;

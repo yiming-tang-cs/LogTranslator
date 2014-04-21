@@ -93,12 +93,11 @@ public class CommonsLoggerLoader extends LoggerLoader {
             i++;
         }
 
-        if (methodText.lastIndexOf(formattedVariables.get(0).getName()) == -1) {
-            System.out.println(methodText);
-        }
         int pos = methodText.lastIndexOf(formattedVariables.get(0).getName());
-        methodText = methodText.substring(0, pos);
-        methodText = methodText.substring(0, methodText.lastIndexOf(","));
+        if (pos != -1) {
+            methodText = methodText.substring(0, pos);
+        }
+        methodText = methodText.substring(0, methodText.lastIndexOf("\","));
         return methodText;
     }
 
