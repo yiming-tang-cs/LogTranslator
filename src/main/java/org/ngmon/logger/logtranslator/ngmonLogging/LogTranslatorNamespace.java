@@ -83,4 +83,8 @@ public class LogTranslatorNamespace extends AbstractNamespace {
     public AbstractNamespace deletedFile(String filepath) {
         return this;
     }
+
+    public AbstractNamespace changedMethodsCount(int changedLogMethodsCount) {
+        return this;
+    }
 }

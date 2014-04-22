@@ -16,16 +16,21 @@ public class HelperGenerator {
      *
      * @param log to generate and set method log from
      */
-    public static void generateMethodName(Log log) {
+    public static void generateMethodName(Log log, LogFile lf) {
         if (log.getComments().size() == 0) {
             StringBuilder tempName = new StringBuilder();
             for (LogFile.Variable var : log.getVariables()) {
-                if (var.getNgmonName() != null) {
-                    tempName.append(var.getNgmonName());
+                if (var != null) {
+                    if (var.getNgmonName() != null) {
+                        tempName.append(var.getNgmonName());
+                    } else {
+                        tempName.append(var.getName());
+                    }
                 } else {
-                    tempName.append(var.getName());
+                    System.err.println("NULL VAR=" + log + "\n" + lf.getFilepath());
                 }
             }
+            tempName = new StringBuilder(cultivate(tempName.toString()));
             int maxLengthUtils = Utils.getNgmonEmptyLogStatementMethodNameLength();
             int maxLength = (tempName.length() < maxLengthUtils) ? tempName.length() : maxLengthUtils;
             if (tempName.length() > 0) {
@@ -78,13 +83,14 @@ public class HelperGenerator {
 //            System.out.println("\t" + log.getVariables() + "\n\t" + log.getOriginalLog() );
             int j = 0;
             for (LogFile.Variable var : log.getVariables()) {
-                if (var == null) {
-                    System.out.println("NULL VAR in" + log.getOriginalLog());
-                }
-                if (var.getChangeOriginalName() == null) {
-                    vars.append(var.getName());
+                if (var != null) {
+                    if (var.getChangeOriginalName() == null) {
+                        vars.append(var.getName());
+                    } else {
+                        vars.append(var.getChangeOriginalName());
+                    }
                 } else {
-                    vars.append(var.getChangeOriginalName());
+                    System.err.println("VAR NULL in=" + log.getOriginalLog());
                 }
                 // Append .toString() if variable is of any other type then NGMON allowed data types
                 if (Utils.listContainsItem(Utils.NGMON_ALLOWED_TYPES, var.getType().toLowerCase()) == null) {
@@ -101,13 +107,19 @@ public class HelperGenerator {
             if (log.getTag() != null) {
                 int tagSize = log.getTag().size();
                 if (tagSize == 0) {
-                    tags = null;
+                    tags = new StringBuilder();
                 } else {
                     for (String tag : log.getTag()) {
                         tags.append(".tag(\"").append(tag).append("\")");
                     }
                 }
             }
+//            String replacementLog;
+//            if (tags == null) {
+//                replacementLog = String.format("%s.%s(%s).%s()", logName, log.getMethodName(), vars, log.getLevel());
+//            } else {
+//                replacementLog = String.format("%s.%s(%s)%s.%s()", logName, log.getMethodName(), vars, tags, log.getLevel());
+//            }
             String replacementLog = String.format("%s.%s(%s)%s.%s()", logName, log.getMethodName(), vars, tags, log.getLevel());
             LOG.replacementLogOriginalLog(replacementLog, log.getOriginalLog()).trace();
             log.setGeneratedReplacementLog(replacementLog);
@@ -135,4 +147,65 @@ public class HelperGenerator {
     }
 
 
+    /**
+     * Method used for dropping unnecessary symbols in comments.
+     * Drop quotes, extra spaces, commas, non-alphanum characters
+     * into more fashionable way for later NGMON log method naming generation.
+     *
+     * @param str string to be changed
+     */
+    public static String cultivate(String str) {
+//        System.out.print("cultivating  " + str);
+        // remove escaped characters and formatters like \n, \t
+        for (String escaped : Utils.JAVA_ESCAPE_CHARS) {
+            str = str.replaceAll(escaped, "");
+        }
+
+        str = str.replaceAll("\\d+", "");   // remove all digits as well
+        str = str.replaceAll("%\\w", ""); // remove all single chars
+        str = str.replaceAll("\\W", " ").replaceAll("\\s+", " ").trim();
+//        System.out.print("  -->" + str + "\n");
+        str = str.toLowerCase().trim();
+        return str;
+    }
+
+    /**
+     * Method removes dots from text and upper-cases the following letter after ".".
+     * Also removes empty brackets and brackets with content are substituted with "_".
+     *
+     * @param text to be changed
+     * @return text without dots
+     */
+    public static String removeSpecialCharsFromText(String text) {
+
+        // remove quotations
+        text = text.replace("\"", "");
+
+        // remove brackets, empty brackets first
+        // array
+        text = text.replace("[]", "");
+        text = text.replace("[", "_").replace("]", "_").replace("__", "");
+
+        text = text.replace("()", "");
+        text = text.replace("(", "_").replace(")", "_").replace("__", "");
+        if (text.endsWith("_")) {
+            text = text.substring(0, text.lastIndexOf("_"));
+        }
+        if (text.startsWith("_")) {
+            text = text.substring(1);
+        }
+        // remove commas
+        text = text.replace(",", "AND");
+        // remove dots
+        StringBuilder newText = new StringBuilder(text);
+        int dotsCount = text.length() - text.replace(".", "").length();
+        int dotPos;
+        for (int i = 0; i < dotsCount; i++) {
+            dotPos = text.indexOf(".");
+            newText.deleteCharAt(dotPos);
+            newText.setCharAt(dotPos, Character.toUpperCase(newText.charAt(dotPos)));
+            text = newText.toString();
+        }
+        return newText.toString();
+    }
 }

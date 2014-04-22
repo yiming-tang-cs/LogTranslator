@@ -4,7 +4,6 @@ package org.ngmon.logger.logtranslator.generator;
 import org.ngmon.logger.logtranslator.common.Utils;
 import org.ngmon.logger.logtranslator.ngmonLogging.LogTranslatorNamespace;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystems;
@@ -13,7 +12,6 @@ import java.nio.file.Path;
 
 public class FileCreator {
 
-    private static final String sep = File.separator;
     private static String ngmonLogsDir;
     private static LogTranslatorNamespace LOG = Utils.getLogger();
 
@@ -23,12 +21,14 @@ public class FileCreator {
      */
     private static void createNGMONLogDirectoryPath() {
 
-        StringBuilder newNgmonPath = new StringBuilder(sep + "src" + sep + "main" + sep + "java" + sep + "log_events" + sep);
-        String appHome = Utils.getApplicationHome();
-        if (appHome.endsWith("\\") || appHome.endsWith("/")) {
-            appHome = appHome.substring(0, appHome.length() - 1);
-        }
-        ngmonLogsDir = appHome + newNgmonPath;
+        StringBuilder newNgmonPath = new StringBuilder("src" + Utils.sep + "main" + Utils.sep + "java" + Utils.sep + "log_events" + Utils.sep);
+//        String appHome = Utils.getApplicationHome();
+//        if (appHome.endsWith("\\") || appHome.endsWith("/")) {
+//            appHome = appHome.substring(0, appHome.length() - 1) + Utils.sep + "logtranslator";
+////            Utils.setLogTranslatorGeneratedProject(appHome);
+//        }
+//        ngmonLogsDir = appHome + newNgmonPath;
+        ngmonLogsDir = Utils.getLogTranslatorGeneratedProject() + newNgmonPath;
     }
 
     /**
@@ -40,8 +40,8 @@ public class FileCreator {
     public static void flushNamespaces() {
         createNGMONLogDirectoryPath();
         for (NamespaceFileCreator nfc : NgmonNamespaceFactory.getNamespaceFileCreatorSet()) {
-            String dir = ngmonLogsDir + nfc.getNamespace().replace(".", File.separator);
-            String filepath = dir + sep + nfc.getNamespaceClassName() + ".java";
+            String dir = ngmonLogsDir + nfc.getNamespace().replace(".", Utils.sep);
+            String filepath = dir + Utils.sep + nfc.getNamespaceClassName() + ".java";
 
             createDirectory(createPathFromString(dir));
             LOG.writingNamespace(filepath).debug();
@@ -80,6 +80,7 @@ public class FileCreator {
      * @param fileContent NamespaceFileCreator filled template
      */
     public static void createFile(Path file, String fileContent) {
+        createDirectory(file.getParent());
         try {
             if (!Files.exists(file)) {
                 // create new file

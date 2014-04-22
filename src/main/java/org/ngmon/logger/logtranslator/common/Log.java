@@ -17,7 +17,6 @@ public class Log {
     private String generatedReplacementLog;
     private String originalLog;
     private String goMatchLog;
-    private boolean isSpecialLog; // special means formatted - having '{}'
     private List<LogFile.Variable> formattedVariables; // variables in slf4j formatter's standard, declared after first comma
     private String formattingSymbol;
     private List<String> ternaryValues;
@@ -73,14 +72,6 @@ public class Log {
             this.formattedVariables = new ArrayList<>();
         }
         this.formattedVariables.add(0, variable);
-    }
-
-    public boolean isSpecialLog() {
-        return isSpecialLog;
-    }
-
-    public void setSpecialLog(boolean isSpecialLog) {
-        this.isSpecialLog = isSpecialLog;
     }
 
     public String getOriginalLog() {

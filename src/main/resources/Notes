@@ -9,6 +9,25 @@ When translating hadoop-common project, file contains variables at the end of th
 hadoop-common/hadoop-tools/hadoop-streaming/src/main/java/org/apache/hadoop/streaming/StreamJob.java
 
 
+FixMe
+LOG.error(datanode.getDisplayName()+":DataXceiver error processing "+((op==null)?"unknown":op.name())+" operation "+" src: "+remoteAddress+" dest: "+localAddress,t)
+
+FixMe GoMatch (\n?)
+LOG.info("ParsedTask details:"+obtainCounters()+"\n"+obtainFailedDueToAttemptId()+"\nPreferred Locations are:")
+org.apache.hadoop.parsedtask_details_npreferred_locations_are##ParsedTask details:<STRING:obtainCounters>\n<STRING:obtainFailedDueToAttemptId>\nPreferred Locations are:
+
+// LOG.warn("Failed to transfer block "+blocks[i],ie)
+org.apache.hadoop.failed_to_transfer_block##Failed to transfer block <STRING:blocks[]> <STRING:Exception>
+
+
+org.apache.hadoop.opened_info_server_at##Opened info server at <STRING:infoHost>:<INT:tmpInfoPort>
+
+org.apache.hadoop.bad_conf_file_top_level_element##bad conf file: top-level element not <configuration>
+org.apache.hadoop.bad_conf_file_top_level_element##Bad conf file: top-level element not <queues>
+
+
+
+
 variable declaration related rules:
 
 x memberDeclaration

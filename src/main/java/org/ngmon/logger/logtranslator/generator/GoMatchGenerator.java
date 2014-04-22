@@ -28,7 +28,7 @@ public class GoMatchGenerator {
     public static String getGoMatchPatternListToString() {
         StringBuilder output = new StringBuilder();
         for (String pattern : goMatchPatternList) {
-            output.append(pattern).append("\n\n");
+            output.append(pattern).append("\n");
         }
         return output.toString();
     }
@@ -36,8 +36,11 @@ public class GoMatchGenerator {
     public static void createGoMatchFromLog(Log log) {
         log.getComments();
         String goMatchPattern = createNewPattern(log);
+        if (Utils.goMatchDebug) {
         // prepend with comment and original log file
-        goMatchPatternList.add("// " + log.getOriginalLog() + "\n" + goMatchPattern);
+            goMatchPattern = "# " + log.getOriginalLog() + "\n" + goMatchPattern + "\n";
+        }
+        goMatchPatternList.add(goMatchPattern);
         log.setGoMatchLog(goMatchPattern);
     }
 

@@ -5,30 +5,25 @@ import org.ngmon.logger.logtranslator.ngmonLogging.LogTranslatorNamespace;
 import org.ngmon.logger.logtranslator.translator.ANTLRRunner;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class TranslatorStarter {
 
-    private static List<LogFile> logFiles;
-    private static Set<LogFile> nonLogLogFiles = new HashSet<>();
+    protected static List<LogFile> logFiles;
     private static List<LogFile> tempList = new ArrayList<>();
-    private static int counter = 0;
     private static LogTranslatorNamespace LOG = Utils.getLogger();
 
     public static void main(String[] args) {
-        long start = System.currentTimeMillis();
-        LOG.startingLogTranslation(start).debug();
+        LOG.startingLogTranslation(Statistics.startTiming()).debug();
         /** 0) Initialize property file */
         Utils.initialize();
 
         /** 1) Search through all ".java" files in given directory. Look for "log.{debug,warn,error,fatal} */
         logFiles = LogFilesFinder.commenceSearch(Utils.getApplicationHome());
-
+        System.out.println(logFiles.size());
 // START OF DEBUGGING PURPOSES ONLY!
         for (LogFile lf : logFiles) {
-            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common/hadoop-tools/hadoop-gridmix/src/main/java/org/apache/hadoop/mapred/gridmix/JobMonitor.java")) {
+            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common-clean/hadoop-common-project/hadoop-nfs/src/main/java/org/apache/hadoop/nfs/nfs3/IdUserGroup.java")) {
                 tempList.add(lf);
             }
         }
@@ -52,62 +47,61 @@ public class TranslatorStarter {
             }
         }
 
-        System.out.printf("Changed %d log methods.%n", Statistics.getChangedLogMethodsCount());
-        System.out.printf("\nProcessed %d of %d files. Extra files parsed by extending %d.%n%n", counter - nonLogLogFiles.size(), logFiles.size(), nonLogLogFiles.size());
-        LOG.processed_log_and_extra_files(counter - nonLogLogFiles.size(), nonLogLogFiles.size()).debug();
-
         /** 4) Rewrite files from logFiles - logs/imports by ANTLR */
         for (LogFile logFile : logFiles) {
             // TODO() -- uncomment to work again!
-//            FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()),
-//                logFile.getRewrittenJavaContent());
-
+//            FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()), logFile.getRewrittenJavaContent());
             LOG.createdFile(logFile.getFilepath()).info();
-//            System.out.println(logFile.getFilepath());
         }
 
         /** 5) Create NGMON namespaces from associated parsed logFiles */
         NgmonNamespaceFactory.createNamespaces();
 
-        /** 5,5) Create GoMatch patterns */
+        /** 6) Create GoMatch patterns */
         GoMatchGenerator.createGoMatch(logFiles);
 
-        /** 6) Write NGMON namespaces on filesystem */
+        /** 7) Create Maven project from generated files
+         * After completion of this method, we should be able to install/package
+         * created maven application and add as dependency to target's app pom.xml. */
+        createLogTranslatorMavenProject();
+
+        /** 8) Put all generated 'lines of code' below original log to one debug file */
+        FileCreator.createFile(FileCreator.createPathFromString(Utils.debugOutputLocation), Utils.getOldNewLogList(logFiles));
+
+        /** 9) Put GoMatch patterns into one file */
+        FileCreator.createFile(FileCreator.createPathFromString(Utils.goMatchLocation), GoMatchGenerator.getGoMatchPatternListToString());
+
+        /** Print runtime lenght and simple statistics */
+        System.out.println(Statistics.publishRunInfo());
+    }
+
+    /**
+     * Creation of maven project structure from generated files and
+     * creating and/or copying files to appropriate location in
+     * target application's home.
+     */
+    private static void createLogTranslatorMavenProject() {
+        /** Write NGMON namespaces on filesystem */
         FileCreator.flushNamespaces();
 
-        /** 7) Add "dummy" LogGlobal logger, which handles isXEnabled() -> true */
+        /** Add "dummy" LogGlobal logger, which handles isXEnabled() -> true */
         LogGlobalGenerator.create();
-        LOG.createdFile(LogGlobalGenerator.path).info();
-//        System.out.println("LogGlobal=" + LogGlobalGenerator.path);
+        LOG.createdFile(LogGlobalGenerator.getPath()).info();
 
-        /** 8) Create SimpleLogger file - a bridge between NGMON logging and Log4j logging implementation */
+        /** Create SimpleLogger file - a bridge between NGMON logging and Log4j logging implementation */
         SimpleLoggerGenerator.create();
-        LOG.createdFile(SimpleLoggerGenerator.path).info();
-//        System.out.println("SimpleLogger=" + SimpleLoggerGenerator.path);
+        LOG.createdFile(SimpleLoggerGenerator.getPath()).info();
 
-        /** 9) Just put all logs to one "random" file */
-        FileCreator.createFile(FileCreator.createPathFromString("logs/ngmonold-newfiles"), Utils.getOldNewLogList(logFiles));
-        long stop = System.currentTimeMillis();
-        LOG.translationProcessFinishTime(((double) (stop - start) / 1000)).info();
-//        System.out.println("Finished in " + ((double) (stop - start) / 1000) + " seconds.");
-
-        /** 10) Put GoMatch patterns into one file */
-        FileCreator.createFile(FileCreator.createPathFromString("logs/go-match.patterns"), GoMatchGenerator.getGoMatchPatternListToString());
+        /** Create LogTranslator's default pom.xml to target location */
+        LogTranslatorPom.create();
+        LOG.createdFile(LogTranslatorPom.getPath()).info();
     }
 
     public static List<LogFile> getLogFiles() {
         return logFiles;
     }
 
-    public static void addNonLogLogFile(LogFile logFile) {
-        nonLogLogFiles.add(logFile);
-    }
 
-    /**
-     * Before exiting of processed java file by ANTLR,
-     * raise counter by one.
-     */
-    public static void addProcessedFilesCounter() {
-        counter++;
-    }
+
+
 }

@@ -4,6 +4,7 @@ import org.ngmon.logger.core.LoggerFactory;
 import org.ngmon.logger.logtranslator.ngmonLogging.LogTranslatorNamespace;
 import org.ngmon.logger.logtranslator.ngmonLogging.SimpleLogger;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,9 +56,19 @@ public class Utils {
     private static String ngmonJsonerImport;
     private static String ngmonDefaultNamespaceEnd;
     private static boolean ngmonPrimitiveTypesOnly;
+    public static final String sep = File.separator;
+
+    public static String getLogTranslatorGeneratedProject() {
+        return logTranslatorGeneratedProject;
+    }
+
+    private static String logTranslatorGeneratedProject;
 
     // list of old & new generated log
     private static StringBuilder oldNewLogList = new StringBuilder();
+    public static boolean goMatchDebug;
+    public static String goMatchLocation;
+    public static String debugOutputLocation;
 
     public static void initialize() {
         String propertyFile = "src/main/resources/logtranslator.properties";
@@ -84,6 +95,10 @@ public class Utils {
             ngmonLogLength = properties.getProperty("ngmon_log_length", "7");
             ignoreParsingErrors = Boolean.parseBoolean(properties.getProperty("ignoreParsingErrors"));
             ngmonPrimitiveTypesOnly = Boolean.parseBoolean(properties.getProperty("generate_primitive_types_only"));
+            goMatchDebug = Boolean.parseBoolean(properties.getProperty("gomatch_debug_mode", "false"));
+            goMatchLocation = properties.getProperty("gomatch_generated_files", "generated/go-match.patterns");
+            debugOutputLocation = properties.getProperty("debug_output_location", "generated/ngmonold-newfiles");
+            logTranslatorGeneratedProject = applicationHome + sep + properties.getProperty("generated_project_name", "logtranslator") + sep;
         } catch (IOException e) {
             e.printStackTrace();
         }

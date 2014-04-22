@@ -73,7 +73,7 @@ public class LogTranslator extends JavaBaseListener {
         LoggerFactory.setActualLoggingFramework(null);
         loggerLoader = null;
         logFile.setFinishedParsing(true);
-        TranslatorStarter.addProcessedFilesCounter();
+        Statistics.addProcessedFilesCounter();
     }
 
     // ------------------------------------------------------------------------
@@ -170,17 +170,17 @@ public class LogTranslator extends JavaBaseListener {
         }
 
         if (!parsedExtendingClass) {
-            // We haven't found/added variables from extending class - search from all files
+            /** We haven't found/added variables from extending class - search from all files */
 //            System.out.println("\nHaven't found " + fileNameFromImport + " yet, digging deeper\n");
             for (String javaFile : LogFilesFinder.getAllJavaFiles()) {
 //                System.out.println(javaFile + " x " + fileNameFromImport );
                 if (javaFile.contains(fileNameFromImport)) {
                     // TODO log debug()
 //                    System.out.println("\tFound=" + javaFile);
-                    // if this file is not the same file, go into it, else exit method
+                    /** if this file is not the same file, go into it, else exit method */
                     if (!logFile.getFilepath().equals(javaFile)) {
                         LogFile nonLogLogFile = new LogFile(javaFile);
-                        TranslatorStarter.addNonLogLogFile(nonLogLogFile);
+                        Statistics.addNonLogLogFile(nonLogLogFile);
                         ANTLRRunner.run(nonLogLogFile, true, true);
                         parsedExtendingClass = true;
                         logFile.addConnectedLogFilesList(nonLogLogFile);
@@ -330,14 +330,23 @@ public class LogTranslator extends JavaBaseListener {
 
     /**
      * Parse variable names and types from method formal parameters.
+     * ANTLR distinguishes by type all and last formal arguments.
+     * Last argument has to be passed manually
      *
      * @param ctx ANTLR's JavaParser.FormalParameterListContext context
      */
     @Override
-    public void exitFormalParameterList(@NotNull JavaParser.FormalParameterListContext ctx) {
+    public void enterFormalParameterList(@NotNull JavaParser.FormalParameterListContext ctx) {
         String varName;
         String varType;
         for (JavaParser.FormalParameterContext parameter : ctx.formalParameter()) {
+            varType = parameter.type().getText();
+            varName = parameter.variableDeclaratorId().getText();
+            logFile.storeVariable(parameter, varName, varType, false, null);
+        }
+
+        if (ctx.lastFormalParameter() != null) {
+            JavaParser.LastFormalParameterContext parameter = ctx.lastFormalParameter();
             varType = parameter.type().getText();
             varName = parameter.variableDeclaratorId().getText();
             logFile.storeVariable(parameter, varName, varType, false, null);
@@ -475,7 +484,7 @@ public class LogTranslator extends JavaBaseListener {
         // Process LOG.XYZ(stuff);
         if ((logName == null) && !ignoreLogs) {
             /**
-             * If (extending, visit that class and find log declaration :) ) and use it here.
+             * If (extending, visit that class and find log declaration) and use it here.
              * It can be unnecessary hard to find extending class, There might be a chance, that this class
              * extends otherClass, which contains defined LOG. So we will go with 'dummy failsafe logger'
              * which acts as any logger.
@@ -496,16 +505,16 @@ public class LogTranslator extends JavaBaseListener {
         if (!ignoreLogs) {
             if (ctx.getText().startsWith(logName + ".")) {
                 if ((ctx.expression().expression(0) != null) && (ctx.expression().expression(0).getChildCount() == 3)) {
-                    /** Get "XYZ" Log call into methodCall */
-                    ParseTree methodCall = ctx.expression().expression(0).getChild(2);
+                    /** Get ".{debug,info,error..}" Log call into methodCall */
+                    String methodCall = ctx.expression().expression(0).getChild(2).getText();
 
                     /** if Log.operation is in currentLoggerMethodList - transform it, generate new stuff... */
-                    if (loggerLoader.getTranslateLogMethods().contains(methodCall.getText())) {
+                    if (loggerLoader.getTranslateLogMethods().contains(methodCall)) {
 //                    System.out.println("yes, '" + methodCall +"' is in current logger method list.");
                         Log log = transformMethodStatement(ctx.expression().expressionList());
                         log.setOriginalLog(ctx.getText());
-                        HelperGenerator.generateMethodName(log);
-                        log.setLevel(methodCall.getText());
+                        HelperGenerator.generateMethodName(log, logFile);
+                        log.setLevel(methodCall);
                         logFile.addLog(log);
                         replaceLogMethod(ctx, log);
 
@@ -591,6 +600,37 @@ public class LogTranslator extends JavaBaseListener {
 
             /** Recursively call this method to find out more information about *this* statement */
         } else if (childCount == 3) {
+//            if (expression.getChild(1).getText().equals("+")) {
+//                // TODO FIX!!
+                /** if both expressions are variables or method calls, just store them as one and */
+//                LogFile.Variable var0 = findVariableInLogFile(logFile, expression.expression(0));
+//                LogFile.Variable var1 = findVariableInLogFile(logFile, expression.expression(1));
+//                if (var0 != null && var1 != null) {
+////                    determineLogTypeAndStore(log, expression, formattedVar);
+//                    String varType;
+//                    if (var0.getType().equals(var1.getType())) {
+//                        varType = var0.getType();
+//                    } else {
+//                        varType = "String";
+//                    }
+//                    String tmpVar1 = HelperGenerator.cultivate(var1.getName());
+//                    String ngmonNewName = HelperGenerator.cultivate(var0.getName()) + Character.toUpperCase(tmpVar1.charAt(0)) + tmpVar1.substring(1);
+//                    logFile.storeVariable(expression, expression.getText(), "String", false, ngmonNewName);
+//                    LogFile.Variable foundVar = returnLastValue(expression.getText());
+//                    log.addVariable(foundVar);
+//                    if (formattedVar) {
+//                        foundVar.setTag("methodCall");
+//                    }
+//                    return;
+
+//                } else {
+////                    logFile.storeVariable(expression, expression.getText(), "String", false, "complexExpression");
+////                    LogFile.Variable var = returnLastValue(expression.getText());
+////                    var.setTag("methodCall");
+////                    log.addVariable(var);
+////                    return;
+//                }
+//            }
             if (expression.expression(1) != null) {
 //                System.out.format("var=%s exp(0)=%s exp(1)=%s%n", expression.getText(), expression.expression(0).getText(), expression.expression(1).getText());
                 determineLogTypeAndStore(log, expression.expression(1), formattedVar);
@@ -618,10 +658,21 @@ public class LogTranslator extends JavaBaseListener {
                     determineLogTypeAndStore(log, ch, formattedVar);
                 }
             } else {
-                String text = expression.getText();
+//                String text = expression.getText();
 //                System.out.println("ELSE=" + text);
                 determineLogTypeAndStore(log, expression, formattedVar);
             }
+        } else if (childCount == 5) {
+            /** ternary operator */
+            if (expression.getChild(1).getText().equals("?") && expression.getChild(3).getText().equals(":")) {
+                List<JavaParser.ExpressionContext> expList = expression.expression();
+//                Collections.reverse(expList);
+//                for (JavaParser.ExpressionContext ch : expList) {
+//                    System.out.println("ch=" + ch.getText());
+                determineLogTypeAndStore(log, expression.expression(0), formattedVar);
+//                }
+            }
+
         } else {
             System.err.printf("Error! ChildCount=%d: %s %d:%s%n", childCount, expression.getText(), expression.getStart().getLine(), logFile.getFilepath());
         }
@@ -638,10 +689,11 @@ public class LogTranslator extends JavaBaseListener {
     public LogFile.Variable determineLogTypeAndStore(Log log, JavaParser.ExpressionContext expression, boolean formattedVariable) {
         LogFile.Variable varProperty = null;
         if (expression.getText().startsWith("\"")) {
-            log.addComment(cultivate(expression.getText()));
+            log.addComment(HelperGenerator.cultivate(expression.getText()));
         } else {
             varProperty = findVariable(log, expression, formattedVariable);
             log.addVariable(varProperty);
+
         }
         return varProperty;
     }
@@ -714,7 +766,7 @@ public class LogTranslator extends JavaBaseListener {
                 List<LogFile.Variable> reversedFormattedList = new ArrayList<>();
                 for (JavaParser.VariableInitializerContext var : varInitList) {
                     if ((variableList = logFile.getVariableList().get(var.getText())) == null) {
-                        logFile.storeVariable(var.expression(), var.getText(), "Object", false, removeSpecialCharsFromText(var.getText()));
+                        logFile.storeVariable(var.expression(), var.getText(), "Object", false, HelperGenerator.removeSpecialCharsFromText(var.getText()));
                         foundVar = returnLastValue(var.getText());
                     } else {
                         foundVar = variableList.get(variableList.size() - 1); // get last value
@@ -776,7 +828,7 @@ public class LogTranslator extends JavaBaseListener {
                     varType = "String";
                 }
                 varName = varName.substring(0, varName.indexOf("[")) + varName.substring(varName.indexOf("]") + 1);
-                ngmonNewName = removeSpecialCharsFromText(varName);
+                ngmonNewName = HelperGenerator.removeSpecialCharsFromText(varName);
 //                System.out.println("array=" + varName + " " + findMe.expression(0).getText());
 //                logFile.storeVariable(findMe, varName, varType, false, ngmonNewName);
                 logFile.storeVariable(findMe, findMeText, varType, false, ngmonNewName);
@@ -789,7 +841,7 @@ public class LogTranslator extends JavaBaseListener {
             } else if (findMeText.contains("instanceof")) {
                 // Rename variables and set them before ngmon Log itself.  bc instance ofXYZ... => boolean isInstanceOfY = bc;
                 // add new parameter to logFile.storeVariable() - newVariableName
-                varName = findMe.primary().expression().expression(0).primary().getText();
+                varName = findMe.primary().expression().expression(0).primary().getText() + "Tern";
                 varType = "boolean";
                 ngmonNewName = "isInstanceOf" + findMe.primary().expression().type().getText();
 //                System.out.printf("var=%s newName=%s, original=%s", varName, newNgmonName, findMeText);
@@ -815,7 +867,7 @@ public class LogTranslator extends JavaBaseListener {
                             if (foundVar == null) {
                                 varName = ec.getText();
                                 varType = "String";
-                                ngmonNewName = removeSpecialCharsFromText(varName);
+                                ngmonNewName = HelperGenerator.removeSpecialCharsFromText(varName);
                                 logFile.storeVariable(ec, varName, varType, false, ngmonNewName);
                                 foundVar = returnLastValue(varName);
                                 foundVar.setChangeOriginalName(HelperGenerator.addStringTypeCast(findMeText));
@@ -848,16 +900,16 @@ public class LogTranslator extends JavaBaseListener {
                     log.setTernaryValues(tmpVarName, expTrue, expFalse, expBool);
                 }
 
-                StringBuilder terVarName = new StringBuilder(removeSpecialCharsFromText(tmpVarName));
+                StringBuilder terVarName = new StringBuilder(HelperGenerator.removeSpecialCharsFromText(tmpVarName));
                 String operator = Utils.listContainsItem(Utils.BOOLEAN_OPERATORS, terVarName.toString());
                 if (operator != null) {
                     terVarName = terVarName.delete(terVarName.indexOf(operator), terVarName.length());
                 }
                 if (tmpVarName.startsWith("null") && expBool != null) {
-                    ngmonNewName = removeSpecialCharsFromText(expBool);
+                    ngmonNewName = HelperGenerator.removeSpecialCharsFromText(expBool);
                 } else {
                     ngmonNewName = "is" + Character.toUpperCase(tmpVarName.charAt(0)) + tmpVarName.substring(1); // varName -> isVarName
-                    ngmonNewName = removeSpecialCharsFromText(ngmonNewName);
+                    ngmonNewName = HelperGenerator.removeSpecialCharsFromText(ngmonNewName);
                 }
                 varType = "String";
                 logFile.storeVariable(findMe, terVarName.toString(), varType, false, ngmonNewName);
@@ -878,7 +930,7 @@ public class LogTranslator extends JavaBaseListener {
                                 if (foundVar == null) {
                                     varName = ec.getText();
                                     varType = "String";
-                                    ngmonNewName = removeSpecialCharsFromText(varName);
+                                    ngmonNewName = HelperGenerator.removeSpecialCharsFromText(varName);
                                     logFile.storeVariable(ec, varName, varType, false, ngmonNewName);
                                     foundVar = returnLastValue(varName);
                                     foundVar.setChangeOriginalName(HelperGenerator.addStringTypeCast(findMeText));
@@ -887,6 +939,11 @@ public class LogTranslator extends JavaBaseListener {
                                         log.addFormattedVariables(foundVar);
                                     }
                                     i++;
+                                } else {
+                                    if (formattedVar) {
+                                        log.addFormattedVariables(foundVar);
+                                        skipAddingFormattedVar = true;
+                                    }
                                 }
                             }
                         }
@@ -896,9 +953,11 @@ public class LogTranslator extends JavaBaseListener {
                 /** Mathematical expression - use double as type */
             } else if (Utils.listContainsItem(Utils.MATH_OPERATORS, findMeText) != null) {
 //                containsMathOperator(findMeText))
+                /** special case, when it is not a math operation, but variable + variable */
+                varType = "double";
+                ngmonNewName = "mathExpression";
                 varName = findMeText;
-                varType = "long";
-                logFile.storeVariable(findMe, varName, varType, false, "mathExpression");
+                logFile.storeVariable(findMe, varName, varType, false, ngmonNewName);
                 foundVar = returnLastValue(varName);
                 foundVar.setTag("mathExp");
 
@@ -984,11 +1043,11 @@ public class LogTranslator extends JavaBaseListener {
                         newNgmonName.delete(newNgmonName.length() - 2, newNgmonName.length());
                     }
                     // remove all dots and brackets from methodCall and raise dot-following letter to upper case
-                    newNgmonName.replace(0, newNgmonName.length(), removeSpecialCharsFromText(newNgmonName.toString()));
+                    newNgmonName.replace(0, newNgmonName.length(), HelperGenerator.removeSpecialCharsFromText(newNgmonName.toString()));
                     newNgmonName.append("MethodCall");
 
                 } else {
-                    newNgmonName.replace(0, newNgmonName.length(), removeSpecialCharsFromText(newNgmonName.toString()));
+                    newNgmonName.replace(0, newNgmonName.length(), HelperGenerator.removeSpecialCharsFromText(newNgmonName.toString()));
                 }
 
                 logFile.storeVariable(findMe, findMeText, "String", false, newNgmonName.toString());
@@ -1027,7 +1086,8 @@ public class LogTranslator extends JavaBaseListener {
                 /** variable might be null */
             } else if (findMeText.equals("null")) {
                 logFile.storeVariable(findMe, "null", "String", false, "null");
-                foundVar = null;//returnLastValue(findMeText);
+//                foundVar = null;//
+                foundVar = returnLastValue(findMeText); // using this, because of LOG.debug("noteFailure " + exception, null);
 
                 /** 'variable' is true|false statement */
             } else if (findMeText.equals("true") || findMeText.equals("false")) {
@@ -1112,6 +1172,9 @@ public class LogTranslator extends JavaBaseListener {
     }
 
     private boolean isArray(JavaParser.ExpressionContext context) {
+        if (context == null) {
+            System.out.println(logFile.getFilepath());
+        }
         return (context.getText().contains("[") && context.getText().contains("]"));
     }
 
@@ -1136,71 +1199,7 @@ public class LogTranslator extends JavaBaseListener {
         return list.get(list.size() - 1);
     }
 
-    /**
-     * Method used for dropping unnecessary symbols in comments.
-     * Drop quotes, extra spaces, commas, non-alphanum characters
-     * into more fashionable way for later NGMON log method naming generation.
-     *
-     * @param str string to be changed
-     */
-    private String cultivate(String str) {
-//        System.out.print("cultivating  " + str);
-        // remove escaped characters and formatters like \n, \t
-        for (String escaped : Utils.JAVA_ESCAPE_CHARS) {
-            str = str.replaceAll(escaped, "");
-        }
-//        str = str.replace("\'", "");
-//        if (str.length() > 3) {
-//            System.out.println(str + "X");
-//            str = str.substring(1, str.length() - 1).trim(); // remove leading and trailing " "
-//        }
-        str = str.replaceAll("\\d+", "");   // remove all digits as well
-        str = str.replaceAll("%\\w", ""); // remove all single chars
-        str = str.replaceAll("\\W", " ").replaceAll("\\s+", " ").trim();
-//        System.out.print("  -->" + str + "\n");
-        str = str.toLowerCase().trim();
-        return str;
-    }
 
-    /**
-     * Method removes dots from text and upper-cases the following letter after ".".
-     * Also removes empty brackets and brackets with content are substituted with "_".
-     *
-     * @param text to be changed
-     * @return text without dots
-     */
-    private String removeSpecialCharsFromText(String text) {
-
-        // remove quotations
-        text = text.replace("\"", "");
-
-        // remove brackets, empty brackets first
-        // array
-        text = text.replace("[]", "");
-        text = text.replace("[", "_").replace("]", "_").replace("__", "");
-
-        text = text.replace("()", "");
-        text = text.replace("(", "_").replace(")", "_").replace("__", "");
-        if (text.endsWith("_")) {
-            text = text.substring(0, text.lastIndexOf("_"));
-        }
-        if (text.startsWith("_")) {
-            text = text.substring(1);
-        }
-        // remove commas
-        text = text.replace(",", "AND");
-        // remove dots
-        StringBuilder newText = new StringBuilder(text);
-        int dotsCount = text.length() - text.replace(".", "").length();
-        int dotPos;
-        for (int i = 0; i < dotsCount; i++) {
-            dotPos = text.indexOf(".");
-            newText.deleteCharAt(dotPos);
-            newText.setCharAt(dotPos, Character.toUpperCase(newText.charAt(dotPos)));
-            text = newText.toString();
-        }
-        return newText.toString();
-    }
 
     /**
      * Method returns last part of actual log type from import.

@@ -2,7 +2,7 @@ package org.ngmon.logger.logtranslator.generator;
 
 import java.util.Comparator;
 
-class StringLengthComparator implements Comparator<String> {
+public class StringLengthComparator implements Comparator<String> {
 
     public StringLengthComparator(){}
 

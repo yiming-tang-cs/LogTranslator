@@ -3,7 +3,6 @@ package org.ngmon.logger.logtranslator.generator;
 import org.ngmon.logger.logtranslator.common.Utils;
 import org.stringtemplate.v4.ST;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -17,11 +16,9 @@ import java.util.List;
  */
 public class LogGlobalGenerator {
 
-    private static final String sep = File.separator;
-
     private static final List<String> levels = Arrays.asList("trace", "debug", "info", "warn", "error", "fatal", "");
-    public static final String path = Utils.getApplicationHome() + "src" + sep + "main" + sep + "java" + sep +
-            Utils.getNgmonLogGlobal().replace(".", sep) + ".java";
+    private static final String path = Utils.getLogTranslatorGeneratedProject() + "src" + Utils.sep + "main" + Utils.sep + "java" + Utils.sep +
+            Utils.getNgmonLogGlobal().replace(".", Utils.sep) + ".java";
 
 
     public static void create() {
@@ -43,7 +40,7 @@ public class LogGlobalGenerator {
         }
         logGlobalFile.add("methods", methods);
 
-        FileCreator.createDirectory(FileCreator.createPathFromString(path.substring(0, path.lastIndexOf(sep))));
+        FileCreator.createDirectory(FileCreator.createPathFromString(path.substring(0, path.lastIndexOf(Utils.sep))));
         FileCreator.createFile(FileCreator.createPathFromString(path), logGlobalFile.render());
     }
 
@@ -59,5 +56,8 @@ public class LogGlobalGenerator {
         return method.render();
     }
 
+    public static String getPath() {
+        return path;
+    }
 }
 

@@ -2,11 +2,9 @@ package org.ngmon.logger.logtranslator.translator;
 
 import org.ngmon.logger.logtranslator.common.LogFile;
 import org.ngmon.logger.logtranslator.common.Utils;
+import org.ngmon.logger.logtranslator.generator.StringLengthComparator;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 
 /*
@@ -50,8 +48,9 @@ public class CommonsLoggerLoader extends LoggerLoader {
         if (methodText.startsWith("String.format")) {
             methodText = methodText.substring("String.format".length(), methodText.length() - 1);
         } else if (methodText.contains("String.format")) {
-            int pos = methodText.indexOf("String.format");
-            methodText = methodText.substring(0, pos) + methodText.substring(pos + "String.format(".length(), methodText.length() - 1);
+            int startPos = methodText.indexOf("String.format");
+            int endPos = methodText.lastIndexOf(")");
+            methodText = methodText.substring(0, startPos) + methodText.substring(startPos + "String.format(".length(), endPos);
 //            if (methodText.startsWith("\"")) {
 //                methodText = methodText.substring(1);
 //            }
@@ -87,17 +86,32 @@ public class CommonsLoggerLoader extends LoggerLoader {
             }
         }
         int i = 0;
+//        System.out.println("error=" + methodText);
         for (String frmt : formatters) {
             checkFormattedVarType(frmt, formattedVariables.get(i));
             methodText = methodText.replaceFirst(frmt, "~");
             i++;
         }
 
-        int pos = methodText.lastIndexOf(formattedVariables.get(0).getName());
-        if (pos != -1) {
-            methodText = methodText.substring(0, pos);
+
+
+//        int pos = methodText.lastIndexOf(formattedVariables.get(0).getName());
+//        if (pos != -1) {
+//            methodText = methodText.substring(0, pos);
+//        }
+//        if (methodText.lastIndexOf("\",") != -1) {
+//            methodText = methodText.substring(0, methodText.lastIndexOf("\","));
+//        }
+        List<String> formatted = new ArrayList<>();
+        for (LogFile.Variable fvar : formattedVariables) {
+            formatted.add(fvar.getName());
         }
-        methodText = methodText.substring(0, methodText.lastIndexOf("\","));
+        Collections.sort(formatted, new StringLengthComparator());
+        for (String fvar : formatted) {
+            methodText = methodText.replace(fvar, "xx");
+        }
+        methodText = methodText.replaceAll("(,xx),*", "~");
+
         return methodText;
     }
 
