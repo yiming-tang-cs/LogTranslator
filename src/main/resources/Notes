@@ -21,9 +21,6 @@ org.apache.hadoop.failed_to_transfer_block##Failed to transfer block <STRING:blo
 
 
 
-
-1=Transfer took <FLOAT:xferSec>s at <FLOAT:mathExpression> KB/s~
-LOG.info(String.format("Transfer took %.2fs at %.2f KB/s",xferSec,xferKb/xferSec))
 2=Loaded <INT:editsLoaded> edits starting from txid <INT:lastTxnId> ~
 LOG.info(String.format("Loaded %d edits starting from txid %d ",editsLoaded,lastTxnId))
 3=<BOOLEAN:enabled>ACLs enabled? ~

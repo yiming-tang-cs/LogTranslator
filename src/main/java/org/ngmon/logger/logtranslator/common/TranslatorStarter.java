@@ -23,12 +23,14 @@ public class TranslatorStarter {
         System.out.println(logFiles.size());
 // START OF DEBUGGING PURPOSES ONLY!
         for (LogFile lf : logFiles) {
-            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common-clean/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/MapTask.java")) {
+//            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common-clean/hadoop-tools/hadoop-sls/src/main/java/org/apache/hadoop/yarn/sls/SLSRunner.java")) {
+//                tempList.add(lf);
+//            }
+//            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common-clean/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/TransferFsImage.java")) {
+            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common-clean/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/shortcircuit/ShortCircuitShm.java")) {
                 tempList.add(lf);
             }
-            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common-clean/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/Task.java")) {
-                tempList.add(lf);
-            }
+
         }
 // END OF DEBUGGING PURPOSES ONLY!
 
@@ -37,8 +39,8 @@ public class TranslatorStarter {
 
         /** 3) Visit each logFile and parse variables, imports, log definitions, methods
          Main part of this program */
-        for (LogFile logFile : tempList) { // REMOVE DEBUGGING LINE ONLY!!
-//        for (LogFile logFile : logFiles) {
+//        for (LogFile logFile : tempList) { // REMOVE DEBUGGING LINE ONLY!!
+        for (LogFile logFile : logFiles) {
             if (!logFile.isFinishedParsing()) {
                 LOG.antlrParsingFile(logFile.getFilepath()).debug();
                 ANTLRRunner.run(logFile, false, false);
@@ -53,7 +55,7 @@ public class TranslatorStarter {
         /** 4) Rewrite files from logFiles - logs/imports by ANTLR */
         for (LogFile logFile : logFiles) {
             // TODO() -- uncomment to work again!
-//            FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()), logFile.getRewrittenJavaContent());
+            FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()), logFile.getRewrittenJavaContent());
             LOG.createdFile(logFile.getFilepath()).info();
         }
 

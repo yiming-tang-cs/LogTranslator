@@ -39,6 +39,8 @@ public class Utils {
         "class", "finally", "long", "strictfp", "volatile",
         "const", "float", "native", "super", "while");
     public static final List<String> JAVA_ESCAPE_CHARS = Arrays.asList("\\b", "\\t", "\\n", "\\f", "\\r", "\\\"", "\\\'", "\\\\");
+    public static final List<String> DEFAULT_LOG_LEVELS = Arrays.asList("trace", "debug", "info", "warn", "error", "fatal", "log");
+    public static List<String> FORMATTERS = Arrays.asList("String.format", "MessageFormatter.format", "StringUtils", "Formatter.format", "print", "formatMessage", "{}", "%");
     public static final String sep = File.separator;
     private static final LogTranslatorNamespace NgmonLogger = LoggerFactory.getLogger(LogTranslatorNamespace.class, new SimpleLogger());
     public static boolean ignoreParsingErrors;
@@ -65,6 +67,7 @@ public class Utils {
 
     // list of old & new generated log
     private static StringBuilder oldNewLogList = new StringBuilder();
+
 
     public static String getLogTranslatorGeneratedProject() {
         return logTranslatorGeneratedProject;

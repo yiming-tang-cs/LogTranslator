@@ -45,6 +45,7 @@ public class CommonsLoggerLoader extends LoggerLoader {
      */
     public static String isolateFormatters(String methodText, List<LogFile.Variable> formattedVariables) {
         List<String> formatters = new ArrayList<>();
+
         if (methodText.startsWith("String.format")) {
             methodText = methodText.substring("String.format".length(), methodText.length() - 1);
         } else if (methodText.contains("String.format")) {
@@ -93,24 +94,16 @@ public class CommonsLoggerLoader extends LoggerLoader {
             i++;
         }
 
-
-
-//        int pos = methodText.lastIndexOf(formattedVariables.get(0).getName());
-//        if (pos != -1) {
-//            methodText = methodText.substring(0, pos);
-//        }
-//        if (methodText.lastIndexOf("\",") != -1) {
-//            methodText = methodText.substring(0, methodText.lastIndexOf("\","));
-//        }
         List<String> formatted = new ArrayList<>();
         for (LogFile.Variable fvar : formattedVariables) {
             formatted.add(fvar.getName());
         }
         Collections.sort(formatted, new StringLengthComparator());
         for (String fvar : formatted) {
-            methodText = methodText.replace(fvar, "xx");
+//            methodText = methodText.replace(fvar, "xx");
+            methodText = methodText.replace(fvar, "");
         }
-        methodText = methodText.replaceAll("(,xx),*", "~");
+//        methodText = methodText.replaceAll(",*(xx),*", "~");
 
         return methodText;
     }

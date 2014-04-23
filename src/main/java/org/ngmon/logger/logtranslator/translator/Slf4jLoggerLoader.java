@@ -2,10 +2,11 @@ package org.ngmon.logger.logtranslator.translator;
 
 import org.ngmon.logger.logtranslator.common.LogFile;
 import org.ngmon.logger.logtranslator.common.Utils;
+import org.ngmon.logger.logtranslator.generator.StringLengthComparator;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /*
     http://www.slf4j.org/api/org/slf4j/Logger.html
@@ -33,7 +34,18 @@ public class Slf4jLoggerLoader extends LoggerLoader {
         this.checkerLogMethods = generateCheckerMethods(levels);
     }
 
-    public static String isolateFormatters(String text, List<LogFile.Variable> formattedVariables) {
+    /**
+     * Formatting symbol can be either {} or {0} - meaning numbered formatting.
+     *
+     * @param text
+     * @param formattedVariables
+     * @param symbol
+     * @return
+     */
+    public static String isolateFormatters(String text, List<LogFile.Variable> formattedVariables, String symbol) {
+        if (text.startsWith("(MessageFormat.format")) {
+            text = text.substring(0, text.length() - 1).replace("(MessageFormat.format", "");
+        }
         if (formattedVariables.size() != 0 && text.contains("{}")) {
             int brackets = Utils.countOfSymbolInText(text, "{}");
             StringBuilder pattern = new StringBuilder();
@@ -51,6 +63,25 @@ public class Slf4jLoggerLoader extends LoggerLoader {
                 pattern.replace(0, pattern.length(), "~");
             }
             text = text.replaceAll("\\{\\}", pattern.toString());
+
+        } else if (formattedVariables.size() != 0 && text.contains("{0}")) {
+            List<String> formattedVars = new ArrayList<>();
+            Pattern pattern = Pattern.compile("\\{\\d+\\}");
+            Matcher matcher = pattern.matcher(text);
+
+
+            for (int i = 0; matcher.find(); i++) {
+                String varName = formattedVariables.get(i).getName();
+                formattedVars.add(varName);
+                text = text.replace(matcher.group(), "~");
+            }
+
+            Collections.sort(formattedVars, new StringLengthComparator());
+            for (String var : formattedVars) {
+                text = text.replace(var, "");
+            }
+
+
         }
         return text;
     }

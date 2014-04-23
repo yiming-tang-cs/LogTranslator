@@ -39,12 +39,19 @@ public class GoMatchGenerator {
     public static void createGoMatchFromLog(Log log) {
         log.getComments();
         String goMatchPattern = createNewPattern(log);
-        if (Utils.goMatchDebug) {
-            // prepend with comment and original log file
-            goMatchPattern = "# " + log.getOriginalLog() + "\n" + goMatchPattern;
+
+        /** if pattern does not contain any variable, throw him away */
+        if (goMatchPattern.contains("<") && goMatchPattern.contains(">")) {
+
+
+            if (Utils.goMatchDebug) {
+                // prepend with comment and original log file
+                goMatchPattern = "# " + log.getOriginalLog() + "\n" + goMatchPattern;
+            }
+
+            goMatchPatternList.add(goMatchPattern);
+            log.setGoMatchLog(goMatchPattern);
         }
-        goMatchPatternList.add(goMatchPattern);
-        log.setGoMatchLog(goMatchPattern);
     }
 
     /**
@@ -58,6 +65,29 @@ public class GoMatchGenerator {
         StringBuilder pattern = new StringBuilder(Utils.getApplicationNamespace() + "." + log.getMethodName() + "##");
 
         String originalLog = log.getOriginalLog();
+        if (Utils.goMatchWorkaround) {
+            for (String escaped : Utils.JAVA_ESCAPE_CHARS) {
+                String substitute;
+                if (escaped.equals("\t") || escaped.equals("\n")) {
+                    substitute = " ";
+                } else if (escaped.equals("\\\"") || escaped.equals("\\\'") || escaped.equals("\\")) {
+                    continue;
+                } else {
+                    substitute = "";
+                }
+                originalLog = originalLog.replaceAll(escaped, substitute);
+            }
+        }
+
+        if (originalLog.startsWith("LogFactory")) {
+            // get substring from method name (info/debug..)
+            for (String level : Utils.DEFAULT_LOG_LEVELS) {
+                if (originalLog.contains("." + level + "(")) {
+                    originalLog = originalLog.substring(originalLog.indexOf(level));
+                    break;
+                }
+            }
+        }
         originalLog = originalLog.substring(originalLog.indexOf("("), originalLog.lastIndexOf(")"));
         originalLog = extractVars(originalLog, log);
 
@@ -166,8 +196,21 @@ public class GoMatchGenerator {
             text = text.replace("s=", "");
         }
         String textNoFormatters = null;
-
         StringBuilder cleanText = new StringBuilder();
+
+        /** If text contains slf4j's formatter brackets {}, don't extract variables
+         manually */
+        if (formattedVariables != null && symbol != null) {
+//            System.out.println("NULL SYMBOL! " + log.getOriginalLog());
+            if (symbol.equals("%")) {
+                textNoFormatters = CommonsLoggerLoader.isolateFormatters(text, formattedVariables);
+                textNoFormatters = textNoFormatters.replace("%%", "%");
+            } else if (symbol.equals("{}") || symbol.equals("{0}")) {
+                // could be slf4j or MessageFormatter - they use similar syntax
+                textNoFormatters = Slf4jLoggerLoader.isolateFormatters(text, formattedVariables, symbol);
+            }
+            text = textNoFormatters;
+        }
 
         /** remove ternary operator */
         if (log.getTag() != null) {
@@ -179,22 +222,14 @@ public class GoMatchGenerator {
                 int endPos = text.indexOf(":" + log.getTernaryValues().get(2)) + log.getTernaryValues().get(2).length();
                 if (startPos < questionMarkPos && endPos > questionMarkPos) {
                     // replace ternary Bool variable by ~ and expTrue,False remove
-                    String tempText = text.substring(startPos, endPos);
-                    text = text.replace(tempText, "~");
+                    String tempText = text.substring(startPos, endPos + 1);
+                    if (formattedVariables != null) {
+                        text = text.replace(tempText, "");
+                    } else {
+                        text = text.replace(tempText, "~");
+                    }
                 }
             }
-        }
-
-        /** If text contains slf4j's formatter brackets {}, don't extract variables
-         manually */
-        if (formattedVariables != null) {
-            if (symbol.equals("%")) {
-                textNoFormatters = CommonsLoggerLoader.isolateFormatters(text, formattedVariables);
-                textNoFormatters = textNoFormatters.replace("%%", "%");
-            } else if (symbol.equals("{}")) {
-                textNoFormatters = Slf4jLoggerLoader.isolateFormatters(text, formattedVariables);
-            }
-            text = textNoFormatters;
         }
 
         Set<String> tags = log.getTag();

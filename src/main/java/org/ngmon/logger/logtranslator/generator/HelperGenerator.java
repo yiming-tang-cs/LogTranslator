@@ -30,7 +30,7 @@ public class HelperGenerator {
                     System.err.println("NULL VAR=" + log + "\n" + lf.getFilepath());
                 }
             }
-            tempName = new StringBuilder(cultivate(tempName.toString()));
+            tempName = new StringBuilder(culture(tempName.toString()));
             int maxLengthUtils = Utils.getNgmonEmptyLogStatementMethodNameLength();
             int maxLength = (tempName.length() < maxLengthUtils) ? tempName.length() : maxLengthUtils;
             if (tempName.length() > 0) {
@@ -44,17 +44,20 @@ public class HelperGenerator {
             int logNameLength = Utils.getNgmonLogLength();
             for (String comment : log.getComments()) {
                 for (String str : comment.split(" ")) {
-                    if (!Utils.BANNED_LIST.contains(str)) {
-                        if (counter != 0) {
-                            logName.append("_");
+                    str = culture(str);
+                    if (str.length() > 2) {
+                        if (!Utils.BANNED_LIST.contains(str)) {
+                            if (counter != 0) {
+                                logName.append("_");
+                            }
+                            logName.append(str);
+                            counter++;
                         }
-                        logName.append(str);
-                        counter++;
+                        if (counter >= logNameLength) break;
                     }
-                    if (counter >= logNameLength) break;
                 }
             }
-            if (Utils.itemInList(Utils.JAVA_KEYWORDS, logName.toString())) {
+            if (Utils.itemInList(Utils.JAVA_KEYWORDS, logName.toString()) || logName.length() == 0) {
 //                System.out.println("logname=" + logName.toString());
                 log.setMethodName(Utils.getNgmonEmptyLogStatement());
             } else {
@@ -158,7 +161,7 @@ public class HelperGenerator {
      *
      * @param str string to be changed
      */
-    public static String cultivate(String str) {
+    public static String culture(String str) {
 //        System.out.print("cultivating  " + str);
         // remove escaped characters and formatters like \n, \t
         for (String escaped : Utils.JAVA_ESCAPE_CHARS) {

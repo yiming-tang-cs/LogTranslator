@@ -12,7 +12,6 @@ import org.ngmon.logger.logtranslator.generator.HelperGenerator;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -515,12 +514,31 @@ public class LogTranslator extends JavaBaseListener {
         // delicately handle such situation
         if (expressionList != null) {
             String methodText = expressionList.expression(0).getText();
+            List<String> stringList = Utils.FORMATTERS;
+            String formatterType = Utils.listContainsItem(stringList, expressionList.getText());
+
+            if (formatterType != null) {
+                if (log.getFormattingSymbol() == null) {
+                    if (formatterType.equals("%")) {
+                        if (CommonsLoggerLoader.hasFormatters(methodText)) {
+                            setFormattingSymbol(log, formatterType);
+                            formattedLog = true;
+                        }
+                    } else {
+                        setFormattingSymbol(log, formatterType);
+                        formattedLog = true;
+                    }
+                }
+            }
             if (methodText.contains("{}")) {
                 formattedLog = true;
                 log.setFormattingSymbol("{}");
             } else if (methodText.contains("%") && CommonsLoggerLoader.hasFormatters(methodText)) {
                 formattedLog = true;
                 log.setFormattingSymbol("%");
+            } else if (methodText.contains("{0}")) {
+                formattedLog = true;
+                log.setFormattingSymbol("{0}");
             }
 
             /** start evaluating of parsed value from rightmost element, continuing with left sibling */
@@ -591,14 +609,15 @@ public class LogTranslator extends JavaBaseListener {
             }
         } else if (childCount == 4) {
             // TODO ?
-            List<String> stringList = Arrays.asList("format", "print");
 //            System.out.println("asd" + expression.expression(0).getText());
-            if (Utils.listContainsItem(stringList, expression.expression(0).getText()) != null) {
+//            String formatterType = Utils.listContainsItem(stringList, expression.expression(0).getText());
+            if (log.getFormattingSymbol() != null) {
                 List<JavaParser.ExpressionContext> expList = expression.expressionList().expression();
                 Collections.reverse(expList);
                 for (JavaParser.ExpressionContext ch : expList) {
 //                    System.out.println("ch=" + ch.getText());
-                    determineLogTypeAndStore(log, ch, formattedVar);
+//                    determineLogTypeAndStore(log, ch, formattedVar);
+                    determineLogTypeAndStore(log, ch, true);
                 }
             } else {
 //                String text = expression.getText();
@@ -622,6 +641,36 @@ public class LogTranslator extends JavaBaseListener {
     }
 
     /**
+     * Set formatting symbol based on formatter type to given
+     * log.
+     *
+     * @param log to be added formatting symbol
+     * @param formatterType type of found formatter
+     */
+    private void setFormattingSymbol(Log log, String formatterType) {
+        String symbol;
+//        FORMATTERS = Arrays.asList("String.format", "MessageFormatter.format", "StringUtils", "Formatter.format", "print", "formatMessage", "{}", "%");
+        switch (formatterType) {
+            case "Formatter.format":
+            case "String.format":
+            case "%":
+                symbol = "%";
+                break;
+            case "MessageFormatter.format":
+                symbol = "{0}";
+                break;
+            case "{}":
+                symbol = "{}";
+                break;
+            case "StringUtils":
+                symbol = "";
+            default: symbol = "%";
+                break;
+        }
+        log.setFormattingSymbol(symbol);
+    }
+
+    /**
      * Method determines type of variable and stores it for this particular logger.
      *
      * @param log        current log instance to store variables for given method
@@ -632,7 +681,7 @@ public class LogTranslator extends JavaBaseListener {
     public LogFile.Variable determineLogTypeAndStore(Log log, JavaParser.ExpressionContext expression, boolean formattedVariable) {
         LogFile.Variable varProperty = null;
         if (expression.getText().startsWith("\"")) {
-            log.addComment(HelperGenerator.cultivate(expression.getText()));
+            log.addComment(HelperGenerator.culture(expression.getText()));
         } else {
             varProperty = findVariable(log, expression, formattedVariable);
             log.addVariable(varProperty);
@@ -1142,7 +1191,6 @@ public class LogTranslator extends JavaBaseListener {
         }
         return list.get(list.size() - 1);
     }
-
 
 
     /**
