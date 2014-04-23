@@ -116,7 +116,6 @@ public class NamespaceFileCreator {
             method.getLog().setUsedGeneratedNgmonLog(true);
             methodsString.append(method.getLog().getGeneratedNgmonLog());
         }
-
         namespaceFileContent.add("methods", methodsString.toString());
     }
 
@@ -138,13 +137,11 @@ public class NamespaceFileCreator {
      * @return method suitable for
      */
     private String prettyPrintMethod(NGMONMethod ngmonMethod) {
-        // TODO 80 characters limitation (?)
         ST methodTemplate = new ST(
             "public AbstractNamespace <methodName>(<formalParameters>) {\n" +
 //                        "    return log(<parameterNames>);\n" +
                 "    return this;\n" +
                 "}\n\n");
-
 
         methodTemplate.add("methodName", ngmonMethod.getMethodName());
         StringBuilder formalParameters = new StringBuilder();
@@ -166,7 +163,7 @@ public class NamespaceFileCreator {
                 formalParameters.append(indentation);
             }
         }
-        // remove last comma
+        // remove last comma and space
         if (formalParametersMap.size() > 0) {
             int pos = formalParameters.toString().lastIndexOf(", ");
             formalParameters.delete(pos, formalParameters.length());
@@ -220,7 +217,6 @@ public class NamespaceFileCreator {
 
             /** If variable is any Collection, add import to namespace */
             if (varType.contains("<")) {
-
                 String generics = varType.substring(varType.indexOf("<"), varType.indexOf(">"));
                 if (generics.contains(",")) {
                     String[] genericTypes = generics.split(",");
@@ -239,7 +235,6 @@ public class NamespaceFileCreator {
                     tempImportSet.add(collectionVarType);
                 }
             }
-
             parametersMap.put(varName, varType);
         }
         return parametersMap;
