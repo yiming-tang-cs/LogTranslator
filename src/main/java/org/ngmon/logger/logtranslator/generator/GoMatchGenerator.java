@@ -7,6 +7,8 @@ import org.ngmon.logger.logtranslator.translator.CommonsLoggerLoader;
 import org.ngmon.logger.logtranslator.translator.Slf4jLoggerLoader;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * // comment
@@ -17,6 +19,7 @@ public class GoMatchGenerator {
 
     private static Set<String> goMatchPatternList = new HashSet<>();
     private static int waveCounter = 0;
+
     public static void createGoMatch(List<LogFile> logFiles) {
         for (LogFile logFile : logFiles) {
             for (Log log : logFile.getLogs()) {
@@ -37,8 +40,8 @@ public class GoMatchGenerator {
         log.getComments();
         String goMatchPattern = createNewPattern(log);
         if (Utils.goMatchDebug) {
-        // prepend with comment and original log file
-            goMatchPattern = "# " + log.getOriginalLog() + "\n" + goMatchPattern + "\n";
+            // prepend with comment and original log file
+            goMatchPattern = "# " + log.getOriginalLog() + "\n" + goMatchPattern;
         }
         goMatchPatternList.add(goMatchPattern);
         log.setGoMatchLog(goMatchPattern);
@@ -99,8 +102,52 @@ public class GoMatchGenerator {
             waveCounter++;
             System.out.println(waveCounter + "=" + originalLog + " \n" + log.getOriginalLog());
         }
-        pattern.append(originalLog);
+
+        /** goMatch artificial removal of \n\t\r.. and adding extra space before & after pattern */
+        if (Utils.goMatchWorkaround) {
+            for (String escaped : Utils.JAVA_ESCAPE_CHARS) {
+                originalLog = originalLog.replaceAll(escaped, "");
+            }
+            // non-greedy find goMatch pattern and add spaces before/after it
+            originalLog = goMatchAddSpaces(originalLog);
+        }
+        pattern.append(originalLog.trim());
+
         return pattern.toString();
+    }
+
+    /**
+     * Method adds extra spaces (when needed to add one) and
+     * remove escaping characters from string.
+     *
+     * @param text goMatch pattern to be processed
+     * @return processed text with empty spaces
+     */
+    private static String goMatchAddSpaces(String text) {
+        Pattern pattern = Pattern.compile("<[A-Z]+:.*?>");
+        Matcher matcher = pattern.matcher(text);
+
+        String tempText = text;
+        while (matcher.find()) {
+            int startPos = matcher.start();
+            int endPos = matcher.end();
+
+            if (startPos == 0) {
+                startPos = 1;
+            }
+            if (endPos == text.length()) {
+                endPos = text.length() - 1;
+            }
+            if ((text.charAt(startPos - 1) != ' ') && (text.charAt(endPos) != ' ')) {
+                tempText = tempText.replace(matcher.group(), " " + matcher.group() + " ");
+            } else if (text.charAt(startPos - 1) != ' ') {
+                tempText = tempText.replace(matcher.group(), " " + matcher.group());
+            } else if (text.charAt(endPos - 1) != ' ') {
+                tempText = tempText.replace(matcher.group(), matcher.group() + " ");
+            }
+        }
+        text = tempText.trim().replace("  ", " ");
+        return text;
     }
 
     /**

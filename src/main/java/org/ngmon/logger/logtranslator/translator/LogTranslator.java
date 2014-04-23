@@ -22,7 +22,6 @@ public class LogTranslator extends JavaBaseListener {
     //    BufferedTokenStream bufferedTokens; // intended to be used with multiple channels for handling WHITESPACES and COMMENTS
     private LoggerLoader loggerLoader = null;
     private LogFile logFile;
-    private int currentLine = 0;
     private String logName = null; // reference to original LOG variable name
     private String logType = null; // reference to original LOG variable type
     private boolean ignoreLogs = false;
@@ -40,21 +39,6 @@ public class LogTranslator extends JavaBaseListener {
 
     public TokenStreamRewriter getRewriter() {
         return rewriter;
-    }
-
-
-    /**
-     * enterEveryRule is executed always before enterAnyRule (first).
-     * exitEveryRule is executed always after exitAnyRule (last).
-     */
-    @Override
-    public void enterEveryRule(@NotNull ParserRuleContext ctx) {
-        currentLine = ctx.getStart().getLine();
-    }
-
-    @Override
-    public void exitEveryRule(@NotNull ParserRuleContext ctx) {
-        // exitEvery rule is always before exitX visit ?? ou really?
     }
 
     /**
@@ -405,16 +389,6 @@ public class LogTranslator extends JavaBaseListener {
     @Override
     public void exitEnhancedForControl(@NotNull JavaParser.EnhancedForControlContext ctx) {
         if (ctx.Identifier() != null) {
-            // TODO !?
-//            String varType;
-//            boolean typeCast = false;
-//            if (Utils.listContainsItem(Utils.NGMON_ALLOWED_TYPES, ctx.type().getText().trim()) != null) {
-//                varType = ctx.type().getText();
-//            } else {
-//                varType = "String";
-//                typeCast = true;
-//            }
-//            logFile.storeVariable(ctx, ctx.Identifier().getText(), varType, false, null);
             logFile.storeVariable(ctx, ctx.Identifier().getText(), ctx.type().getText(), false, null);
 
         }
@@ -600,37 +574,6 @@ public class LogTranslator extends JavaBaseListener {
 
             /** Recursively call this method to find out more information about *this* statement */
         } else if (childCount == 3) {
-//            if (expression.getChild(1).getText().equals("+")) {
-//                // TODO FIX!!
-                /** if both expressions are variables or method calls, just store them as one and */
-//                LogFile.Variable var0 = findVariableInLogFile(logFile, expression.expression(0));
-//                LogFile.Variable var1 = findVariableInLogFile(logFile, expression.expression(1));
-//                if (var0 != null && var1 != null) {
-////                    determineLogTypeAndStore(log, expression, formattedVar);
-//                    String varType;
-//                    if (var0.getType().equals(var1.getType())) {
-//                        varType = var0.getType();
-//                    } else {
-//                        varType = "String";
-//                    }
-//                    String tmpVar1 = HelperGenerator.cultivate(var1.getName());
-//                    String ngmonNewName = HelperGenerator.cultivate(var0.getName()) + Character.toUpperCase(tmpVar1.charAt(0)) + tmpVar1.substring(1);
-//                    logFile.storeVariable(expression, expression.getText(), "String", false, ngmonNewName);
-//                    LogFile.Variable foundVar = returnLastValue(expression.getText());
-//                    log.addVariable(foundVar);
-//                    if (formattedVar) {
-//                        foundVar.setTag("methodCall");
-//                    }
-//                    return;
-
-//                } else {
-////                    logFile.storeVariable(expression, expression.getText(), "String", false, "complexExpression");
-////                    LogFile.Variable var = returnLastValue(expression.getText());
-////                    var.setTag("methodCall");
-////                    log.addVariable(var);
-////                    return;
-//                }
-//            }
             if (expression.expression(1) != null) {
 //                System.out.format("var=%s exp(0)=%s exp(1)=%s%n", expression.getText(), expression.expression(0).getText(), expression.expression(1).getText());
                 determineLogTypeAndStore(log, expression.expression(1), formattedVar);
@@ -1145,6 +1088,7 @@ public class LogTranslator extends JavaBaseListener {
                 // search for non-array variable value
                 if (variableList.size() > 1) {
                     // get closest line number (or field member)
+                    int currentLine = 0;
                     int closest = currentLine;
                     for (LogFile.Variable p : variableList) {
                         if (currentLine - p.getLineNumber() < closest) {

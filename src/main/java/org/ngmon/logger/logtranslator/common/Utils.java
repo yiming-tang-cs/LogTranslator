@@ -38,9 +38,14 @@ public class Utils {
         "char", "final", "interface", "static", "void",
         "class", "finally", "long", "strictfp", "volatile",
         "const", "float", "native", "super", "while");
-    public static final List<String> JAVA_ESCAPE_CHARS =  Arrays.asList("\\b", "\\t", "\\n", "\\f",  "\\r", "\\\"",  "\\\'",  "\\\\");
+    public static final List<String> JAVA_ESCAPE_CHARS = Arrays.asList("\\b", "\\t", "\\n", "\\f", "\\r", "\\\"", "\\\'", "\\\\");
+    public static final String sep = File.separator;
     private static final LogTranslatorNamespace NgmonLogger = LoggerFactory.getLogger(LogTranslatorNamespace.class, new SimpleLogger());
     public static boolean ignoreParsingErrors;
+    public static boolean goMatchDebug;
+    public static boolean goMatchWorkaround;
+    public static String goMatchLocation;
+    public static String debugOutputLocation;
     static String applicationHome;
     static String applicationNamespace;
     static String ngmonLogImport;
@@ -56,19 +61,14 @@ public class Utils {
     private static String ngmonJsonerImport;
     private static String ngmonDefaultNamespaceEnd;
     private static boolean ngmonPrimitiveTypesOnly;
-    public static final String sep = File.separator;
-
-    public static String getLogTranslatorGeneratedProject() {
-        return logTranslatorGeneratedProject;
-    }
-
     private static String logTranslatorGeneratedProject;
 
     // list of old & new generated log
     private static StringBuilder oldNewLogList = new StringBuilder();
-    public static boolean goMatchDebug;
-    public static String goMatchLocation;
-    public static String debugOutputLocation;
+
+    public static String getLogTranslatorGeneratedProject() {
+        return logTranslatorGeneratedProject;
+    }
 
     public static void initialize() {
         String propertyFile = "src/main/resources/logtranslator.properties";
@@ -96,6 +96,7 @@ public class Utils {
             ignoreParsingErrors = Boolean.parseBoolean(properties.getProperty("ignoreParsingErrors"));
             ngmonPrimitiveTypesOnly = Boolean.parseBoolean(properties.getProperty("generate_primitive_types_only"));
             goMatchDebug = Boolean.parseBoolean(properties.getProperty("gomatch_debug_mode", "false"));
+            goMatchWorkaround = Boolean.parseBoolean(properties.getProperty("gomatch_workaround", "false"));
             goMatchLocation = properties.getProperty("gomatch_generated_files", "generated/go-match.patterns");
             debugOutputLocation = properties.getProperty("debug_output_location", "generated/ngmonold-newfiles");
             logTranslatorGeneratedProject = applicationHome + sep + properties.getProperty("generated_project_name", "logtranslator") + sep;

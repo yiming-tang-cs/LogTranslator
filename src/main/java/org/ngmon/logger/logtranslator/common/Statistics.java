@@ -56,12 +56,12 @@ public class Statistics {
 
     public static String publishRunInfo() {
         stop = System.currentTimeMillis();
-
-        LOG.translationProcessFinishTime(((double) (stop - start) / 1000)).info();
+        double finish = ((double) (stop - start) / 1000);
+        LOG.translationProcessFinishTime(finish).info();
         //        System.out.println("Finished in " + ((double) (stop - start) / 1000) + " seconds.");
 
         StringBuilder toPublish = new StringBuilder();
-        toPublish.append(String.format("Changed %d log methods.%n", getChangedLogMethodsCount()));
+        toPublish.append(String.format("Changed %d log methods, in %f seconds.%n", getChangedLogMethodsCount(), finish));
         toPublish.append(String.format("\nProcessed %d of %d files. Extra files parsed by extending %d.%n%n",
             counter - nonLogLogFiles.size(), TranslatorStarter.logFiles.size(), nonLogLogFiles.size()));
 

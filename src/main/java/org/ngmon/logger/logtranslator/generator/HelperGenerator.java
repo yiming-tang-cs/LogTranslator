@@ -93,8 +93,12 @@ public class HelperGenerator {
                     System.err.println("VAR NULL in=" + log.getOriginalLog());
                 }
                 // Append .toString() if variable is of any other type then NGMON allowed data types
-                if (Utils.listContainsItem(Utils.NGMON_ALLOWED_TYPES, var.getType().toLowerCase()) == null) {
-                    vars.append(".toString()");
+                if (var != null) {
+                    if (Utils.listContainsItem(Utils.NGMON_ALLOWED_TYPES, var.getType().toLowerCase()) == null) {
+                        vars.append(".toString()");
+                    }
+                } else {
+                    System.err.println("NULL VAR in =" + vars + "\n" + log.getOriginalLog() + "\n" + log);
                 }
 
                 if (j != log.getVariables().size() - 1) {

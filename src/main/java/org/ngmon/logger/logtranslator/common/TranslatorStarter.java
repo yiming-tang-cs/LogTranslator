@@ -23,7 +23,10 @@ public class TranslatorStarter {
         System.out.println(logFiles.size());
 // START OF DEBUGGING PURPOSES ONLY!
         for (LogFile lf : logFiles) {
-            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common-clean/hadoop-common-project/hadoop-nfs/src/main/java/org/apache/hadoop/nfs/nfs3/IdUserGroup.java")) {
+            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common-clean/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/MapTask.java")) {
+                tempList.add(lf);
+            }
+            if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common-clean/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/Task.java")) {
                 tempList.add(lf);
             }
         }
@@ -34,8 +37,8 @@ public class TranslatorStarter {
 
         /** 3) Visit each logFile and parse variables, imports, log definitions, methods
          Main part of this program */
-//        for (LogFile logFile : tempList) { // REMOVE DEBUGGING LINE ONLY!!
-        for (LogFile logFile : logFiles) {
+        for (LogFile logFile : tempList) { // REMOVE DEBUGGING LINE ONLY!!
+//        for (LogFile logFile : logFiles) {
             if (!logFile.isFinishedParsing()) {
                 LOG.antlrParsingFile(logFile.getFilepath()).debug();
                 ANTLRRunner.run(logFile, false, false);
