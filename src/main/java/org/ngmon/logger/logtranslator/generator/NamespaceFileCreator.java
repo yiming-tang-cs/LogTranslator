@@ -151,11 +151,25 @@ public class NamespaceFileCreator {
 
         Map<String, String> formalParametersMap = ngmonMethod.getFormalParameters();
 
+        boolean firstNewLine = true;
+        int methodLength = ngmonMethod.getMethodName().length();
+        String indentation = "\n\t\t\t\t\t";
         for (String name : formalParametersMap.keySet()) {
             formalParameters.append(formalParametersMap.get(name)).append(" ").append(name).append(", ");
+            if (firstNewLine) {
+                if (methodLength + formalParameters.length() > 80) {
+                    formalParameters.append(indentation);
+                    firstNewLine = false;
+                }
+                // take distance from last "\n\t\t\t"
+            } else if (formalParameters.length() - formalParameters.toString().lastIndexOf(indentation) > 100) {
+                formalParameters.append(indentation);
+            }
         }
+        // remove last comma
         if (formalParametersMap.size() > 0) {
-            formalParameters.delete(formalParameters.length() - 2, formalParameters.length());
+            int pos = formalParameters.toString().lastIndexOf(", ");
+            formalParameters.delete(pos, formalParameters.length());
         }
 
         methodTemplate.add("formalParameters", formalParameters);

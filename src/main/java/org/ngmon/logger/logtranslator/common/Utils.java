@@ -215,7 +215,8 @@ public class Utils {
         for (LogFile logfs : logFiles) {
             for (Log log : logfs.getLogs()) {
                 if (log.isUsedGeneratedNgmonLog()) {
-                    generatedNgmonLog = log.getGeneratedNgmonLog().substring(0, log.getGeneratedNgmonLog().indexOf("{") - 1) + "\n";
+                    generatedNgmonLog = log.getGeneratedNgmonLog().replaceAll("\\n\\t*", "")
+                        .substring(0, log.getGeneratedNgmonLog().indexOf("{") - 1) + "\n";
                 }
                 // TODO DEBUG()!
                 String logs = log.getOriginalLog() + "\n"
