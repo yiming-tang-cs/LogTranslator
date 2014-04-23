@@ -68,12 +68,18 @@ public class GoMatchGenerator {
         if (Utils.goMatchWorkaround) {
             for (String escaped : Utils.JAVA_ESCAPE_CHARS) {
                 String substitute;
-                if (escaped.equals("\t") || escaped.equals("\n")) {
-                    substitute = " ";
-                } else if (escaped.equals("\\\"") || escaped.equals("\\\'") || escaped.equals("\\")) {
-                    continue;
-                } else {
-                    substitute = "";
+                switch (escaped) {
+                    case "\t":
+                    case "\n":
+                        substitute = " ";
+                        break;
+                    case "\\\"":
+                    case "\\\'":
+                    case "\\":
+                        continue;
+                    default:
+                        substitute = "";
+                        break;
                 }
                 originalLog = originalLog.replaceAll(escaped, substitute);
             }
@@ -215,7 +221,6 @@ public class GoMatchGenerator {
         /** remove ternary operator */
         if (log.getTag() != null) {
             if (log.getTag().contains("ternary-operator")) {
-                // TODO log.debug()
 //                System.out.println(log.getOriginalLog());
                 int questionMarkPos = text.indexOf("?");
                 int startPos = text.indexOf(log.getTernaryValues().get(0));
@@ -252,6 +257,10 @@ public class GoMatchGenerator {
 
         /** If not, continue manually */
         boolean parseComment = false;
+        if (text == null) {
+            System.out.println("null text=" + log);
+            text = log.getMethodName();
+        }
         char c_prev = text.charAt(0);
         for (char c : text.substring(1).toCharArray()) {
             if (c == '\"' && c_prev != '\\') {
@@ -276,7 +285,7 @@ public class GoMatchGenerator {
                 if (c == ',') {
                     cleanText.append(" ");
                 } else if (c == '\"') {
-                    ;
+                    continue;
 //                } else if (c == '~') {
 //                    cleanText.append("@~@");
                 } else if (c != '+') {
@@ -287,8 +296,8 @@ public class GoMatchGenerator {
         }
 
         /** remove multiple empty spaces or underscore chars, remove all non alphanum */
-        String clean = cleanText.toString().replaceAll("[^A-Za-z0-9,': \\[\\]_]->#\\(\\)", "").replaceAll("  +", " ").replaceAll("~+", "~");
-        return clean;
+        return cleanText.toString().replaceAll("[^A-Za-z0-9,': \\[\\]_]->#\\(\\)", "").replaceAll("  +", " ").replaceAll("~+", "~");
+//        return clean;
     }
 
 

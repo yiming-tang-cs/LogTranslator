@@ -9,7 +9,13 @@ When translating hadoop-common project, file contains variables at the end of th
 hadoop-common/hadoop-tools/hadoop-streaming/src/main/java/org/apache/hadoop/streaming/StreamJob.java
 
 
+DP:
+Pridat dependency chart of classes
+
 FixMe
+
+CHECK! if variable type is changed to string, append .toString or (String.valueof() )
+
 LOG.error(datanode.getDisplayName()+":DataXceiver error processing "+((op==null)?"unknown":op.name())+" operation "+" src: "+remoteAddress+" dest: "+localAddress,t)
 
 FixMe GoMatch (\n?)
@@ -19,52 +25,6 @@ org.apache.hadoop.parsedtask_details_npreferred_locations_are##ParsedTask detail
 // LOG.warn("Failed to transfer block "+blocks[i],ie)
 org.apache.hadoop.failed_to_transfer_block##Failed to transfer block <STRING:blocks[]> <STRING:Exception>
 
-
-
-2=Loaded <INT:editsLoaded> edits starting from txid <INT:lastTxnId> ~
-LOG.info(String.format("Loaded %d edits starting from txid %d ",editsLoaded,lastTxnId))
-3=<BOOLEAN:enabled>ACLs enabled? ~
-LogFactory.getLog(AclConfigFlag.class).info("ACLs enabled? "+enabled)
-4=Starting a new period : work left in prev period : <FLOAT:isTotalBytesToScan>% ~
-LOG.info("Starting a new period : work left in prev period : "+String.format("%.2f%%",totalBytesToScan==0?0:(bytesLeft*100.0)/totalBytesToScan))
-5=Got overwrite with appended data (<INT:offset>-<INT:mathExpression>), current xx <INT:cachedOffset>, drop the overlapped section (<INT:offset1>-<INT:mathExpression1>) and append new data (<INT:cachedOffset1>-<INT:mathExpression2>).~
-LOG.debug(String.format("Got overwrite with appended data (%d-%d),"+" current offset %d,"+" drop the overlapped section (%d-%d)"+" and append new data (%d-%d).",offset,(offset+count-1),cachedOffset,offset,(cachedOffset-1),cachedOffset,(offset+count-1)))
-6=Got overwrite with appended data (<INT:offset>-<INT:mathExpression>), current xx <INT:cachedOffset>, drop the overlapped section (<INT:offset1>-<INT:mathExpression1>) and append new data (<INT:cachedOffset1>-<INT:mathExpression2>).~
-LOG.warn(String.format("Got overwrite with appended data (%d-%d),"+" current offset %d,"+" drop the overlapped section (%d-%d)"+" and append new data (%d-%d).",offset,(offset+count-1),cachedOffset,offset,(cachedOffset-1),cachedOffset,(offset+count-1)))
-7=<INT:numRunningNodes>SLSRunner is waiting for all nodes RUNNING. {0} of {1} NMs initialized. <INT:numNMs> ~
-LOG.info(MessageFormat.format("SLSRunner is waiting for all "+"nodes RUNNING. {0} of {1} NMs initialized.",numRunningNodes,numNMs))
-8=<DOUBLE:mathExpression>SLSRunner takes {0} ms to launch all nodes. ~
-LOG.info(MessageFormat.format("SLSRunner takes {0} ms to launch all nodes.",(System.currentTimeMillis()-startTimeMS)))
-9=<INT:numNMs># nodes = {0}, # racks = {1}, capacity of each node {2} MB memory and {3} vcores. <INT:numRacks> <INT:nmMemoryMB> <INT:nmVCores> ~
-LOG.info(MessageFormat.format("# nodes = {0}, # racks = {1}, capacity "+"of each node {2} MB memory and {3} vcores.",numNMs,numRacks,nmMemoryMB,nmVCores))
-10=<INT:numAMs># applications = {0}, # total tasks = {1}, average # tasks per application = {2} <INT:numTasks> <DOUBLE:mathExpression> ~
-LOG.info(MessageFormat.format("# applications = {0}, # total "+"tasks = {1}, average # tasks per application = {2}",numAMs,numTasks,(int)(Math.ceil((numTasks+0.0)/numAMs))))
-11=<DOUBLE:mathExpression>estimated simulation time is {0} seconds ~
-LOG.info(MessageFormat.format("estimated simulation time is {0}"+" seconds",(long)(Math.ceil(maxRuntime/1000.0))))
-12=<STRING:appId>Application {0} is shutting down. ~
-LOG.info(MessageFormat.format("Application {0} is shutting down.",appId))
-13=<STRING:appId>Submit a new application {0} ~
-LOG.info(MessageFormat.format("Submit a new application {0}",appId))
-14=<STRING:appId>Register the application master for application {0} ~
-LOG.info(MessageFormat.format("Register the application master for application {0}",appId))
-15=<STRING:appId>Application {0} sends out allocate request for its AM ~
-LOG.debug(MessageFormat.format("Application {0} sends out allocate "+"request for its AM",appId))
-16=<STRING:appId>Application {0} has onemapper finished ({1}). <STRING:containerId> ~
-LOG.debug(MessageFormat.format("Application {0} has one"+"mapper finished ({1}).",appId,containerId))
-17=<STRING:appId>Application {0} has onereducer finished ({1}). <STRING:containerId> ~
-LOG.debug(MessageFormat.format("Application {0} has one"+"reducer finished ({1}).",appId,containerId))
-18=<STRING:appId>Application {0} goes to finish. ~
-LOG.info(MessageFormat.format("Application {0} goes to "+"finish.",appId))
-19=<STRING:appId>Application {0} has one mapper killed ({1}). <STRING:containerId> ~
-LOG.debug(MessageFormat.format("Application {0} has one "+"mapper killed ({1}).",appId,containerId))
-20=<STRING:appId>Application {0} has one reducer killed ({1}). <STRING:containerId> ~
-LOG.debug(MessageFormat.format("Application {0} has one "+"reducer killed ({1}).",appId,containerId))
-21=<STRING:appId>Application {0}'s AM is going to be killed. Restarting... ~
-LOG.info(MessageFormat.format("Application {0}'s AM is "+"going to be killed. Restarting...",appId))
-22=<STRING:appId>Application {0} sends out event to clean up its AM container. ~
-LOG.debug(MessageFormat.format("Application {0} sends out event "+"to clean up its AM container.",appId))
-23=\n<INT:header> new entry (<STRING:key>, ~), existing entry: (~, ~).\n~\n~ The new entry is to be ignored for the following reason.~
-LOG.warn("\n"+header+String.format("new entry (%d, %s), existing entry: (%d, %s).\n%s\n%s",key,value,ekey,evalue,"The new entry is to be ignored for the following reason.",DUPLICATE_NAME_ID_DEBUG_INFO))
 
 
 variable declaration related rules:

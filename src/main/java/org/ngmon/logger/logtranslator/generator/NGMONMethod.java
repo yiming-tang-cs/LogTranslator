@@ -1,5 +1,7 @@
 package org.ngmon.logger.logtranslator.generator;
 
+import org.ngmon.logger.logtranslator.common.Log;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -12,6 +14,16 @@ public class NGMONMethod implements Comparable {
     private LinkedHashMap<String, String> formalParameters;
     private String methodName;
 
+
+    public Log getLog() {
+        return log;
+    }
+
+    public void setLog(Log log) {
+        this.log = log;
+    }
+
+    private Log log;
 
     public NGMONMethod(String methodName, LinkedHashMap<String, String> formalParameters) {
         this.methodName = methodName;

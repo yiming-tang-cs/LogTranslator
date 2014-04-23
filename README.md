@@ -9,11 +9,19 @@ For now, it works only with maven projects.
 
 3) mvn exec:exec
 
-4) Add maven dependencies on NGMON. You can find them [here][mvn-deps].
+4) Install by maven generated source project
+
+5) Add maven project settings for NGMON LogTranslator in parent's pom.xml file. You can find them [here][mvn-settings].
+
+6) Recompile your application of choice (Apache Hadoop in our case)
+
+7) Execute hadoop job with added classpath to ngmon-logger jar.
+
+[How to add custom jar to MapReduce] (http://blog.cloudera.com/blog/2011/01/how-to-include-third-party-libraries-in-your-map-reduce-job/)
 
 #### Possible problems
  * Syntax errors complaining mainly about "diamonds" and their type mismatch.
-    * **Fix:** Make sure you compile and run with JDK 1.7 and language level is set to "Diamonds, ARM, Multicatach". (Project settings in your IDE)
+    * **Fix:** Make sure you compile and run with JDK 1.7 and language level is set to "Diamonds, ARM, Multicatch". (Project settings in your IDE)
 
  * [WARNING] bad version number found in .m2/repository/org/aspectj/aspectjrt/1.7.2/aspectjrt-1.7.2.jar expected 1.6.11 found 1.7.2
     * **Fix:** Change in "aspectj-maven-plugin" artifact .m2/repository/org/codehaus/mojo/aspectj-maven-plugin/1.4/aspectj-maven-plugin-1.4.pom.xml file version
@@ -30,22 +38,13 @@ For now, it works only with maven projects.
 
  Sources are available to download from https://github.com/ngmon/ngmon-logger-java/
 
-<pre>
-<code>
- &lt;dependency&gt;
-      &lt;groupId&gt;org.ngmon&lt;/groupId&gt;
-      &lt;artifactId&gt;ngmon-logger-java&lt;/artifactId&gt;
-      &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
-  &lt;/dependency&gt;
-  &lt;dependency&gt;
-      &lt;groupId&gt;org.apache.logging.log4j&lt;/groupId&gt;
-      &lt;artifactId&gt;log4j-api&lt;/artifactId&gt;
-      &lt;version&gt;2.0-rc1&lt;/version&gt;
-  &lt;/dependency&gt;
-  &lt;dependency&gt;
-      &lt;groupId&gt;org.apache.logging.log4j&lt;/groupId&gt;
-      &lt;artifactId&gt;log4j-core&lt;/artifactId&gt;
-      &lt;version&gt;2.0-rc1&lt;/version&gt;
-  &lt;/dependency&gt;
-</code>
-</pre>
+ You need to add/change packaging to "pom" in logtranslator's project parent's pom.xml file.
+  Also, you have to add logtranslator as module for this parent to understand logtranslator's directory.
+
+    <dependency>
+       <groupId>org.ngmon.logger</groupId>
+       <artifactId>logtranslator</artifactId>
+       <version>1.0-SNAPSHOT</version>
+       <scope>compile</scope>
+    </dependency>
+

@@ -81,9 +81,7 @@ public class NamespaceFileCreator {
     private ST prepareNewNamespace(String namespace) {
         String NAMESPACE_JAVA_CLASS_STRING_TEMPLATE =
             "package log_events.<applicationNamespace>;\n\n"
-//                        + "import <namespaceImport>;\n"
                 + "<imports>\n\n"
-//                        + "<namespaceAnnotation>\n"
                 + "public class <namespaceClassName> extends AbstractNamespace {\n\n"
                 + "    <methods>"
                 + "}\n";
@@ -100,42 +98,30 @@ public class NamespaceFileCreator {
      *
      * @param logFiles set containing all LogFiles Logs with possible new methods.
      */
-//    protected void addMethodsToNamespaceFileContent(Set<LogFile> logFiles) {
-//        for (LogFile logFile : logFiles) {
-//            for (Log log : logFile.getLogs()) {
-//                NGMONMethod ngmonMethod = new NGMONMethod(log.getMethodName(), prepareFormalArguments(log));
-//                if (!methods.contains(ngmonMethod)) {
-//                    methods.add(ngmonMethod);
-//                    log.setGeneratedNgmonLog(ngmonMethod.toString());
-//                }
-//            }
-//        }
-//        StringBuilder methodsString = new StringBuilder();
-//        for (NGMONMethod method : methods) {
-//            methodsString.append(prettyPrintMethod(method));
-//        }
-//        namespaceFileContent.add("methods", methodsString.toString());
-//    }
-
-
     protected void addMethodsToNamespaceFileContent(Set<LogFile> logFiles) {
         StringBuilder methodsString = new StringBuilder();
         for (LogFile logFile : logFiles) {
             for (Log log : logFile.getLogs()) {
                 NGMONMethod ngmonMethod = new NGMONMethod(log.getMethodName(), prepareFormalArguments(log));
+                ngmonMethod.setLog(log);
+                log.setGeneratedNgmonLog(prettyPrintMethod(ngmonMethod));
+
                 if (!methods.contains(ngmonMethod)) {
-                    String prettyNgmonMethod = prettyPrintMethod(ngmonMethod);
-                    methodsString.append(prettyNgmonMethod);
-                    log.setGeneratedNgmonLog(prettyNgmonMethod);
+                    methods.add(ngmonMethod);
                 }
             }
+        }
+
+        for (NGMONMethod method : methods) {
+            method.getLog().setUsedGeneratedNgmonLog(true);
+            methodsString.append(method.getLog().getGeneratedNgmonLog());
         }
 
         namespaceFileContent.add("methods", methodsString.toString());
     }
 
     /**
-     *
+     *  Add imports to AbstractNamespace generation class.
      */
     private void addImportsToFileContent() {
         importList.add("import " + Utils.getNgmonLoggerAbstractNamespaceImport() + ";\n");
@@ -190,7 +176,7 @@ public class NamespaceFileCreator {
             /** Use String data type if variable is of any other data type then NGMON allowed data types */
             String varType = variable.getType();
             if (Utils.isNgmonPrimitiveTypesOnly()) {
-                if (Utils.listContainsItem(Utils.NGMON_ALLOWED_TYPES, varType.toLowerCase()) == null) {
+                if (!Utils.itemInList(Utils.NGMON_ALLOWED_TYPES, varType.toLowerCase())) {
                     varType = "String";
                 }
             }
@@ -224,9 +210,9 @@ public class NamespaceFileCreator {
                 String generics = varType.substring(varType.indexOf("<"), varType.indexOf(">"));
                 if (generics.contains(",")) {
                     String[] genericTypes = generics.split(",");
-                    for (int i = 0; i < genericTypes.length; i++) {
-                        if (Utils.itemInList(Utils.COLLECTION_LIST, genericTypes[i])) {
-                            tempImportSet.add(genericTypes[i]);
+                    for (String genericType : genericTypes) {
+                        if (Utils.itemInList(Utils.COLLECTION_LIST, genericType)) {
+                            tempImportSet.add(genericType);
                         }
                     }
                 }

@@ -57,6 +57,11 @@ public class HelperGenerator {
                     }
                 }
             }
+
+            if (Utils.getNgmonMaxLogLength() < logName.length()) {
+                logName = logName.delete(Utils.getNgmonMaxLogLength(), logName.length());
+            }
+
             if (Utils.itemInList(Utils.JAVA_KEYWORDS, logName.toString()) || logName.length() == 0) {
 //                System.out.println("logname=" + logName.toString());
                 log.setMethodName(Utils.getNgmonEmptyLogStatement());

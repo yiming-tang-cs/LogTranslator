@@ -64,14 +64,9 @@ public class Utils {
     private static String ngmonDefaultNamespaceEnd;
     private static boolean ngmonPrimitiveTypesOnly;
     private static String logTranslatorGeneratedProject;
+    private static StringBuilder oldNewLogList = new StringBuilder(); // list of old & new generated log
+    private static int ngmonMaxLogLength;
 
-    // list of old & new generated log
-    private static StringBuilder oldNewLogList = new StringBuilder();
-
-
-    public static String getLogTranslatorGeneratedProject() {
-        return logTranslatorGeneratedProject;
-    }
 
     public static void initialize() {
         String propertyFile = "src/main/resources/logtranslator.properties";
@@ -96,6 +91,7 @@ public class Utils {
             ngmonEmptyLogStatement = properties.getProperty("ngmon_empty_log_statement");
             ngmonEmptyLogStatementMethodNameLength = Integer.valueOf(properties.getProperty("ngmon_empty_log_method_name_length", "8"));
             ngmonLogLength = properties.getProperty("ngmon_log_length", "7");
+            ngmonMaxLogLength = Integer.parseInt(properties.getProperty("ngmon_log_method_max_length", "30"));
             ignoreParsingErrors = Boolean.parseBoolean(properties.getProperty("ignoreParsingErrors"));
             ngmonPrimitiveTypesOnly = Boolean.parseBoolean(properties.getProperty("generate_primitive_types_only"));
             goMatchDebug = Boolean.parseBoolean(properties.getProperty("gomatch_debug_mode", "false"));
@@ -108,6 +104,9 @@ public class Utils {
         }
     }
 
+    public static String getLogTranslatorGeneratedProject() {
+        return logTranslatorGeneratedProject;
+    }
 
     public static LogTranslatorNamespace getLogger() {
         return NgmonLogger;
@@ -127,6 +126,10 @@ public class Utils {
 
     public static int getNgmonLogLength() {
         return Integer.parseInt(ngmonLogLength);
+    }
+
+    public static int getNgmonMaxLogLength() {
+        return ngmonMaxLogLength;
     }
 
     public static String getNgmonEmptyLogStatement() {
@@ -208,12 +211,16 @@ public class Utils {
     }
 
     public static String getOldNewLogList(List<LogFile> logFiles) {
+        String generatedNgmonLog = "";
         for (LogFile logfs : logFiles) {
             for (Log log : logfs.getLogs()) {
+                if (log.isUsedGeneratedNgmonLog()) {
+                    generatedNgmonLog = log.getGeneratedNgmonLog().substring(0, log.getGeneratedNgmonLog().indexOf("{") - 1) + "\n";
+                }
                 // TODO DEBUG()!
                 String logs = log.getOriginalLog() + "\n"
                     + log.getGeneratedReplacementLog() + "\n"
-                    + log.getGeneratedNgmonLog().substring(0, log.getGeneratedNgmonLog().indexOf("{") - 1) + "\n"
+                    + generatedNgmonLog
                     + log.getGoMatchLog() + "\n\n\n";
                 oldNewLogList.append(logs);
             }

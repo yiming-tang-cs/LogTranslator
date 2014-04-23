@@ -14,6 +14,7 @@ public class Log {
     private Set<String> tags;
     private String methodName;
     private String generatedNgmonLog;
+    private boolean usedGeneratedNgmonLog = false;
     private String generatedReplacementLog;
     private String originalLog;
     private String goMatchLog;
@@ -53,6 +54,14 @@ public class Log {
         if (comment.length() > 1) {
             this.comments.add(0, comment);
         }
+    }
+
+    public boolean isUsedGeneratedNgmonLog() {
+        return usedGeneratedNgmonLog;
+    }
+
+    public void setUsedGeneratedNgmonLog(boolean usedGeneratedNgmonLog) {
+        this.usedGeneratedNgmonLog = usedGeneratedNgmonLog;
     }
 
     public String getFormattingSymbol() {
