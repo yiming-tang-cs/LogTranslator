@@ -91,7 +91,21 @@ public class LogTranslator extends JavaBaseListener {
                     }
             }
 //            System.out.println(extendingFileTosearch + " is package? " + isPackage);
-            if (extendingFileTosearch != null) addExtendingClassVariables(extendingFileTosearch, isPackage);
+            if (extendingFileTosearch != null) {
+                // set here current logFile
+                LogFile originalLogFile = logFile;
+                LogFile extendingLogFile = addExtendingClassVariables(extendingFileTosearch, isPackage);
+
+                //  use it here again
+                if (logFile != originalLogFile) {
+                    logFile = originalLogFile;
+                }
+
+                if (extendingLogFile != null) {
+                    logFile.addConnectedLogFilesList(extendingLogFile);
+                }
+
+            }
         }
     }
 
@@ -104,10 +118,15 @@ public class LogTranslator extends JavaBaseListener {
      * @param isPackage             true if extendingFileToSearch Class type is qualified name package
      * @return true if we successfully parsed extending class and added new variables to current logFile
      */
-    private boolean addExtendingClassVariables(String extendingFileToSearch, boolean isPackage) {
+    private LogFile addExtendingClassVariables(String extendingFileToSearch, boolean isPackage) {
         String fileNameFromImport;
         String tempFileImport = null;
         boolean parsedExtendingClass = false;
+        LogFile extendingLogFile = null;
+
+        if (extendingFileToSearch.contains("<") && extendingFileToSearch.contains(">")) {
+            extendingFileToSearch = extendingFileToSearch.substring(0, extendingFileToSearch.indexOf("<"));
+        }
 
         if (isPackage) {
             tempFileImport = extendingFileToSearch;
@@ -121,31 +140,38 @@ public class LogTranslator extends JavaBaseListener {
         }
 
         if (tempFileImport == null) {
-            // Not found in imports && not package itself, it has to be single class type name.
-            // Class type is definitely from this package, so append logFile's current package name
+            /** Not found in imports && not package itself, it has to be single class type name.
+             Class type is definitely from this package, so append logFile's current package name */
             tempFileImport = logFile.getPackageName() + "." + extendingFileToSearch;
         }
-
         fileNameFromImport = tempFileImport.replaceAll("\\.", File.separator) + ".java";
-//        System.out.println(tempFileImport + " vs " + extendingFileToSearch + " =>" + fileNameFromImport);
 
         List<LogFile> lfiles = TranslatorStarter.getLogFiles();
         for (LogFile lf : lfiles) {
             if (lf.getFilepath().contains(fileNameFromImport)) {
 //                System.out.println("GOT IT " + logFile.getFilepath() + " " + lf.getFilepath());
-                if (!lf.isFinishedParsing() && (!logFile.getFilepath().equals(lf.getFilepath()))) {
-                    // parseFile & connect it with this logFile
-                    // todo debug()
-//                    System.out.println("Starting ANTLR on file " + lf.getFilepath() + " from " + logFile.getFilepath());
-                    ANTLRRunner.run(lf, false, true);
-                    parsedExtendingClass = true;
-                    logFile.addConnectedLogFilesList(lf);
+//                if (!lf.isFinishedParsing() && (!logFile.getFilepath().equals(lf.getFilepath()))) {
+                if (!logFile.getFilepath().equals(lf.getFilepath())) {
+                    if (!lf.isFinishedParsing()) {
+                        // parseFile & connect it with this logFile
+                        // todo debug()
+//                        System.out.println("Starting ANTLR on file " + lf.getFilepath() + " from " + logFile.getFilepath());
+                        ANTLRRunner.run(lf, false, true);
+                        //logFile.addConnectedLogFilesList(lf);
+                        parsedExtendingClass = true;
+
+                    }
+                    if (lf.isFinishedParsing() && (!logFile.getFilepath().equals(lf.getFilepath()))) {
+                        parsedExtendingClass = true;
+                    }
+                    extendingLogFile = lf;
+                    break;
                 }
             }
         }
 
         if (!parsedExtendingClass) {
-            /** We haven't found/added variables from extending class - search from all files */
+            /** We haven't found/added variables from extending class - search from all files. Dig deeper. */
 //            System.out.println("\nHaven't found " + fileNameFromImport + " yet, digging deeper\n");
             for (String javaFile : LogFilesFinder.getAllJavaFiles()) {
 //                System.out.println(javaFile + " x " + fileNameFromImport );
@@ -157,13 +183,15 @@ public class LogTranslator extends JavaBaseListener {
                         LogFile nonLogLogFile = new LogFile(javaFile);
                         Statistics.addNonLogLogFile(nonLogLogFile);
                         ANTLRRunner.run(nonLogLogFile, true, true);
-                        parsedExtendingClass = true;
-                        logFile.addConnectedLogFilesList(nonLogLogFile);
+//                        parsedExtendingClass = true;
+                        extendingLogFile = nonLogLogFile;
+                        //logFile.addConnectedLogFilesList(nonLogLogFile);
+                        break;
                     }
                 }
             }
         }
-        return parsedExtendingClass;
+        return extendingLogFile;
     }
 
     /**
@@ -502,6 +530,7 @@ public class LogTranslator extends JavaBaseListener {
 
     private Log transformMethodStatement(JavaParser.ExpressionListContext expressionList) {
         Log log = new Log();
+        log.setLogFile(logFile);
         boolean formattedLog = false;
 
         // TODO if expressions are separated by commas and/or first argument contains '%x' or '{}'
@@ -524,16 +553,16 @@ public class LogTranslator extends JavaBaseListener {
                     }
                 }
             }
-            if (methodText.contains("{}")) {
-                formattedLog = true;
-                log.setFormattingSymbol("{}");
-            } else if (methodText.contains("%") && CommonsLoggerLoader.hasFormatters(methodText)) {
-                formattedLog = true;
-                log.setFormattingSymbol("%");
-            } else if (methodText.contains("{0}")) {
-                formattedLog = true;
-                log.setFormattingSymbol("{0}");
-            }
+//            if (methodText.contains("{}")) {
+//                formattedLog = true;
+//                log.setFormattingSymbol("{}");
+//            } else if (methodText.contains("%") && CommonsLoggerLoader.hasFormatters(methodText)) {
+//                formattedLog = true;
+//                log.setFormattingSymbol("%");
+//            } else if (methodText.contains("{0}")) {
+//                formattedLog = true;
+//                log.setFormattingSymbol("{0}");
+//            }
 
             /** start evaluating of parsed value from rightmost element, continuing with left sibling */
             List<JavaParser.ExpressionContext> methodList = expressionList.expression();
@@ -1006,7 +1035,7 @@ public class LogTranslator extends JavaBaseListener {
                 if (!HelperLogTranslator.findMethod(logFile, findMeText, methodArgumentsTypeList)) {
                     /** Method has not been found in class. Store it anyway.
                      * Exactly same situation as variable containing "." */
-                    ngmonNewName = findMe.expression(0).getText() + "MethodCall";
+                    ngmonNewName = HelperGenerator.removeSpecialCharsFromText(findMe.expression(0).getText()) + "MethodCall";
                     logFile.storeVariable(findMe, findMeText, "String", false, ngmonNewName);
                 }
                 // found method!
@@ -1113,6 +1142,7 @@ public class LogTranslator extends JavaBaseListener {
 
     /**
      * Search for variable in given LogFile's variable list.
+     * And / or in connected LogFiles (extending class)
      *
      * @param logFile to search for this variable list
      * @param findMe  variable to look for
@@ -1142,10 +1172,31 @@ public class LogTranslator extends JavaBaseListener {
                 // look for array[] definition (without any stuff inside)
                 if (isArray(key)) {
                     if ((findMe.getChildCount() > 3) && (findMe.expression(1).getText() != null)) {
-                        // search for array declaration in variable list
-//                        System.out.printf("search for %s[] \n", findMe.expression(0).getText() );
+                        // search for array declaration in variable list - search for %[]
                         if (key.equals(findMe.expression(0).getText() + "[]")) {
                             foundVar = logFile.getVariableList().get(key).get(0);
+                        }
+                    }
+                }
+            }
+        }
+
+        /** Look into variables from connected (extending class) logFile */
+        if (foundVar == null && logFile.getConnectedLogFilesList() != null) {
+            // look through all extending classes
+            for (LogFile lf : logFile.getConnectedLogFilesList()) {
+                if (lf != this.logFile) {
+                    // if it is not the same file, get all variableNames and compare them
+                    for (String varNameKey : lf.getVariableList().keySet()) {
+                        if (findMe.getText().equals(varNameKey)) {
+                            // this variable list should contain wanted variable
+                            List<LogFile.Variable> vars = lf.getVariableList().get(varNameKey);
+                            for (LogFile.Variable v : vars) {
+                                if (v.isField()) {
+                                    foundVar = v;
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
@@ -1224,10 +1275,17 @@ public class LogTranslator extends JavaBaseListener {
      * @param ctx ANTLR's current rule context
      */
     private void replaceLogFactory(ParserRuleContext ctx) {
-        String logFieldDeclaration = "/* " + ctx.getText() + " */\n" + ANTLRRunner.getCurrentFile().getNamespaceClass() +
-            " LOG = LoggerFactory.getLogger(" + ANTLRRunner.getCurrentFile().getNamespaceClass() + ".class, new SimpleLogger());";
+        String nsClass = logFile.getNamespaceClass();
+//        String logFieldDeclaration = "/* " + ctx.getText() + " */\n" + ANTLRRunner.getCurrentFile().getNamespaceClass() +
+        String logFactoryFieldDeclaration = "/* " + ctx.getText() + " */\n" + nsClass +
+            " LOG = LoggerFactory.getLogger(" + nsClass + ".class, new SimpleLogger());";
+        // TODO fixed or bugged?
+//            " LOG = LoggerFactory.getLogger(" + ANTLRRunner.getCurrentFile().getNamespaceClass() + ".class, new SimpleLogger());";
 //            System.out.println("replacing " + ctx.getStart() + ctx.getText() + " with " + logFieldDeclaration);
-        rewriter.replace(ctx.getStart(), ctx.getStop(), logFieldDeclaration);
+        if (logFactoryFieldDeclaration.contains("null")) {
+            System.err.println("logfactory contains null!" + logFactoryFieldDeclaration);
+        }
+        rewriter.replace(ctx.getStart(), ctx.getStop(), logFactoryFieldDeclaration);
     }
 
     /**

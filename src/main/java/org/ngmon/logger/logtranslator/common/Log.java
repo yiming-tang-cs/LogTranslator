@@ -21,6 +21,7 @@ public class Log {
     private List<LogFile.Variable> formattedVariables; // variables in slf4j formatter's standard, declared after first comma
     private String formattingSymbol;
     private List<String> ternaryValues;
+    private LogFile logFile;
 
     public Log() {
         comments = new ArrayList<>();
@@ -178,6 +179,7 @@ public class Log {
             ", level='" + level + '\'' +
             ", tags='" + tags + '\'' +
             ", methodName='" + methodName + '\'' +
+            ", \nfilePath='" + logFile.getFilepath() + '\'' +
             '}';
     }
 
@@ -187,5 +189,13 @@ public class Log {
 
     public void setGoMatchLog(String goMatchLog) {
         this.goMatchLog = goMatchLog;
+    }
+
+    public void setLogFile(LogFile logFile) {
+        this.logFile = logFile;
+    }
+
+    public LogFile getLogFile() {
+        return logFile;
     }
 }

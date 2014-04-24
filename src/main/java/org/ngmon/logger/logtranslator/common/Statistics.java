@@ -13,7 +13,7 @@ public class Statistics {
     private static Map<String, Integer> loggerTypeCountMap = new HashMap<>();
     private static Set<LogFile> nonLogLogFiles = new HashSet<>();
     private static LogTranslatorNamespace LOG = Utils.getLogger();
-    private static int counter = 0;
+    protected static int counter = 0;
     private static long start;
     private static long stop;
 

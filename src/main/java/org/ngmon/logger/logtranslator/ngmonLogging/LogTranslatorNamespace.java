@@ -10,7 +10,7 @@ import org.ngmon.logger.core.AbstractNamespace;
  */
 public class LogTranslatorNamespace extends AbstractNamespace {
 
-    public AbstractNamespace antlrParsingFile(String filepath) {
+    public AbstractNamespace antlrParsingFile(int fileNumber, String filepath) {
         return this;
     }
 

@@ -40,9 +40,9 @@ public class Utils {
         "const", "float", "native", "super", "while");
     public static final List<String> JAVA_ESCAPE_CHARS = Arrays.asList("\\b", "\\t", "\\n", "\\f", "\\r", "\\\"", "\\\'", "\\\\");
     public static final List<String> DEFAULT_LOG_LEVELS = Arrays.asList("trace", "debug", "info", "warn", "error", "fatal", "log");
-    public static List<String> FORMATTERS = Arrays.asList("String.format", "MessageFormatter.format", "StringUtils", "Formatter.format", "print", "formatMessage", "{}", "%");
     public static final String sep = File.separator;
     private static final LogTranslatorNamespace NgmonLogger = LoggerFactory.getLogger(LogTranslatorNamespace.class, new SimpleLogger());
+    public static List<String> FORMATTERS = Arrays.asList("String.format", "MessageFormatter.format", "StringUtils", "Formatter.format", "print", "formatMessage", "{}", "%");
     public static boolean ignoreParsingErrors;
     public static boolean goMatchDebug;
     public static boolean goMatchWorkaround;
@@ -77,6 +77,9 @@ public class Utils {
             properties.load(is);
 
             applicationHome = properties.getProperty("application_home");
+            if (applicationHome.endsWith(sep)) {
+                applicationHome = applicationHome.substring(0, applicationHome.length() - 1);
+            }
             applicationNamespace = properties.getProperty("application_namespace");
             int tmpLength = Integer.parseInt(properties.getProperty("application_namespace_length"));
             applicationNamespaceLength = (tmpLength == 0) ? (applicationNamespace.length() + 2) : tmpLength;
@@ -211,18 +214,19 @@ public class Utils {
     }
 
     public static String getOldNewLogList(List<LogFile> logFiles) {
-        String generatedNgmonLog = "";
         for (LogFile logfs : logFiles) {
             for (Log log : logfs.getLogs()) {
-                if (log.isUsedGeneratedNgmonLog()) {
-                    generatedNgmonLog = log.getGeneratedNgmonLog().replaceAll("\\n\\t*", "")
-                        .substring(0, log.getGeneratedNgmonLog().indexOf("{") - 1) + "\n";
+                String generatedNgmonLog = log.getGeneratedNgmonLog().
+                    substring(0, log.getGeneratedNgmonLog().indexOf("{") - 1).replaceAll("\\n\\t*", "");
+                if (!log.isUsedGeneratedNgmonLog()) {
+                    generatedNgmonLog = "Not used: " + generatedNgmonLog;
                 }
                 // TODO DEBUG()!
                 String logs = log.getOriginalLog() + "\n"
                     + log.getGeneratedReplacementLog() + "\n"
-                    + generatedNgmonLog
-                    + log.getGoMatchLog() + "\n\n\n";
+                    + generatedNgmonLog + "\n"
+                    + log.getGoMatchLog() + "\n"
+                    + log.getLogFile().getFilepath() + "\n\n";
                 oldNewLogList.append(logs);
             }
         }

@@ -37,21 +37,22 @@ public class GoMatchGenerator {
     }
 
     public static void createGoMatchFromLog(Log log) {
-        log.getComments();
         String goMatchPattern = createNewPattern(log);
 
-        /** if pattern does not contain any variable, throw him away */
-        if (goMatchPattern.contains("<") && goMatchPattern.contains(">")) {
-
+//        /** if pattern does not contain any variable, throw him away */
+//        if (goMatchPattern.contains("<") && goMatchPattern.contains(">")) {
 
             if (Utils.goMatchDebug) {
                 // prepend with comment and original log file
                 goMatchPattern = "# " + log.getOriginalLog() + "\n" + goMatchPattern;
             }
-
+            // contains at least one <PATTERN> store and use it
             goMatchPatternList.add(goMatchPattern);
             log.setGoMatchLog(goMatchPattern);
-        }
+//        }
+//        else {
+//            log.setGoMatchLog("PureText: " + goMatchPattern);
+//        }
     }
 
     /**
@@ -67,7 +68,7 @@ public class GoMatchGenerator {
         String originalLog = log.getOriginalLog();
         if (Utils.goMatchWorkaround) {
             for (String escaped : Utils.JAVA_ESCAPE_CHARS) {
-                String substitute;
+                String substitute = null;
                 switch (escaped) {
                     case "\t":
                     case "\n":
@@ -76,12 +77,16 @@ public class GoMatchGenerator {
                     case "\\\"":
                     case "\\\'":
                     case "\\":
-                        continue;
+                    case "\\\\":
+                        substitute = null;
+                        break;
                     default:
                         substitute = "";
                         break;
                 }
-                originalLog = originalLog.replaceAll(escaped, substitute);
+                if (substitute != null) {
+                    originalLog = originalLog.replaceAll(escaped, substitute);
+                }
             }
         }
 
@@ -215,7 +220,9 @@ public class GoMatchGenerator {
                 // could be slf4j or MessageFormatter - they use similar syntax
                 textNoFormatters = Slf4jLoggerLoader.isolateFormatters(text, formattedVariables, symbol);
             }
-            text = textNoFormatters;
+            if (textNoFormatters != null) {
+                text = textNoFormatters;
+            }
         }
 
         /** remove ternary operator */
@@ -249,7 +256,11 @@ public class GoMatchGenerator {
                 Collections.sort(sortedVars, new StringLengthComparator());
                 for (String var : sortedVars) {
                     if (var.contains("("))
-                        text = text.replace(var, "~");
+                        if (text == null) {
+                            System.err.println("Null text!" + log.getLogFile().getFilepath());
+                        } else {
+                            text = text.replace(var, "~");
+                        }
                 }
             }
         }
@@ -258,7 +269,7 @@ public class GoMatchGenerator {
         /** If not, continue manually */
         boolean parseComment = false;
         if (text == null) {
-            System.out.println("null text=" + log);
+            /** if log has no textual information, use at least it's method name */
             text = log.getMethodName();
         }
         char c_prev = text.charAt(0);

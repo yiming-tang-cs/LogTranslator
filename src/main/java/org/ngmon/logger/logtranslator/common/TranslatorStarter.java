@@ -20,13 +20,17 @@ public class TranslatorStarter {
 
         /** 1) Search through all ".java" files in given directory. Look for "log.{debug,warn,error,fatal} */
         logFiles = LogFilesFinder.commenceSearch(Utils.getApplicationHome());
-        System.out.println(logFiles.size());
+
+        System.out.println("Files to process: " + logFiles.size());
         if (logFiles.size() != 0) {
 // START OF DEBUGGING PURPOSES ONLY!
             for (LogFile lf : logFiles) {
-                if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common-clean/hadoop-tools/hadoop-sls/src/main/java/org/apache/hadoop/yarn/sls/SLSRunner.java")) {
-                    tempList.add(lf);
+                if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common-clean/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/fs/FSInputChecker.java")) {
+//                    tempList.add(lf);
                 }
+            }
+            if (tempList.size() != 0) {
+                logFiles = tempList ;
             }
 // END OF DEBUGGING PURPOSES ONLY!
 
@@ -35,13 +39,11 @@ public class TranslatorStarter {
 
             /** 3) Visit each logFile and parse variables, imports, log definitions, methods
              Main part of this program */
-//        for (LogFile logFile : tempList) { // REMOVE DEBUGGING LINE ONLY!!
             for (LogFile logFile : logFiles) {
                 if (!logFile.isFinishedParsing()) {
-                    LOG.antlrParsingFile(logFile.getFilepath()).debug();
+                    LOG.antlrParsingFile(Statistics.counter, logFile.getFilepath()).debug();
                     ANTLRRunner.run(logFile, false, false);
                 }
-
                 if (logFile.isFinishedParsing()) {
                     // Add this file to namespaces map
                     NgmonNamespaceFactory.addToNamespaceCreationMap(logFile);
