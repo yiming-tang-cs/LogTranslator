@@ -22,10 +22,11 @@ public class TranslatorStarter {
         logFiles = LogFilesFinder.commenceSearch(Utils.getApplicationHome());
 
         System.out.println("Files to process: " + logFiles.size());
-        if (logFiles.size() != 0) {
 // START OF DEBUGGING PURPOSES ONLY!
+        String testFile = "/home/mtoth/tmp/rewritting/hadoop-common-clean/hadoop-tools/hadoop-streaming/src/main/java/org/apache/hadoop/streaming/StreamXmlRecordReader.java";
+        if (logFiles.size() != 0) {
             for (LogFile lf : logFiles) {
-                if (lf.getFilepath().equals("/home/mtoth/tmp/rewritting/hadoop-common-clean/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/fs/FSInputChecker.java")) {
+                if (lf.getFilepath().equals(testFile)) {
 //                    tempList.add(lf);
                 }
             }
@@ -40,6 +41,7 @@ public class TranslatorStarter {
             /** 3) Visit each logFile and parse variables, imports, log definitions, methods
              Main part of this program */
             for (LogFile logFile : logFiles) {
+                System.out.println(Statistics.counter + "  " + logFile.getFilepath());
                 if (!logFile.isFinishedParsing()) {
                     LOG.antlrParsingFile(Statistics.counter, logFile.getFilepath()).debug();
                     ANTLRRunner.run(logFile, false, false);
@@ -52,7 +54,6 @@ public class TranslatorStarter {
 
             /** 4) Rewrite files from logFiles - logs/imports by ANTLR */
             for (LogFile logFile : logFiles) {
-                // TODO() -- uncomment to work again!
 //                FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()), logFile.getRewrittenJavaContent());
                 LOG.createdFile(logFile.getFilepath()).info();
             }

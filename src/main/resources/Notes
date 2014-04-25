@@ -6,7 +6,12 @@ RUN hadoop exmaple job and look for log statements
 
 When translating hadoop-common project, file contains variables at the end of the file! Move to the first class:
 /home/mtoth/tmp/rewritting/hadoop-common/hadoop-tools/hadoop-streaming/src/main/java/org/apache/hadoop/streaming/StreamJob.java
-hadoop-common/hadoop-tools/hadoop-streaming/src/main/java/org/apache/hadoop/streaming/StreamJob.java
+
+/home/mtoth/tmp/rewritting/hadoop-common/hadoop-tools/hadoop-streaming/src/main/java/org/apache/hadoop/streaming/StreamJob.java
+/home/mtoth/tmp/rewritting/hadoop-common/hadoop-tools/hadoop-streaming/src/main/java/org/apache/hadoop/streaming/PipeMapRed.java
+
+
+
 
 
 DP:
@@ -18,12 +23,9 @@ CHECK! if variable type is changed to string, append .toString or (String.valueo
 
 LOG.error(datanode.getDisplayName()+":DataXceiver error processing "+((op==null)?"unknown":op.name())+" operation "+" src: "+remoteAddress+" dest: "+localAddress,t)
 
-FixMe GoMatch (\n?)
-LOG.info("ParsedTask details:"+obtainCounters()+"\n"+obtainFailedDueToAttemptId()+"\nPreferred Locations are:")
-org.apache.hadoop.parsedtask_details_npreferred_locations_are##ParsedTask details:<STRING:obtainCounters>\n<STRING:obtainFailedDueToAttemptId>\nPreferred Locations are:
 
-// LOG.warn("Failed to transfer block "+blocks[i],ie)
-org.apache.hadoop.failed_to_transfer_block##Failed to transfer block <STRING:blocks[]> <STRING:Exception>
+methodCall - String.valueOf()
+Exception - add .toString()
 
 
 

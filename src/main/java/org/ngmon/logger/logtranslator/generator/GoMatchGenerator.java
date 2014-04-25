@@ -3,6 +3,7 @@ package org.ngmon.logger.logtranslator.generator;
 import org.ngmon.logger.logtranslator.common.Log;
 import org.ngmon.logger.logtranslator.common.LogFile;
 import org.ngmon.logger.logtranslator.common.Utils;
+import org.ngmon.logger.logtranslator.ngmonLogging.LogTranslatorNamespace;
 import org.ngmon.logger.logtranslator.translator.CommonsLoggerLoader;
 import org.ngmon.logger.logtranslator.translator.Slf4jLoggerLoader;
 
@@ -17,6 +18,7 @@ import java.util.regex.Pattern;
  */
 public class GoMatchGenerator {
 
+    private static LogTranslatorNamespace LOG = Utils.getLogger();
     private static Set<String> goMatchPatternList = new HashSet<>();
     private static int waveCounter = 0;
 
@@ -38,21 +40,13 @@ public class GoMatchGenerator {
 
     public static void createGoMatchFromLog(Log log) {
         String goMatchPattern = createNewPattern(log);
-
-//        /** if pattern does not contain any variable, throw him away */
-//        if (goMatchPattern.contains("<") && goMatchPattern.contains(">")) {
-
-            if (Utils.goMatchDebug) {
-                // prepend with comment and original log file
-                goMatchPattern = "# " + log.getOriginalLog() + "\n" + goMatchPattern;
-            }
-            // contains at least one <PATTERN> store and use it
-            goMatchPatternList.add(goMatchPattern);
-            log.setGoMatchLog(goMatchPattern);
-//        }
-//        else {
-//            log.setGoMatchLog("PureText: " + goMatchPattern);
-//        }
+        if (Utils.goMatchDebug) {
+            // prepend with comment and original log file
+            goMatchPattern = "# " + log.getOriginalLog() + "\n" + goMatchPattern;
+        }
+        // contains at least one <PATTERN> store and use it
+        goMatchPatternList.add(goMatchPattern);
+        log.setGoMatchLog(goMatchPattern);
     }
 
     /**
@@ -65,7 +59,7 @@ public class GoMatchGenerator {
     private static String createNewPattern(Log log) {
         StringBuilder pattern = new StringBuilder(Utils.getApplicationNamespace() + "." + log.getMethodName() + "##");
 
-        String originalLog = log.getOriginalLog();
+        String newGoMatch = log.getOriginalLog();
         if (Utils.goMatchWorkaround) {
             for (String escaped : Utils.JAVA_ESCAPE_CHARS) {
                 String substitute = null;
@@ -85,22 +79,22 @@ public class GoMatchGenerator {
                         break;
                 }
                 if (substitute != null) {
-                    originalLog = originalLog.replaceAll(escaped, substitute);
+                    newGoMatch = newGoMatch.replaceAll(escaped, substitute);
                 }
             }
         }
 
-        if (originalLog.startsWith("LogFactory")) {
+        if (newGoMatch.startsWith("LogFactory")) {
             // get substring from method name (info/debug..)
             for (String level : Utils.DEFAULT_LOG_LEVELS) {
-                if (originalLog.contains("." + level + "(")) {
-                    originalLog = originalLog.substring(originalLog.indexOf(level));
+                if (newGoMatch.contains("." + level + "(")) {
+                    newGoMatch = newGoMatch.substring(newGoMatch.indexOf(level));
                     break;
                 }
             }
         }
-        originalLog = originalLog.substring(originalLog.indexOf("("), originalLog.lastIndexOf(")"));
-        originalLog = extractVars(originalLog, log);
+        newGoMatch = newGoMatch.substring(newGoMatch.indexOf("("), newGoMatch.lastIndexOf(")"));
+        newGoMatch = extractVars(newGoMatch, log);
 
         List<String> variableNames = new ArrayList<>();
         for (LogFile.Variable var : log.getVariables()) {
@@ -118,9 +112,13 @@ public class GoMatchGenerator {
                 int occurrence = 0;
                 for (String vName : variableNames) {
                     if (vName.startsWith(varName) && (vName.length() > varName.length())) {
-                        int tmp = Integer.parseInt(vName.substring(varName.length()));
-                        if (tmp > occurrence) {
-                            occurrence = tmp;
+                        try {
+                            int tmp = Integer.parseInt(vName.substring(varName.length()));
+                            if (tmp > occurrence) {
+                                occurrence = tmp;
+                            }
+                        } catch (NumberFormatException nfe) {
+                            occurrence++;
                         }
                     }
                 }
@@ -132,27 +130,28 @@ public class GoMatchGenerator {
             if (!Utils.itemInList(Utils.NGMON_ALLOWED_TYPES, type.toLowerCase())) {
                 type = "String";
             }
-            originalLog = originalLog.replaceFirst("~", "<" + type.toUpperCase() + ":" + varName + ">");
+            newGoMatch = newGoMatch.replaceFirst("~", "<" + type.toUpperCase() + ":" + varName + ">");
         }
         // TODO check slf4j and common on behaviour!
-        if (log.getGeneratedReplacementLog().contains("tag(\"methodCall\")") && originalLog.contains("~")) {
-            originalLog = originalLog.replaceAll("~", "");
+        if (log.getGeneratedReplacementLog().contains("tag(\"methodCall\")") && newGoMatch.contains("~")) {
+            newGoMatch = newGoMatch.replaceAll("~", "");
         }
 
-        if (originalLog.contains("~")) {
+        if (newGoMatch.contains("~")) {
             waveCounter++;
-            System.out.println(waveCounter + "=" + originalLog + " \n" + log.getOriginalLog());
+            System.err.println(waveCounter + "=" + newGoMatch + " \n" + log.getOriginalLog());
+            LOG.goMatchPatternError(waveCounter, newGoMatch, log.getOriginalLog()).error();
         }
 
         /** goMatch artificial removal of \n\t\r.. and adding extra space before & after pattern */
         if (Utils.goMatchWorkaround) {
             for (String escaped : Utils.JAVA_ESCAPE_CHARS) {
-                originalLog = originalLog.replaceAll(escaped, "");
+                newGoMatch = newGoMatch.replaceAll(escaped, "");
             }
             // non-greedy find goMatch pattern and add spaces before/after it
-            originalLog = goMatchAddSpaces(originalLog);
+            newGoMatch = goMatchAddSpaces(newGoMatch);
         }
-        pattern.append(originalLog.trim());
+        pattern.append(newGoMatch.trim());
 
         return pattern.toString();
     }

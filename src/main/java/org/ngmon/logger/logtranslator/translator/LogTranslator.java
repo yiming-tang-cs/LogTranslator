@@ -14,6 +14,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class LogTranslator extends JavaBaseListener {
@@ -400,7 +402,10 @@ public class LogTranslator extends JavaBaseListener {
             /** Store Exception as variable type name (as we can not tell which exception has higher priority) */
             errorTypeName = "Exception";
         }
+
         logFile.storeVariable(ctx, errorVarName, errorTypeName, false, "Exception");
+        LogFile.Variable var = returnLastValue(errorVarName);
+//        var.setChangeOriginalName(errorVarName + ".toString()");
     }
 
     /**
@@ -487,7 +492,18 @@ public class LogTranslator extends JavaBaseListener {
 
 //            System.err.println("Unable to change log calls, when log factory has not been defined! Error. Exiting. " +
 //                    logFile.getFilepath() + "\n " + ctx.getText());
-            if (ctx.getText().toLowerCase().startsWith("log")) {
+            /** starts with log followed by ALPHANUM (dot) */
+            String logCall = ctx.getText().toLowerCase();
+            int end = 10;
+            if (logCall.length() < 10) {
+                end = logCall.length();
+            } else {
+                end = 10;
+            }
+            Matcher matcher = Pattern.compile("log\\w*\\.\\w+").matcher(logCall).region(0, end);
+
+            if (matcher.find()) {
+//            if (ctx.getText().toLowerCase().startsWith("log")) {
 //                System.out.println("our extending log statements! " + ctx.expression().expression(0).expression(0).getText() +
 //                    " " + logFile.getFilepath());
                 logName = ctx.expression().expression(0).expression(0).getText();
@@ -634,12 +650,16 @@ public class LogTranslator extends JavaBaseListener {
 //            System.out.println("asd" + expression.expression(0).getText());
 //            String formatterType = Utils.listContainsItem(stringList, expression.expression(0).getText());
             if (log.getFormattingSymbol() != null) {
-                List<JavaParser.ExpressionContext> expList = expression.expressionList().expression();
-                Collections.reverse(expList);
-                for (JavaParser.ExpressionContext ch : expList) {
+                if (expression.getText().contains("[") && expression.getText().endsWith("]")) {
+                    determineLogTypeAndStore(log, expression, true);
+                } else {
+                    List<JavaParser.ExpressionContext> expList = expression.expressionList().expression();
+                    Collections.reverse(expList);
+                    for (JavaParser.ExpressionContext ch : expList) {
 //                    System.out.println("ch=" + ch.getText());
 //                    determineLogTypeAndStore(log, ch, formattedVar);
-                    determineLogTypeAndStore(log, ch, true);
+                        determineLogTypeAndStore(log, ch, true);
+                    }
                 }
             } else {
                 determineLogTypeAndStore(log, expression, formattedVar);
@@ -1211,7 +1231,8 @@ public class LogTranslator extends JavaBaseListener {
             // Todo check!
             return false;
         } else {
-            return (context.getText().contains("[") && context.getText().contains("]"));
+//            return (context.getText().contains("[") && context.getText().contains("]"));
+            return (context.getText().contains("[") && context.getText().endsWith("]"));
         }
     }
 

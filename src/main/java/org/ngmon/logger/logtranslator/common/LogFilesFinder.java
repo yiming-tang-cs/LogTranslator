@@ -6,9 +6,12 @@ import org.ngmon.logger.logtranslator.translator.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Locate all files, where there is any log call.
@@ -19,6 +22,7 @@ public class LogFilesFinder {
     static List<LogFile> processFilesNoLogDeclaration = new ArrayList<>();
     static SortedSet<String> allJavaFiles = new TreeSet<>();
     private static LogTranslatorNamespace LOG = Utils.getLogger();
+    protected static Set<String> excludeFilesList = null;
 
     public static List<LogFile> commenceSearch(String loggingApplicationHome) {
         Path path = Paths.get(loggingApplicationHome);
@@ -26,7 +30,6 @@ public class LogFilesFinder {
         try {
             if (Files.exists(path, LinkOption.NOFOLLOW_LINKS) && Files.isDirectory(path) && Files.isReadable(path)) {
                 Files.walkFileTree(path, new JavaLogFinder());
-//                System.out.println(processFileList.size());
             } else {
                 LOG.locationDoesNotExists(loggingApplicationHome).error();
 //                System.err.format("Location %s does not exist.%n", loggingApplicationHome);
@@ -35,12 +38,31 @@ public class LogFilesFinder {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        System.out.println("NO LOG def found=" + processFilesNoLogDeclaration.size());
+        processFiles.addAll(processFilesNoLogDeclaration);
         return processFiles;
     }
 
     public static SortedSet<String> getAllJavaFiles() {
         return allJavaFiles;
     }
+
+
+    protected static boolean isFileOnExcludeList(String logFilePath) {
+        if (excludeFilesList == null) {
+            excludeFilesList = new HashSet<>();
+            Path excludePath = FileSystems.getDefault().getPath("src.main.resources.exclude-list".replaceAll("\\.", Utils.sep));
+            try {
+                excludeFilesList.addAll(Files.readAllLines(excludePath, Charset.defaultCharset()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+        return excludeFilesList.contains(logFilePath);
+    }
+
 }
 
 /**
@@ -109,7 +131,9 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
                  * 3) if not foundLog in imports, look for suspicious LOG
                  */
 
-                String logSearch = "^\\.*?log[a-z]*\\.(trace|debug|warn|error|fatal|log)\\(.*\\).*$";
+//                String logSearch = "^\\s*\\.*?log[a-z]*\\.(trace|debug|info|warn|error|fatal|log)\\(.*\\).*$";
+                Pattern logSearch = Pattern.compile("^\\s*\\.*?log[a-z]*\\.(trace|debug|info|warn|error|fatal|log)\\(\\.*");
+                Matcher matcher;
                 boolean foundLog = false;
                 boolean foundImport = false;
                 boolean searchLogsOnly = false;
@@ -136,7 +160,10 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
                     } else {
                         /** There is high possibility that there is no logger.
                          *  Quick search only for 'log.method(*)' in file. */
-                        foundLog = line.toLowerCase().matches(logSearch);
+                        matcher = logSearch.matcher(line.toLowerCase());
+                        if (matcher.find()) {
+                            foundLog = true;
+                        }
                         if (foundLog) {
                             // TODO debug() System.out.println("XXX found log call! " + line + " " + file);
                             LOG.foundLogCall(line, file.toString()).trace();
@@ -144,11 +171,14 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
                     }
 
                     if (foundImport) {
-//                        System.out.format("%s: line=%s %s%n", file.toString(), packageName, line);
-                        LogFilesFinder.processFiles.add(logFile);
+                        if (!LogFilesFinder.isFileOnExcludeList(file.toString())) {
+                            LogFilesFinder.processFiles.add(logFile);
+                        }
                         break;
                     } else if (foundLog) {
-                        LogFilesFinder.processFilesNoLogDeclaration.add(logFile);
+                        if (!LogFilesFinder.isFileOnExcludeList(file.toString())) {
+                            LogFilesFinder.processFilesNoLogDeclaration.add(logFile);
+                        }
                         break;
                     }
                 }

@@ -87,4 +87,8 @@ public class LogTranslatorNamespace extends AbstractNamespace {
     public AbstractNamespace changedMethodsCount(int changedLogMethodsCount) {
         return this;
     }
+
+    public AbstractNamespace goMatchPatternError(int waveCounter, String newGoMatch, String originalLog) {
+        return this;
+    }
 }

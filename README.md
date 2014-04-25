@@ -48,3 +48,32 @@ For now, it works only with maven projects.
        <scope>compile</scope>
     </dependency>
 
+Or add as module?!
+
+
+
+#==== Apache Hadoop ====
+## == Installation procedure ==
+1) Install these tools on your machine:
+protobuf-c
+hawtbuf-protoc  (maven's invocator of proto-buf-c?)
+
+2) Download findbugs  (http://findbugs.sourceforge.net/downloads.html)
+environment properties settings:
+set FINDBUGS_HOME
+set proper JAVA_HOME - must point to javah executable
+
+3)
+git clone https://github.com/apache/hadoop-common.git
+
+We have used 'commit 33a47d90022f8c6611e89f2da0b6f72e008ed529' for testing purposes.
+
+mvn package -Pdist,native,docs -Dtar -DskipTests
+
+4)
+./hadoop-dist/target/hadoop-3.0.0-SNAPSHOT/bin/hadoop jar ./hadoop-mapreduce-project/hadoop-mapreduce-examples/target/hadoop-mapreduce-examples-3.0.0-SNAPSHOT.jar teragen 3 /tmp/teragen2
+
+Note: When translating hadoop-common, make sure you do following:
+
+Move fields definitions from back of the file, to the beginning before first constructor/ method.
+hadoop-common/hadoop-tools/hadoop-streaming/src/main/java/org/apache/hadoop/streaming/StreamJob.java

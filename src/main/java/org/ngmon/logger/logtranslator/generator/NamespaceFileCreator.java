@@ -205,10 +205,16 @@ public class NamespaceFileCreator {
                 // get all varNames, which has same name + numbered suffix, getLast and add last+1 into map
                 int occurrence = 0;
                 for (String keyName : parametersMap.keySet()) {
-                    if (keyName.startsWith(varName) && (keyName.length() > varName.length())) {
-                        int tmp = Integer.parseInt(keyName.substring(varName.length()));
-                        if (tmp > occurrence) {
-                            occurrence = tmp;
+                    if (keyName.equals(varName)) {
+                            occurrence++;
+                    } else if (keyName.startsWith(varName) && (keyName.length() > varName.length())) {
+                        try {
+                            int tmp = Integer.parseInt(keyName.substring(varName.length()));
+                            if (tmp > occurrence) {
+                                occurrence = tmp;
+                            }
+                        } catch (NumberFormatException nfe) {
+                            occurrence++;
                         }
                     }
                 }

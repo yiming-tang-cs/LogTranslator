@@ -126,12 +126,7 @@ public class HelperGenerator {
                     }
                 }
             }
-//            String replacementLog;
-//            if (tags == null) {
-//                replacementLog = String.format("%s.%s(%s).%s()", logName, log.getMethodName(), vars, log.getLevel());
-//            } else {
-//                replacementLog = String.format("%s.%s(%s)%s.%s()", logName, log.getMethodName(), vars, tags, log.getLevel());
-//            }
+
             String replacementLog = String.format("%s.%s(%s)%s.%s()", logName, log.getMethodName(), vars, tags, log.getLevel());
             LOG.replacementLogOriginalLog(replacementLog, log.getOriginalLog()).trace();
             log.setGeneratedReplacementLog(replacementLog);
@@ -200,6 +195,9 @@ public class HelperGenerator {
 
         text = text.replace("()", "");
         text = text.replace("(", "_").replace(")", "_").replace("__", "");
+
+        text = text.replace("<", "").replace(">", "");
+
         if (text.endsWith("_")) {
             text = text.substring(0, text.lastIndexOf("_"));
         }
