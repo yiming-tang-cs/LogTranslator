@@ -1,0 +1,13 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="TestAll">
+
+    <test name="all">
+        <classes>
+            <class name="org.ngmon.logger.logtranslator.tests.TestBase" />
+            <class name="org.ngmon.logger.logtranslator.tests.TranslatorTest" />
+            <class name="org.ngmon.logger.logtranslator.tests.SearchTest" />
+        </classes>
+    </test>
+
+</suite>

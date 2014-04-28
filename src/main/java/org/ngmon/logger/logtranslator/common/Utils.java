@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * Class reads from logtranslator.properties file and sets accordingly all settings
@@ -68,8 +69,13 @@ public class Utils {
     private static int ngmonMaxLogLength;
 
 
-    public static void initialize() {
-        String propertyFile = "src/main/resources/logtranslator.properties";
+    public static void initialize(String propertyPath) {
+        String propertyFile;
+        if (propertyPath == null) {
+            propertyFile = "src/main/resources/logtranslator.properties";
+        } else {
+            propertyFile = propertyPath;
+        }
         Properties properties = new Properties();
 
         try {
@@ -213,7 +219,7 @@ public class Utils {
         return (text.length() - text.replace(symbol, "").length()) / symbol.length();
     }
 
-    public static String getOldNewLogList(List<LogFile> logFiles) {
+    public static String getOldNewLogList(Set<LogFile> logFiles) {
         for (LogFile logfs : logFiles) {
             for (Log log : logfs.getLogs()) {
                 String generatedNgmonLog = log.getGeneratedNgmonLog().

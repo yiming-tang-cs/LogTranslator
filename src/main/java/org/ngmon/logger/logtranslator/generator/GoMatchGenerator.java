@@ -22,7 +22,7 @@ public class GoMatchGenerator {
     private static Set<String> goMatchPatternList = new HashSet<>();
     private static int waveCounter = 0;
 
-    public static void createGoMatch(List<LogFile> logFiles) {
+    public static void createGoMatch(Set<LogFile> logFiles) {
         for (LogFile logFile : logFiles) {
             for (Log log : logFile.getLogs()) {
                 createGoMatchFromLog(log);

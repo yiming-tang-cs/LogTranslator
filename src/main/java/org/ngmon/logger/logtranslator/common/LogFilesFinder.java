@@ -18,13 +18,13 @@ import java.util.regex.Pattern;
  */
 public class LogFilesFinder {
 
-    static List<LogFile> processFiles = new ArrayList<>();
-    static List<LogFile> processFilesNoLogDeclaration = new ArrayList<>();
+    static Set<LogFile> processFiles = new TreeSet<>();
+    static Set<LogFile> processFilesNoLogDeclaration = new TreeSet<>();
     static SortedSet<String> allJavaFiles = new TreeSet<>();
     private static LogTranslatorNamespace LOG = Utils.getLogger();
     protected static Set<String> excludeFilesList = null;
 
-    public static List<LogFile> commenceSearch(String loggingApplicationHome) {
+    public static Set<LogFile> commenceSearch(String loggingApplicationHome) {
         Path path = Paths.get(loggingApplicationHome);
 
         try {
@@ -172,7 +172,9 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
 
                     if (foundImport) {
                         if (!LogFilesFinder.isFileOnExcludeList(file.toString())) {
-                            LogFilesFinder.processFiles.add(logFile);
+                            if (!LogFilesFinder.processFiles.contains(logFile)) {
+                                LogFilesFinder.processFiles.add(logFile);
+                            }
                         }
                         break;
                     } else if (foundLog) {

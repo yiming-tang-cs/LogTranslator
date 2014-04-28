@@ -29,7 +29,7 @@ public class NgmonNamespaceFactory {
      * @param logFileList input list of logFiles, which contain only filepath and package qualified name.
      * @return same list of logFiles, but each of them has filled appropriate namespace.
      */
-    public static List<LogFile> generateNamespaces(List<LogFile> logFileList) {
+    public static Set<LogFile> generateNamespaces(Set<LogFile> logFileList) {
         LOG.applicationNamespaceLength(Utils.getApplicationNamespaceLength()).trace();
         for (LogFile lf : logFileList) {
             if (lf.getPackageName() == null) {

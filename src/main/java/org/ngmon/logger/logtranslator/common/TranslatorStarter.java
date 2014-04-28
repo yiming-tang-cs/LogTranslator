@@ -4,29 +4,37 @@ import org.ngmon.logger.logtranslator.generator.*;
 import org.ngmon.logger.logtranslator.ngmonLogging.LogTranslatorNamespace;
 import org.ngmon.logger.logtranslator.translator.ANTLRRunner;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class TranslatorStarter {
 
-    protected static List<LogFile> logFiles;
-    private static List<LogFile> tempList = new ArrayList<>();
+    protected static Set<LogFile> logFiles;
+    private static Set<LogFile> tempList = new TreeSet<>();
     private static LogTranslatorNamespace LOG = Utils.getLogger();
 
     public static void main(String[] args) {
+        String propertyFilePath = null;
+        if (args.length > 0) {
+            for (String arg : args) {
+                if (arg.contains(".properties")) {
+                    propertyFilePath = arg;
+                }
+            }
+        }
         LOG.startingLogTranslation(Statistics.startTiming()).debug();
         /** 0) Initialize property file */
-        Utils.initialize();
+        Utils.initialize(propertyFilePath);
 
         /** 1) Search through all ".java" files in given directory. Look for "log.{debug,warn,error,fatal} */
         logFiles = LogFilesFinder.commenceSearch(Utils.getApplicationHome());
 
         System.out.println("Files to process: " + logFiles.size());
 // START OF DEBUGGING PURPOSES ONLY!
-        String testFile = "/home/mtoth/tmp/rewritting/hadoop-common-clean/hadoop-tools/hadoop-streaming/src/main/java/org/apache/hadoop/streaming/StreamXmlRecordReader.java";
+        String testFile = "testdir1/ThreadUtil.java";
         if (logFiles.size() != 0) {
             for (LogFile lf : logFiles) {
-                if (lf.getFilepath().equals(testFile)) {
+                if (lf.getFilepath().contains(testFile)) {
 //                    tempList.add(lf);
                 }
             }
@@ -54,7 +62,7 @@ public class TranslatorStarter {
 
             /** 4) Rewrite files from logFiles - logs/imports by ANTLR */
             for (LogFile logFile : logFiles) {
-//                FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()), logFile.getRewrittenJavaContent());
+                FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()), logFile.getRewrittenJavaContent());
                 LOG.createdFile(logFile.getFilepath()).info();
             }
 
@@ -101,7 +109,7 @@ public class TranslatorStarter {
         LOG.createdFile(LogTranslatorPom.getPath()).info();
     }
 
-    public static List<LogFile> getLogFiles() {
+    public static Set<LogFile> getLogFiles() {
         return logFiles;
     }
 

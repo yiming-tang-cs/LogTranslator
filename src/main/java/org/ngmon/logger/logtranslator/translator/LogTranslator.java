@@ -14,6 +14,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -148,7 +149,7 @@ public class LogTranslator extends JavaBaseListener {
         }
         fileNameFromImport = tempFileImport.replaceAll("\\.", File.separator) + ".java";
 
-        List<LogFile> lfiles = TranslatorStarter.getLogFiles();
+        Set<LogFile> lfiles = TranslatorStarter.getLogFiles();
         for (LogFile lf : lfiles) {
             if (lf.getFilepath().contains(fileNameFromImport)) {
 //                System.out.println("GOT IT " + logFile.getFilepath() + " " + lf.getFilepath());
@@ -1298,7 +1299,7 @@ public class LogTranslator extends JavaBaseListener {
     private void replaceLogFactory(ParserRuleContext ctx) {
         String nsClass = logFile.getNamespaceClass();
 //        String logFieldDeclaration = "/* " + ctx.getText() + " */\n" + ANTLRRunner.getCurrentFile().getNamespaceClass() +
-        String logFactoryFieldDeclaration = "/* " + ctx.getText() + " */\n" + nsClass +
+        String logFactoryFieldDeclaration = "/* " + ctx.getText() + " */\n\t\t\t" + nsClass +
             " LOG = LoggerFactory.getLogger(" + nsClass + ".class, new SimpleLogger());";
         // TODO fixed or bugged?
 //            " LOG = LoggerFactory.getLogger(" + ANTLRRunner.getCurrentFile().getNamespaceClass() + ".class, new SimpleLogger());";
