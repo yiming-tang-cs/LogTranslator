@@ -86,11 +86,7 @@
                         <argument>-classpath</argument>
                         <classpath/>
                         <argument>org.ngmon.logger.logtranslator.common.TranslatorStarter</argument>
-
                     </arguments>
-                    <!--<arguments>-->
-                    <!--<argument>argument1</argument>-->
-                    <!--</arguments>-->
                 </configuration>
             </plugin>
 

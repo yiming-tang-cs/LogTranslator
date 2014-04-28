@@ -570,16 +570,6 @@ public class LogTranslator extends JavaBaseListener {
                     }
                 }
             }
-//            if (methodText.contains("{}")) {
-//                formattedLog = true;
-//                log.setFormattingSymbol("{}");
-//            } else if (methodText.contains("%") && CommonsLoggerLoader.hasFormatters(methodText)) {
-//                formattedLog = true;
-//                log.setFormattingSymbol("%");
-//            } else if (methodText.contains("{0}")) {
-//                formattedLog = true;
-//                log.setFormattingSymbol("{0}");
-//            }
 
             /** start evaluating of parsed value from rightmost element, continuing with left sibling */
             List<JavaParser.ExpressionContext> methodList = expressionList.expression();
@@ -777,9 +767,18 @@ public class LogTranslator extends JavaBaseListener {
                 /** Hadoop's StringUtils internal function */
             } else if (findMeText.startsWith("StringUtils")) {
 //                System.out.println("SU=" + findMeText);
+                String replacementText = null;
+                if (findMeText.contains("newException")) {
+                    int newExcPos = findMeText.indexOf("newException");
+                    // add space between "new Exception"
+                    replacementText = findMeText.substring(0, newExcPos + 3) + " " + findMeText.substring(newExcPos + 3);
+                }
                 logFile.storeVariable(findMe, findMeText, "String", false, "StringUtils");
                 foundVar = returnLastValue(findMeText);
                 foundVar.setTag("methodCall"); // special
+                if (replacementText != null) {
+                    foundVar.setChangeOriginalName(replacementText);
+                }
 
                 /** Handle new Path creation object */
                 // findMeText.startsWith("new")
@@ -835,8 +834,8 @@ public class LogTranslator extends JavaBaseListener {
                     tag = "methodCall"; // special
 
                 } else if (findMe.creator().getText().contains("Throwable")) {
-                    // we don't want to have "new Throwable()" as variable -
-                    // on contrary, set "Error" as ngmon_log_tag
+                    /** we don't want to have "new Throwable()" as variable -
+                     on contrary, set "Error" as ngmon_log_tag */
                     varName = "new " + findMe.creator().getText();
                     varType = "String";
                     ngmonNewName = "throwable";

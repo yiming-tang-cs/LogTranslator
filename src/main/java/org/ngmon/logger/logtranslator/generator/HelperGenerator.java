@@ -102,7 +102,7 @@ public class HelperGenerator {
                 }
                 // Append .toString() if variable is of any other type then NGMON allowed data types
                 if (var != null) {
-                    if (Utils.listContainsItem(Utils.NGMON_ALLOWED_TYPES, var.getType().toLowerCase()) == null) {
+                    if (!Utils.itemInList(Utils.NGMON_ALLOWED_TYPES, var.getType().toLowerCase())) {
                         vars.append(".toString()");
                     }
                 } else {

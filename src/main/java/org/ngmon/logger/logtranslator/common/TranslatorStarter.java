@@ -28,10 +28,10 @@ public class TranslatorStarter {
 
         /** 1) Search through all ".java" files in given directory. Look for "log.{debug,warn,error,fatal} */
         logFiles = LogFilesFinder.commenceSearch(Utils.getApplicationHome());
-
         System.out.println("Files to process: " + logFiles.size());
+
 // START OF DEBUGGING PURPOSES ONLY!
-        String testFile = "testdir1/ThreadUtil.java";
+        String testFile = "/home/mtoth/tmp/rewritting/hadoop-common/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/CleanupQueue.java";
         if (logFiles.size() != 0) {
             for (LogFile lf : logFiles) {
                 if (lf.getFilepath().contains(testFile)) {

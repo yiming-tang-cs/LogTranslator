@@ -11,19 +11,10 @@ When translating hadoop-common project, file contains variables at the end of th
 /home/mtoth/tmp/rewritting/hadoop-common/hadoop-tools/hadoop-streaming/src/main/java/org/apache/hadoop/streaming/PipeMapRed.java
 
 
-
-
-
 DP:
 Pridat dependency chart of classes
 
 FixMe
-
-CHECK! if variable type is changed to string, append .toString or (String.valueof() )
-
-LOG.error(datanode.getDisplayName()+":DataXceiver error processing "+((op==null)?"unknown":op.name())+" operation "+" src: "+remoteAddress+" dest: "+localAddress,t)
-
-
 methodCall - String.valueOf()
 Exception - add .toString()
 
