@@ -38,18 +38,16 @@ For now, it works only with maven projects.
 
  Sources are available to download from https://github.com/ngmon/ngmon-logger-java/
 
- You need to add/change packaging to "pom" in logtranslator's project parent's pom.xml file.
-  Also, you have to add logtranslator as module for this parent to understand logtranslator's directory.
+ You have to add logtranslator as dependency for this project in appropriate pom.xml file to understand logtranslator's directory. (Create dependencies part)
 
+  <dependencies>
     <dependency>
        <groupId>org.ngmon.logger</groupId>
        <artifactId>logtranslator</artifactId>
        <version>1.0-SNAPSHOT</version>
        <scope>compile</scope>
     </dependency>
-
-Or add as module?!
-
+  </dependencies>
 
 
 #==== Apache Hadoop ====
@@ -77,3 +75,9 @@ Note: When translating hadoop-common, make sure you do following:
 
 Move fields definitions from back of the file, to the beginning before first constructor/ method.
 hadoop-common/hadoop-tools/hadoop-streaming/src/main/java/org/apache/hadoop/streaming/StreamJob.java
+
+
+export HADOOP_CLASSPATH=/home/mtoth/.m2/repository/org/ngmon/ngmon-logger-java/1.0-SNAPSHOT/ngmon-logger-java-1.0-SNAPSHOT.jar:/home/mtoth/.m2/repository/org/ngmon/logger/logtranslator/1.0-SNAPSHOT/logtranslator-1.0-SNAPSHOT.jar:/home/mtoth/.m2/repository/org/apache/logging/log4j/log4j-core/2.0-beta4/log4j-core-2.0-beta4.jar:/home/mtoth/Downloads/apache-log4j-2.0-rc1-bin/log4j-api-2.0-rc1.jar
+
+
+or pass log4j2's configuration file system environment property '-Dlog4j.configurationFile=PATH/TO/log4j2.xml' into HADOOP_OPTS system variable

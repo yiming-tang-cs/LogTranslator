@@ -19,6 +19,9 @@ methodCall - String.valueOf()
 Exception - add .toString()
 
 
+FixMe
+if boolean is binary operation.. (?)
+
 
 variable declaration related rules:
 
