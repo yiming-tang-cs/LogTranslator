@@ -847,6 +847,7 @@ public class LogTranslator extends JavaBaseListener {
                 }
                 logFile.storeVariable(findMe, varName, varType, false, ngmonNewName);
                 foundVar = returnLastValue(varName);
+                foundVar.setChangeOriginalName(varName + ".toString()");
                 foundVar.setTag(tag);
 
                 /** If variable is array [], find declared variable earlier and use it's type.
@@ -1094,6 +1095,7 @@ public class LogTranslator extends JavaBaseListener {
                     ngmonNewName = Character.toLowerCase(classname.charAt(0)) + classname.substring(1);
                     logFile.storeVariable(findMe, "this", "String", false, ngmonNewName);
                     foundVar = returnLastValue(findMeText);
+                    foundVar.setChangeOriginalName("this.toString()");
                 } else {
                     // We can ignore value assignment as we have parsed this.'variable';
                     System.err.println("'this.' call found method!" + findMeText);

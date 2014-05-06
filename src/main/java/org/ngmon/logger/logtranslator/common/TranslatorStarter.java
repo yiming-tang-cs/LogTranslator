@@ -83,7 +83,7 @@ public class TranslatorStarter {
             /** 9) Put GoMatch patterns into one file */
             FileCreator.createFile(FileCreator.createPathFromString(Utils.goMatchLocation), GoMatchGenerator.getGoMatchPatternListToString());
         }
-        /** Print runtime lenght and simple statistics */
+        /** Print runtime length and simple statistics */
         System.out.println(Statistics.publishRunInfo());
     }
 
