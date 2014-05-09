@@ -53,31 +53,39 @@ For now, it works only with maven projects.
 #==== Apache Hadoop ====
 ## == Installation procedure ==
 1) Install these tools on your machine:
-protobuf-c
-hawtbuf-protoc  (maven's invocator of proto-buf-c?)
+ a) package depending on your system
+ 	protobuf-c  (rpm)
+  	- OR - 
+  	protobuf-compiler (deb)
+ b) maven's invocator of protoc compiler
+	hawtbuf-protoc (rpm package) 
+	- OR -
+	maven-protoc-plugin (mvn install from https://github.com/usmanismail/maven-protoc-plugin)
+ c) make sure you have build-essential, cmake, pkg-config, zlib1g (zlib1g-dev) and libssl (libssl-dev) packages  
 
 2) Download findbugs  (http://findbugs.sourceforge.net/downloads.html)
 environment properties settings:
 set FINDBUGS_HOME
 set proper JAVA_HOME - must point to javah executable
 
-3)
+3) Compilation
 git clone https://github.com/apache/hadoop-common.git
 
 We have used 'commit 33a47d90022f8c6611e89f2da0b6f72e008ed529' for testing purposes.
 
 mvn package -Pdist,native,docs -Dtar -DskipTests
 
-4)
+4) Running Hadoop 
+ a) Add log4j2 to apache hadoop's classpath first 	
+ 	HADOOP_CLASSPATH=/home/mtoth/.m2/repository/org/apache/logging/log4j/log4j-core/2.0-beta4/log4j-core-2.0-beta4.jar:/home/mtoth/Downloads/apache-log4j-2.0-rc1-bin/log4j-api-2.0-rc1.jar
+
+ b) run example application
 ./hadoop-dist/target/hadoop-3.0.0-SNAPSHOT/bin/hadoop jar ./hadoop-mapreduce-project/hadoop-mapreduce-examples/target/hadoop-mapreduce-examples-3.0.0-SNAPSHOT.jar teragen 3 /tmp/teragen2
+
 
 Note: When translating hadoop-common, make sure you do following:
 
 Move fields definitions from back of the file, to the beginning before first constructor/ method.
 hadoop-common/hadoop-tools/hadoop-streaming/src/main/java/org/apache/hadoop/streaming/StreamJob.java
 
-
-export HADOOP_CLASSPATH=/home/mtoth/.m2/repository/org/ngmon/ngmon-logger-java/1.0-SNAPSHOT/ngmon-logger-java-1.0-SNAPSHOT.jar:/home/mtoth/.m2/repository/org/ngmon/logger/logtranslator/1.0-SNAPSHOT/logtranslator-1.0-SNAPSHOT.jar:/home/mtoth/.m2/repository/org/apache/logging/log4j/log4j-core/2.0-beta4/log4j-core-2.0-beta4.jar:/home/mtoth/Downloads/apache-log4j-2.0-rc1-bin/log4j-api-2.0-rc1.jar
-
-
-or pass log4j2's configuration file system environment property '-Dlog4j.configurationFile=PATH/TO/log4j2.xml' into HADOOP_OPTS system variable
+Default log4j output is set to /tmp/Hadoop-LogTranslator.log file
