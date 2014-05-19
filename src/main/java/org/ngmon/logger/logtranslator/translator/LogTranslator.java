@@ -876,16 +876,13 @@ public class LogTranslator extends JavaBaseListener {
                             }
                         }
                     }
-
                 } else {
-
                     /**
                      * Create it as "isX",  addComment to log as "isX", store
                      * this boolean variable add tag to this log as "ternary" */
                     if (findMeText.startsWith("(")) {
                         findMe = findMe.primary().expression();
                     }
-
                     tmpVarName = findMe.expression(0).getText();
 
                     if (tmpVarName.startsWith("null")) {
