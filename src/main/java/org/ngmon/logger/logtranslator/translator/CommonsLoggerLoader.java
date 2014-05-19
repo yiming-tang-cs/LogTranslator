@@ -20,7 +20,7 @@ import java.util.*;
  */
 public class CommonsLoggerLoader extends LoggerLoader {
 
-    //    private static List<String> formattingSymbols = Arrays.asList("%b", "%h", "%s",  "%c", "%d", "%o", "%x", "%e", "%f", "%g", "%a", "%t");
+//  private static List<String> formattingSymbols = Arrays.asList("%b", "%h", "%s",  "%c", "%d", "%o", "%x", "%e", "%f", "%g", "%a", "%t");
     private static List<String> formattingSymbols = Arrays.asList("b", "h", "s", "c", "d", "o", "x", "e", "f", "g", "a", "t");
     private Collection translateLogMethods;
     private Collection checkerLogMethods;
@@ -33,8 +33,6 @@ public class CommonsLoggerLoader extends LoggerLoader {
         setLogFactory(imports.get(0));
         setLogger(imports.subList(1, imports.size()));
 
-
-//        List<String> customCustomizedMethods = null; //Arrays.asList("asd");
         List<String> levels = Arrays.asList("trace", "debug", "info", "warn", "error", "fatal");
         this.checkerLogMethods = generateCheckerMethods(levels);
         this.translateLogMethods = generateTranslateMethods(levels, null);
@@ -56,9 +54,6 @@ public class CommonsLoggerLoader extends LoggerLoader {
             int startPos = methodText.indexOf("String.format");
             int endPos = methodText.lastIndexOf(")");
             methodText = methodText.substring(0, startPos) + methodText.substring(startPos + "String.format(".length(), endPos);
-//            if (methodText.startsWith("\"")) {
-//                methodText = methodText.substring(1);
-//            }
         }
         String tempMethod = methodText;
 
@@ -91,7 +86,6 @@ public class CommonsLoggerLoader extends LoggerLoader {
             }
         }
         int i = 0;
-//        System.out.println("error=" + methodText);
         for (String frmt : formatters) {
             checkFormattedVarType(frmt, formattedVariables.get(i));
             methodText = methodText.replaceFirst(frmt, "~");
@@ -104,10 +98,8 @@ public class CommonsLoggerLoader extends LoggerLoader {
         }
         Collections.sort(formatted, new StringLengthComparator());
         for (String fvar : formatted) {
-//            methodText = methodText.replace(fvar, "xx");
             methodText = methodText.replace(fvar, "");
         }
-//        methodText = methodText.replaceAll(",*(xx),*", "~");
 
         return methodText;
     }
@@ -141,7 +133,6 @@ public class CommonsLoggerLoader extends LoggerLoader {
                 }
             }
         }
-//        System.out.println("new=" + methodText);
         return !formatters.isEmpty();
     }
 

@@ -1208,7 +1208,6 @@ public class LogTranslator extends JavaBaseListener {
         return list.get(list.size() - 1);
     }
 
-
     /**
      * Method returns last part of actual log type from import.
      * Used for searching of declaration of 'old/to be changed' logger
@@ -1272,5 +1271,4 @@ public class LogTranslator extends JavaBaseListener {
         rewriter.replace(ctx.start, ctx.stop, commentedOriginalLog + "\n" + spaces + ngmonLogReplacement);
         Statistics.addChangedLogMethodsCount();
     }
-
 }
