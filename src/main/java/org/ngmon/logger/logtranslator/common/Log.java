@@ -51,6 +51,10 @@ public class Log {
         }
     }
 
+    /**
+     * Add commet to list of comments of this log.
+     * @param comment to add to comment list
+     */
     public void addComment(String comment) {
         if (comment.length() > 1) {
             this.comments.add(0, comment);

@@ -1,6 +1,5 @@
 package org.ngmon.logger.logtranslator.generator;
 
-
 import org.ngmon.logger.logtranslator.common.Utils;
 import org.ngmon.logger.logtranslator.ngmonLogging.LogTranslatorNamespace;
 
@@ -10,6 +9,10 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * FileCreator class serves as file creating
+ * and deleting tool in wanted location.
+ */
 public class FileCreator {
 
     private static String ngmonLogsDir;
@@ -20,14 +23,7 @@ public class FileCreator {
      * By default it is in <applicationHome>/src/main/java/log_events/<app-namespace>
      */
     private static void createNGMONLogDirectoryPath() {
-
         StringBuilder newNgmonPath = new StringBuilder("src" + Utils.sep + "main" + Utils.sep + "java" + Utils.sep + "log_events" + Utils.sep);
-//        String appHome = Utils.getApplicationHome();
-//        if (appHome.endsWith("\\") || appHome.endsWith("/")) {
-//            appHome = appHome.substring(0, appHome.length() - 1) + Utils.sep + "logtranslator";
-////            Utils.setLogTranslatorGeneratedProject(appHome);
-//        }
-//        ngmonLogsDir = appHome + newNgmonPath;
         ngmonLogsDir = Utils.getLogTranslatorGeneratedProject() + newNgmonPath;
     }
 
@@ -67,7 +63,6 @@ public class FileCreator {
             }
         } catch (IOException e) {
             LOG.unableToCreateDirectory(dir.toString()).error();
-//            System.err.println("Unable to create NGMON directory " + dir.toString());
             e.printStackTrace();
         }
         return dirPath;
@@ -92,10 +87,10 @@ public class FileCreator {
             } else {
                 throw new FileAlreadyExistsException("Unable to create file, already exists. " + file.toString());
             }
+            LOG.createdFile(file.toString());
             Files.write(file, fileContent.getBytes());
         } catch (IOException e) {
             LOG.unableToCreateDirectory(file.toString()).error();
-//            System.err.println("Unable to create NGMON directory " + file.toString());
             e.printStackTrace();
         }
     }

@@ -16,6 +16,10 @@ import java.util.regex.Pattern;
     logger.info("Temperature has risen above 50 degrees.");
 */
 
+/**
+ * Class represents Slf4j logger,
+ * it's definitions and usage for LogTranslator itself.
+ */
 public class Slf4jLoggerLoader extends LoggerLoader {
 
     private Collection translateLogMethods;
@@ -37,10 +41,10 @@ public class Slf4jLoggerLoader extends LoggerLoader {
     /**
      * Formatting symbol can be either {} or {0} - meaning numbered formatting.
      *
-     * @param text
-     * @param formattedVariables
-     * @param symbol
-     * @return
+     * @param text to be formatted
+     * @param formattedVariables list of formatted variables
+     * @param symbol slf4j's formatting symbol
+     * @return text accordingly formatted by formatters
      */
     public static String isolateFormatters(String text, List<LogFile.Variable> formattedVariables, String symbol) {
         if (text.startsWith("(MessageFormat.format")) {
@@ -80,8 +84,6 @@ public class Slf4jLoggerLoader extends LoggerLoader {
             for (String var : formattedVars) {
                 text = text.replace(var, "");
             }
-
-
         }
         return text;
     }

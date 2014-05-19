@@ -7,15 +7,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * LoggerFactory determines and sets LoggerFactory and
+ * Logging framework for currently parsed/walked Java
+ * class by ANTLR, by comparing imports and/or log declarations.
+ */
 public class LoggerFactory {
 
     private static Map<String, List<String>> loggingFrameworks;
     private static String actualLoggingFramework = null;
-//    private static String obtainedImport = null;
 
     static {
-        // <LogName, List<imports Factory+Loggers>> mapping
-        // Factory is always on first position!
+        /* <LogName, List<imports Factory+Loggers>> mapping
+         Factory is always on first position! */
         loggingFrameworks = new HashMap<>();
         loggingFrameworks.put("juli", Arrays.asList(null, "java.util.logging.Logger")); // JULi has no factory (Logger is factory as well)
         loggingFrameworks.put("commons", Arrays.asList("org.apache.commons.logging.LogFactory", "org.apache.commons.logging.Log", "org.apache.commons.logging.impl.Log4JLogger"));
@@ -27,11 +31,6 @@ public class LoggerFactory {
         loggingFrameworks.put("custom", Arrays.asList("org.ngmon.logger.logtranslator.customlogger.LogFactory", "org.ngmon.logger.logtranslator.customlogger.Logger"));
 
     }
-
-//    public static String getObtainedImport() {
-//        return obtainedImport;
-//    }
-
 
     public static Map<String, List<String>> getLoggingFrameworks() {
         return loggingFrameworks;
@@ -58,7 +57,6 @@ public class LoggerFactory {
             for (String key : loggingFrameworks.keySet()) {
                 if (loggingFrameworks.get(key).contains(obtImport)) {
                     setActualLoggingFramework(key);
-//                obtainedImport = obtImport;
                     break;
                 }
             }

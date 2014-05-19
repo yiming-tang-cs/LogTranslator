@@ -14,6 +14,10 @@ import java.util.*;
     http://commons.apache.org/proper/commons-logging/apidocs/org/apache/commons/logging/impl/Log4JLogger.html
  */
 
+/**
+ * Class represents Apache Commons logging logger,
+ * it's definitions and usage for LogTranslator itself.
+ */
 public class CommonsLoggerLoader extends LoggerLoader {
 
     //    private static List<String> formattingSymbols = Arrays.asList("%b", "%h", "%s",  "%c", "%d", "%o", "%x", "%e", "%f", "%g", "%a", "%t");

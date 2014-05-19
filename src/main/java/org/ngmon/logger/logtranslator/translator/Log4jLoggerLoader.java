@@ -12,7 +12,10 @@ import java.util.List;
         http://logging.apache.org/log4j/2.x/manual/api.html
         http://logging.apache.org/log4j/2.x/log4j-api/apidocs/index.html
      */
-
+/**
+ * Class represents Apache Log4j logger,
+ * it's definitions and usage for LogTranslator itself.
+ */
 public class Log4jLoggerLoader extends LoggerLoader {
 
     private Collection<String> translateLogMethods;

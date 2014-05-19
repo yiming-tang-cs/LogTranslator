@@ -91,4 +91,100 @@ public class LogTranslatorNamespace extends AbstractNamespace {
     public AbstractNamespace goMatchPatternError(int waveCounter, String newGoMatch, String originalLog) {
         return this;
     }
+
+    public AbstractNamespace extending_search_file_isPackage(String extendingFileTosearch, boolean isPackage) {
+        return this;
+    }
+
+    public AbstractNamespace null_variable(String variable) {
+        return this;
+    }
+
+    public AbstractNamespace log_name(String name) {
+        return this;
+    }
+
+    public AbstractNamespace new_namespace(String namespace) {
+        return this;
+    }
+
+    public AbstractNamespace original_replacement_log(String originalLog, String ngmonLogReplacement) {
+        return this;
+    }
+
+    public AbstractNamespace replacing(String original, String replacement) {
+        return this;
+    }
+
+    public AbstractNamespace lookingFor(String variable) {
+        return this;
+    }
+
+    public AbstractNamespace unableToDetermineMethodsArgument(String method) {
+        return this;
+    }
+
+    public AbstractNamespace formal_parameters(String text) {
+        return this;
+    }
+
+    public AbstractNamespace storing_array(String varName, String text) {
+        return this;
+    }
+
+    public AbstractNamespace path(String text) {
+        return this;
+    }
+
+    public AbstractNamespace assuming_external_variable_from_static_import(String text) {
+        return this;
+    }
+
+    public AbstractNamespace lookingForInFile(String text, String filepath, int lineNumber) {
+        return this;
+    }
+
+    public AbstractNamespace string_utils(String text) {
+        return this;
+    }
+
+    public AbstractNamespace unableToChangeLogCallsLogFactoryNotDefined(String filepath, String text) {
+        return this;
+    }
+
+    public AbstractNamespace translation_of_log_call_not_implemented(String text) {
+        return this;
+    }
+
+    public AbstractNamespace log_type(String type) {
+        return this;
+    }
+
+    public AbstractNamespace loggerloader_logFactory(String logFactory, String text) {
+        return this;
+    }
+
+    public AbstractNamespace no_logging_framework(String actualLoggingFramework, String text) {
+        return this;
+    }
+
+    public AbstractNamespace static_import(String staticImport) {
+        return this;
+    }
+
+    public AbstractNamespace found(String javaFile) {
+        return this;
+    }
+
+    public AbstractNamespace not_found_yet_digging_deeper(String fileNameFromImport) {
+        return this;
+    }
+
+    public AbstractNamespace starting_antlr_on_file(String filepath, String fromFilePath) {
+        return this;
+    }
+
+    public AbstractNamespace no_log_definition_files(int noLogDefinitionFilesSize) {
+        return this;
+    }
 }

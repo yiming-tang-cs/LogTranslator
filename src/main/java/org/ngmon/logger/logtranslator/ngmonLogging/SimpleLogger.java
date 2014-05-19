@@ -9,9 +9,9 @@ import java.util.List;
 /**
  * SimpleLogger class is used to log NGMON events and passes it to other (bridged) logging framework.
  * In our case, LogTranslator project uses Log4j2 as underlying logging framework.
- * <p/>
+ *
  * Class is not participating with LogTranslation process. It is used as an example logging framework
- * and handles various log events as would do any other logging framework.
+ * and handles various log events as would any other logging framework have done.
  */
 public class SimpleLogger implements Logger {
 

@@ -20,8 +20,6 @@ public class NgmonNamespaceFactory {
         return namespaceFileCreatorSet;
     }
 
-
-
     /**
      * Generate few namespaces for this logging application. Resolve number of namespaces
      * for this app based on applicationNamespaceLength property and set them to LogFiles.
@@ -34,10 +32,9 @@ public class NgmonNamespaceFactory {
         for (LogFile lf : logFileList) {
             if (lf.getPackageName() == null) {
                 LOG.emptyPackageNameInFile(lf.getFilepath()).error();
-//                System.err.println("null packageName in file " + lf.getFilepath());
             }
             String namespace = createNamespace(lf.getPackageName());
-//            System.out.println("NS=" + namespace);
+            LOG.new_namespace(namespace).trace();
             lf.setNamespace(namespace);
         }
 

@@ -7,6 +7,14 @@ import org.ngmon.logger.logtranslator.translator.ANTLRRunner;
 import java.util.Set;
 import java.util.TreeSet;
 
+/**
+ * Class starts whole project. Beginning from reading
+ * properties input file, searching appropriate java files,
+ * changing their logs, generating NGMON syntax and writing
+ * out all the changes on drive with generated NGMON logger
+ * specific files and output of logs/go-match patterns.
+ *
+ */
 public class TranslatorStarter {
 
     protected static Set<LogFile> logFiles;
@@ -31,10 +39,11 @@ public class TranslatorStarter {
         System.out.println("Files to process: " + logFiles.size());
 
 // START OF DEBUGGING PURPOSES ONLY!
-        String testFile = "/home/mtoth/tmp/rewritting/hadoop-common/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/CleanupQueue.java";
+        String testFile = "/home/mtoth/tmp/rewritting/hadoop-common-pure/hadoop-hdfs-project/hadoop-hdfs/src/contrib/bkjournal/src/main/java/org/apache/hadoop/contrib/bkjournal/MaxTxId.java";
         if (logFiles.size() != 0) {
             for (LogFile lf : logFiles) {
                 if (lf.getFilepath().contains(testFile)) {
+                    // Uncomment this line for this specific file
 //                    tempList.add(lf);
                 }
             }
@@ -62,8 +71,10 @@ public class TranslatorStarter {
 
             /** 4) Rewrite files from logFiles - logs/imports by ANTLR */
             for (LogFile logFile : logFiles) {
-                FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()), logFile.getRewrittenJavaContent());
-                LOG.createdFile(logFile.getFilepath()).info();
+                if (!Utils.cleanRun) {
+                    FileCreator.createFile(FileCreator.createPathFromString(logFile.getFilepath()), logFile.getRewrittenJavaContent());
+                    LOG.createdFile(logFile.getFilepath()).info();
+                }
             }
 
             /** 5) Create NGMON namespaces from associated parsed logFiles */

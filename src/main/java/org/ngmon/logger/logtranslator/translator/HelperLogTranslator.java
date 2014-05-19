@@ -15,6 +15,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Class walks file, which is needed by LogTranslator,
+ * when Java file is extended by other class and we are
+ * looking for variable or method from this file.
+ */
 class HelperLogTranslator {
 
     /**
@@ -67,7 +72,10 @@ class HelperLogTranslator {
     }
 }
 
-
+/**
+ * Implementation of ANTLR walker for HelperLogTranslator, when
+ * looking for specific method in extending class.
+ */
 class MethodListener extends JavaBaseListener {
     private final List<String> argumentTypes;
     private LogFile logfile;
@@ -83,8 +91,6 @@ class MethodListener extends JavaBaseListener {
     }
 
     public boolean isFound() {
-
-
         return found;
     }
 

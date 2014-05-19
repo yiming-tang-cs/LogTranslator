@@ -7,6 +7,12 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * Class copies logTranslator's pom.xml file to newly
+ * translated applications folder of LogTranslator,
+ * which will ensure compatibility with an existing
+ * maven project.
+ */
 public class LogTranslatorPom {
 
     private static String LOGTRANSLATOR_POM = "src" + Utils.sep + "main" +Utils.sep +

@@ -76,6 +76,9 @@ public class NGMONMethod implements Comparable {
      */
     @Override
     public int compareTo(Object obj) {
+        if (obj == null) {
+            System.err.println("Comparing object is null!" + obj);
+        }
         NGMONMethod other = (NGMONMethod) obj;
         if (this.getMethodName().equals(other.getMethodName())) {
             if (this.getFormalParameters().keySet().size() == other.getFormalParameters().size()) {

@@ -14,7 +14,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-
+/**
+ * ANTLRRunner starts ANTLR on given file
+ * and traverses through whole file.
+ * When file is completely walked-through, it
+ * stores changed content to appropriate LogFile instance.
+ */
 public class ANTLRRunner {
     private static LogFile currentFile;
     private static LogTranslatorNamespace LOG = Utils.getLogger();
@@ -40,10 +45,8 @@ public class ANTLRRunner {
 
         } catch (IOException e){
             LOG.fileError(e.toString()).error();
-//            System.err.println("Unable to handle file=" + e.toString());
         } catch (NullPointerException exc) {
             LOG.exception("NullPointerException", logFile.getFilepath()).error();
-//            System.err.println("NullPointerException! " + logFile.getFilepath());
             exc.printStackTrace();
             System.exit(100);
         } catch (Exception e) {

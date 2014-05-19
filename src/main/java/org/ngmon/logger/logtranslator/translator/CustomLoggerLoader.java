@@ -4,6 +4,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Class represents Custom logger,
+ * it's definitions and usage for LogTranslator itself.
+ *
+ * It is mainly here to show, how easy it is to define own logging
+ * methods. Logging framework has to still maintain default syntax
+ * of logging. 'LOG.something(something);'
+ */
 public class CustomLoggerLoader extends LoggerLoader {
 
     private Collection translateLogMethods;

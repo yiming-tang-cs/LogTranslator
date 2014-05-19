@@ -15,6 +15,8 @@ import java.util.regex.Pattern;
 
 /**
  * Locate all files, where there is any log call.
+ * Initial search for files starts from user defined
+ * project directory.
  */
 public class LogFilesFinder {
 
@@ -32,7 +34,6 @@ public class LogFilesFinder {
                 Files.walkFileTree(path, new JavaLogFinder());
             } else {
                 LOG.locationDoesNotExists(loggingApplicationHome).error();
-//                System.err.format("Location %s does not exist.%n", loggingApplicationHome);
                 System.exit(15);
             }
         } catch (IOException e) {
@@ -40,6 +41,7 @@ public class LogFilesFinder {
         }
 
         System.out.println("NO LOG def found=" + processFilesNoLogDeclaration.size());
+        LOG.no_log_definition_files(processFilesNoLogDeclaration.size()).info();
         processFiles.addAll(processFilesNoLogDeclaration);
         return processFiles;
     }
@@ -58,7 +60,6 @@ public class LogFilesFinder {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         }
         return excludeFilesList.contains(logFilePath);
     }
@@ -108,7 +109,6 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
         }
         // Skip this tree, it contains no directories or no java files
         if (count == 0) {
-//           TODO debug() System.out.println("skipping tree " + dir);
             LOG.skippingDirectoryTree(dir.toString()).debug();
             return FileVisitResult.SKIP_SUBTREE;
         }
@@ -165,7 +165,6 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
                             foundLog = true;
                         }
                         if (foundLog) {
-                            // TODO debug() System.out.println("XXX found log call! " + line + " " + file);
                             LOG.foundLogCall(line, file.toString()).trace();
                         }
                     }
@@ -192,7 +191,6 @@ class JavaLogFinder extends SimpleFileVisitor<Path> {
     @Override
     public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
         LOG.fileError(exc.toString()).error();
-//        System.err.println("File error!");
         return FileVisitResult.CONTINUE;
     }
 }

@@ -5,10 +5,14 @@ import org.ngmon.logger.logtranslator.common.LogFile;
 import org.ngmon.logger.logtranslator.common.Utils;
 import org.ngmon.logger.logtranslator.ngmonLogging.LogTranslatorNamespace;
 
+/**
+ * Class contains helper methods for generation
+ * of new method names, whole NGMON log methods, add
+ * String typecasting and other string polishing methods.
+ */
 public class HelperGenerator {
 
     private static LogTranslatorNamespace LOG = Utils.getLogger();
-
 
     /**
      * Generate method name from 'comments' list - strings found in given log method call.
@@ -63,7 +67,7 @@ public class HelperGenerator {
             }
 
             if (Utils.itemInList(Utils.JAVA_KEYWORDS, logName.toString()) || logName.length() == 0) {
-//                System.out.println("logname=" + logName.toString());
+                LOG.log_name(logName.toString()).trace();
                 log.setMethodName(Utils.getNgmonEmptyLogStatement());
             } else {
                 log.setMethodName(logName.toString());
@@ -88,7 +92,6 @@ public class HelperGenerator {
             StringBuilder tags = new StringBuilder();
 
             LOG.variablesInLog(log.getVariables().toString()).trace();
-//            System.out.println("\t" + log.getVariables() + "\n\t" + log.getOriginalLog() );
             int j = 0;
             for (LogFile.Variable var : log.getVariables()) {
                 if (var != null) {
@@ -162,7 +165,6 @@ public class HelperGenerator {
      * @param str string to be changed
      */
     public static String culture(String str) {
-//        System.out.print("cultivating  " + str);
         // remove escaped characters and formatters like \n, \t
         for (String escaped : Utils.JAVA_ESCAPE_CHARS) {
             str = str.replaceAll(escaped, "");
@@ -171,7 +173,6 @@ public class HelperGenerator {
         str = str.replaceAll("\\d+", "");   // remove all digits as well
         str = str.replaceAll("%\\w", ""); // remove all single chars
         str = str.replaceAll("\\W", " ").replaceAll("\\s+", " ").trim();
-//        System.out.print("  -->" + str + "\n");
         str = str.toLowerCase().trim();
         return str;
     }

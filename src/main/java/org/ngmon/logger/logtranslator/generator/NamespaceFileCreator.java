@@ -245,5 +245,4 @@ public class NamespaceFileCreator {
         }
         return parametersMap;
     }
-
 }

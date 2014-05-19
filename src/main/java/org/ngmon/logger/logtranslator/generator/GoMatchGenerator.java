@@ -12,9 +12,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * // comment
- * //"originalLog":"LOG.info(\"Processing \"+count+\" messages from DataNodes \"+\"that were previously queued during standby state\")"}}}
- * org.hadooop.XYZ.replacementLog##Processing <INT:count> messages from DataNodes that were previously queued during standby state.")
+ * Class generates Go-Match patterns from each found log (Log instance).
+ * Generation is done in following manner:
+ * "originalLog":"LOG.info(\"Processing \"+count+\" messages from DataNodes \"+\"that were previously queued during standby state\")"
+ * ->
+ * org.hadooop.XYZ.replacementLog##Processing %{INT:count} messages from DataNodes that were previously queued during standby state.")
  */
 public class GoMatchGenerator {
 
@@ -57,7 +59,7 @@ public class GoMatchGenerator {
      * @return created new goMatch pattern
      */
     private static String createNewPattern(Log log) {
-        StringBuilder pattern = new StringBuilder(Utils.getApplicationNamespace() + "." + log.getMethodName() + "##");
+        StringBuilder pattern = new StringBuilder(Utils.getApplicationNamespace() + "." + log.getLogFile().getNamespaceClass().toLowerCase() + "." + log.getMethodName() + "##");
 
         String newGoMatch = log.getOriginalLog();
         if (Utils.goMatchWorkaround) {
@@ -130,9 +132,8 @@ public class GoMatchGenerator {
             if (!Utils.itemInList(Utils.NGMON_ALLOWED_TYPES, type.toLowerCase())) {
                 type = "String";
             }
-            newGoMatch = newGoMatch.replaceFirst("~", "<" + type.toUpperCase() + ":" + varName + ">");
+            newGoMatch = newGoMatch.replaceFirst("~", "%{" + type.toUpperCase() + ":" + varName + "}");
         }
-        // TODO check slf4j and common on behaviour!
         if (log.getGeneratedReplacementLog().contains("tag(\"methodCall\")") && newGoMatch.contains("~")) {
             newGoMatch = newGoMatch.replaceAll("~", "");
         }
@@ -211,7 +212,6 @@ public class GoMatchGenerator {
         /** If text contains slf4j's formatter brackets {}, don't extract variables
          manually */
         if (formattedVariables != null && symbol != null) {
-//            System.out.println("NULL SYMBOL! " + log.getOriginalLog());
             if (symbol.equals("%")) {
                 textNoFormatters = CommonsLoggerLoader.isolateFormatters(text, formattedVariables);
                 textNoFormatters = textNoFormatters.replace("%%", "%");
@@ -227,7 +227,6 @@ public class GoMatchGenerator {
         /** remove ternary operator */
         if (log.getTag() != null) {
             if (log.getTag().contains("ternary-operator")) {
-//                System.out.println(log.getOriginalLog());
                 int questionMarkPos = text.indexOf("?");
                 int startPos = text.indexOf(log.getTernaryValues().get(0));
                 int endPos = text.indexOf(":" + log.getTernaryValues().get(2)) + log.getTernaryValues().get(2).length();
@@ -296,8 +295,6 @@ public class GoMatchGenerator {
                     cleanText.append(" ");
                 } else if (c == '\"') {
                     continue;
-//                } else if (c == '~') {
-//                    cleanText.append("@~@");
                 } else if (c != '+') {
                     cleanText.append("~");
                 }
@@ -307,7 +304,6 @@ public class GoMatchGenerator {
 
         /** remove multiple empty spaces or underscore chars, remove all non alphanum */
         return cleanText.toString().replaceAll("[^A-Za-z0-9,': \\[\\]_]->#\\(\\)", "").replaceAll("  +", " ").replaceAll("~+", "~");
-//        return clean;
     }
 
 

@@ -58,6 +58,10 @@ public class LogFile implements Comparable {
         return filepath;
     }
 
+    /**
+     * Method returns current namespace
+     * @return current namespace (org.apache.hadoop)
+     */
     public String getNamespace() {
         return namespace;
     }
@@ -92,6 +96,10 @@ public class LogFile implements Comparable {
         return stringBuilder.toString();
     }
 
+    /**
+     * Returns generated namespace class
+     * @return NGMON generated namespace class (HdfsNamespace)
+     */
     public String getNamespaceClass() {
         return namespaceClass;
     }

@@ -7,6 +7,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Class Statistics counts number of parsed files,
+ * changed and generated log methods, extra parsed files, because of
+ * extending from other classes and total length of run itself.
+ */
 public class Statistics {
 
     private static int changedLogMethodsCount;

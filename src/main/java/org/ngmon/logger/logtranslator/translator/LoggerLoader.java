@@ -5,6 +5,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * LoggerLoader is an abstract representation
+ * of any Logging system.
+ * Currently LogTranslator supports Log4j, Slf4j,
+ * Commons logging, Custom logging and Failsafe (default,
+ * when none is found) logging frameworks.
+ */
 public abstract class LoggerLoader {
 
     private List<String> logger;

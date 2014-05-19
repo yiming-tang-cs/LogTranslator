@@ -20,6 +20,7 @@ For now, it works only with maven projects.
 [How to add custom jar to MapReduce] (http://blog.cloudera.com/blog/2011/01/how-to-include-third-party-libraries-in-your-map-reduce-job/)
 
 #### Possible problems
+ * Add StringUtils.java file path to exclude-list file
  * Syntax errors complaining mainly about "diamonds" and their type mismatch.
     * **Fix:** Make sure you compile and run with JDK 1.7 and language level is set to "Diamonds, ARM, Multicatch". (Project settings in your IDE)
 
@@ -50,8 +51,8 @@ For now, it works only with maven projects.
   </dependencies>
 
 
-#==== Apache Hadoop ====
-## == Installation procedure ==
+###==== Apache Hadoop ====
+#### == Installation procedure ==
 1) Install these tools on your machine:
  a) package depending on your system
  	protobuf-c  (rpm)

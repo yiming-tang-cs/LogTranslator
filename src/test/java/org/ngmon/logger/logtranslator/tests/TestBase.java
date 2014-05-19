@@ -16,6 +16,11 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Properties;
 
+/**
+ * Class contains default settings for testing purposes, like
+ * initializing properties and ability to walk through directories
+ * and copy or delete files on demand.
+ */
 public class TestBase {
 
     protected static String sep = Utils.sep;

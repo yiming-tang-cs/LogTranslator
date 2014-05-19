@@ -11,15 +11,15 @@ import java.util.Set;
 
 import static org.testng.Assert.assertEquals;
 
+/**
+ * Test finding of 'log.x' statements in Java files. If file contains
+ * at least one logging call or at least one import declaration from any
+ * known logging frameworks by application, it should return it for
+ * further processing.
+ * <p/>
+ * Tests are being run on testing environment called "ProjectTesting".
+ */
 public class SearchTest extends TestBase {
-    /**
-     * Test finding of 'log.x' statements in Java files. If file contains
-     * at least one logging call or at least one import declaration from any
-     * known logging frameworks by application, it should return it for
-     * further processing.
-     * <p/>
-     * Tests are being run on testing environment called "ProjectTesting".
-     */
 
     private String sep = Utils.sep;
     private Set<String> expectedFilesToProcess;

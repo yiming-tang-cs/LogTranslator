@@ -21,9 +21,6 @@ import static org.testng.Assert.assertEquals;
  * provided in test application home directory.
  * Compares "static" java files ending with "-original" from ProjectTesting
  * with newly translated files from TranslatedProject folder.
- * <p/>
- * In the next step, test checks for successful compilation of generated namespaces.
- * And compilation of simpler java files.??
  */
 public class TranslatorTest extends TestBase {
 
@@ -68,7 +65,7 @@ public class TranslatorTest extends TestBase {
      * Assert true, when they are same (converted correctly).
      *
      * @param testFile     java file converted by LogTranslator project
-     * @param expectedFile static java file hodling an expected translated content
+     * @param expectedFile static java file holding an expected translated content
      */
     @Test(dataProvider = "JavaFilesInput")
     private void translationTest(String testFile, String expectedFile) {

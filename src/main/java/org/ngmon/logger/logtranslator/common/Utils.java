@@ -14,8 +14,8 @@ import java.util.Properties;
 import java.util.Set;
 
 /**
- * Class reads from logtranslator.properties file and sets accordingly all settings
- * as specified in file.
+ * Class reads settings from logtranslator.properties file and
+ * sets accordingly all settings as specified in file.
  * Class contains some useful methods as well.
  */
 public class Utils {
@@ -67,6 +67,7 @@ public class Utils {
     private static String logTranslatorGeneratedProject;
     private static StringBuilder oldNewLogList = new StringBuilder(); // list of old & new generated log
     private static int ngmonMaxLogLength;
+    static boolean cleanRun;
 
 
     public static void initialize(String propertyPath) {
@@ -108,6 +109,7 @@ public class Utils {
             goMatchLocation = properties.getProperty("gomatch_generated_files", "generated/go-match.patterns");
             debugOutputLocation = properties.getProperty("debug_output_location", "generated/ngmonold-newfiles");
             logTranslatorGeneratedProject = applicationHome + sep + properties.getProperty("generated_project_name", "logtranslator") + sep;
+            cleanRun = Boolean.parseBoolean(properties.getProperty("clean_run", "false"));
         } catch (IOException e) {
             e.printStackTrace();
         }
