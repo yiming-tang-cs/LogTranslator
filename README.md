@@ -1,5 +1,7 @@
 ### === NGMON LogTranslator ===
 
+NGMON LogTranslator git repository is located [here] (https://github.com/michalxo/LogTranslator).
+
 Project for changing classic log statements from Log4j, Slf4j, Commons Logging frameworks into NGMON's syntax.
 For now, it works only with maven projects.
 
