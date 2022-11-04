@@ -74,7 +74,7 @@ public class LogFile implements Comparable {
     public void setNamespace(String namespace) {
         this.namespace = namespace;
         this.namespaceClass = getNamespaceEnd() + Utils.getNgmonDefaultNamespaceEnd();
-        this.namespace = namespace.substring(0, namespace.lastIndexOf("."));
+        this.namespace = namespace.contains(".")?namespace.substring(0, namespace.lastIndexOf(".")):namespace;
     }
 
     public String getWholeNamespace() {
